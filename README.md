@@ -41,7 +41,7 @@ homePhone: {
     }
 },
 age: {
-    displayName: 'Your Age",
+    displayName: 'Your Age',
     ...
     validation: {
         minNumber: 18,
