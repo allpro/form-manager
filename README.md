@@ -20,9 +20,34 @@ FM stores and updates all data (form or otherwise). It can automatically transfo
 
 ### Validation
 
-In forms, data is automatically validated, in the manner specified in the form configuration. These settings can be tweaked to provide a good user experience.
+In forms, data is automatically validated, in the manner specified by the form
+ configuration. The most common validations are built-in. These can be 
+ enabled with simple options, like:
 
-It's easy to integrate a function to do custom validation of any data, but the most common validations are built-in so can be enabled without writing any code. These can be expanded over time, but so far we have:
+```javascript static
+emailAddress: {
+    ...
+    validation: {
+        required: true,
+        email: true,
+        maxLength: 100,
+    }
+},
+homePhone: {
+    ...
+    validation: {
+        phone: true,
+        minLength: 10,
+    }
+},
+age: {
+    displayName: 'Your Age",
+    ...
+    validation: {
+        minNumber: 18,
+    }
+}
+```
 
 | Options      | Values         | Notes |
 | -----------: | :------------- | :-----------------|
@@ -97,7 +122,7 @@ Here's an example of a container component using FM. It shows only basic FM conf
 
 ```javascript static
 import React, { Fragment } from 'react';
-import { FormManager } from 'helpers';
+import FormManager from 'react-form-manager';
 
 import Header from './Header';
 import Instructions from './Instructions';
@@ -141,7 +166,10 @@ This example shows a form with a few fields on it. It does not show cosmetic
 props like `classes` or `fullWidth`, which you can add as normal. The FM
 props shown here _only_ handles props like `name`, `value` and event-handlers.
 
-This sample includes the fieldname `user/gender`. This indicates the data has gender _nested_ inside a user object. This syntax can be used for any level of nesting. OR you can set an `aliasName` in the field-config (eg: `gender`) and then use this alias in your code.
+This sample includes the fieldname `user/gender`. This indicates the data has
+ gender _nested_ inside a user object. Use slashes or dots, (`user.gender`), to
+  refer to values nested at _any depth_. OR you can set an `aliasName` in the 
+  field-config, (eg: `gender`), and then use this alias-name in your code.
 
 Note that some MUI elements, like `TextField` don't need `FormControl` and `FormTextHelper` components **because it auto-generates these**!
 
@@ -229,6 +257,7 @@ MyComponent.state = {
                 }
             }
         },
+
         errors: {
             'user/name': {
                 required: 'Your name is required.'
@@ -280,6 +309,7 @@ function handleCategoryChange(field, category, formManager) {
 
         // Set the correct subcategories list, or a blank list
         formManager.state('subcategoryList', subcategories);
+
         // Always clear the subcategory value when category changes
         formManager.value('subcategory', '');
     }
@@ -305,6 +335,7 @@ function handleCategoryChange(field, category, formManager) {
         formManager.setFieldValues({
             // Set the correct subcategories list, or a blank list
             subcategoryList: subcategories,
+
             // Always clear the subcategory value when category changes
             subcategory: '',
         });
@@ -373,9 +404,8 @@ const formConfig = {
     fields: {
         /* SAMPLE field data using Hash format (same as internal format)
         address: {
-            name:           'address',  // REQUIRED
-            displayName:    'Address',  // REQUIRED IF want to use in errors
-            autoValidate:   'blur',     // OVERRIDE default form-level option
+            displayName:    'Address',  // Used only for error-messages
+            autoValidate:   'blur',     // OVERRIDE of a form-level option
             onChange:       this.onAddressChange // OPTIONAL change callback
             validation: {
                 required:   true,
@@ -391,9 +421,8 @@ const formConfig = {
             },
         },
         'person/age': {
-            name:           'person/age',
-            aliasName:      'age', // name user passes to get data-props, etc.
-            displayName:    'Age',
+            aliasName:      'age',
+            displayName:    'Your Age',
             defaultValue:   25,
             validation: {
                 required:       true,
@@ -437,9 +466,10 @@ This helper is fully functional, but is still a work in progress. Some
  of the 
 outstanding issues are:
 
-- Validation is incomplete, like custom handlers
+- Validation can be further extended
 - The onBlur handler doesn't handle all fields; needs closure
 - Documentation & JS-Docs are incomplete
-- Need to track initial-values to know when a field is 'dirty'
-- Need to add unit tests
-- Need to test with more Material UI form elements, including updated versions
+- Track initial-values to know when a field is 'dirty'
+- Add more unit tests
+- Test with more of latest Material UI form elements
+- Integration with React Hooks; requires different state-storage
