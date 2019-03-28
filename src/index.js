@@ -53,7 +53,7 @@ const reAllPeriods = /\./g
  * @returns {Object}            Returns an API for this FormManager instance
  * @constructor
  */
-function FormManager( Container, options, extraData ) {
+function FormManager( Container, options = {}, extraData ) {
 	// Auto-instantiate thisInstance so 'new' keyword is NOT required
 	// (It's best practice to not require 'new' as it's an internal design)
 	if (!(this instanceof FormManager)) {

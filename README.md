@@ -122,7 +122,7 @@ Here's an example of a container component using FM. It shows only basic FM conf
 
 ```javascript static
 import React, { Fragment } from 'react';
-import FormManager from 'react-form-manager';
+import FormManager from 'form-manager';
 
 import Header from './Header';
 import Instructions from './Instructions';

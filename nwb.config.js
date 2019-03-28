@@ -3,7 +3,7 @@ module.exports = {
 	npm: {
 		esModules: true,
 		umd: {
-			global: 'ReactFormManager',
+			global: 'FormManager',
 			externals: {
 				react: 'React',
 			},

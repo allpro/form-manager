@@ -1,5 +1,5 @@
 {
-  "name": "react-form-manager",
+  "name": "form-manager",
   "version": "0.1.0",
   "description": "Form/Data Manager for React forms, particularly Material UI controls",
   "license": "MIT",
@@ -9,9 +9,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/allpro/react-form-manager.git"
+    "url": "https://github.com/allpro/form-manager.git"
   },
-  "homepage": "https://github.com/allpro/react-form-manager#readme",
+  "homepage": "https://github.com/allpro/form-manager#readme",
   "main": "lib/index.js",
   "module": "es/index.js",
   "files": [
@@ -34,7 +34,7 @@
     "moment": "~2.20.1"
   },
   "peerDependencies": {
-    "react": "16.x"
+    "react": "^16.0.0"
   },
   "devDependencies": {
     "@material-ui/core": "^3.9.0",
