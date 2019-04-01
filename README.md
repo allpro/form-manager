@@ -13,14 +13,14 @@
 [install-size-badge]: https://packagephobia.now.sh/badge?p=@allpro/form-manager
 [install-size]: https://packagephobia.now.sh/result?p=@allpro/form-manager
 
-[npm-badge]: https://img.s`hields.io/npm/v/npm-package.svg?style=flat-round
+[npm-badge]: http://img.shields.io/npm/v/@allpro/form-manager.svg?style=flat-round
 [npm]: https://www.npmjs.com/package/@allpro/form-manager
 
-[build-badge]: https://img.shields.io/travis/user/repo/master.svg?style=flat-round
-[build]: https://travis-ci.org/user/repo
+[build-badge]: https://travis-ci.org/allpro/form-manager.svg?branch=master
+[build]: https://travis-ci.org/allpro/form-manager
 
-[coveralls-badge]: https://img.shields.io/coveralls/user/repo/master.svg?style=flat-round
-[coveralls]: https://coveralls.io/github/user/repo
+[coveralls-badge]: https://coveralls.io/repos/github/allpro/form-manager/badge.svg?branch=master
+[coveralls]: https://coveralls.io/github/allpro/form-manager?branch=master
 
 [donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-round
 [donate]: https://paypal.me/KevinDalman
