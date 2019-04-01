@@ -1,6 +1,45 @@
 # FormManager Helper
 
-## Overview
+[![npm package][npm-badge]][npm]
+[![gzip-size][gzip-size-badge]][gzip-size]
+[![install-size][install-size-badge]][install-size]
+[![build][build-badge]][build]
+[![coverage][coveralls-badge]][coveralls]
+[![donate][donate-badge]][donate]
+
+[gzip-size-badge]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js?compression=gzip
+[gzip-size]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js
+
+[install-size-badge]: https://packagephobia.now.sh/badge?p=@allpro/form-manager
+[install-size]: https://packagephobia.now.sh/result?p=@allpro/form-manager
+
+[npm-badge]: https://img.s`hields.io/npm/v/npm-package.svg?style=flat-round
+[npm]: https://www.npmjs.com/package/@allpro/form-manager
+
+[build-badge]: https://img.shields.io/travis/user/repo/master.svg?style=flat-round
+[build]: https://travis-ci.org/user/repo
+
+[coveralls-badge]: https://img.shields.io/coveralls/user/repo/master.svg?style=flat-round
+[coveralls]: https://coveralls.io/github/user/repo
+
+[donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-round
+[donate]: https://paypal.me/KevinDalman
+
+[dependency-badge]: https://badgen.now.sh/david/dep/styfle/packagephobia
+[dependency]: https://david-dm.org/styfle/packagephobia
+
+[devDependency-badge]: https://badgen.now.sh/david/dev/styfle/packagephobia
+[devDependency]: https://david-dm.org/styfle/packagephobia?type=dev
+
+---
+
+-   NPM: `npm install @allpro/form-manager`
+-   Yarn: `yarn add @allpro/form-manager`
+-   CDN: Exposed global is `FormManager`
+    -   Unpkg: `<script src="https://unpkg.com/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
+    -   JSDelivr: `<script src="https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
+
+---
 
 The FormManager (**FM**) module is used by components to simplify data handling. Although the name includes "Form", it can also be useful for passing down read-only data rather than passing dozens of value-props.
 
@@ -374,89 +413,59 @@ Some options can be set at both the form and fields levels. Setting an option at
 
 ```javascript static
 const formConfig = {
-    /**
-     * Form validation options can be overridden per-field
-     * Validation can be triggered manually for a single field, or all fields
-     * Separate options exist for validating a field with or without errors
-     */
-    // When should we do an INITIAL auto-validation of each field
-    autoValidate:   false,      // [change|blur|false] false = none
-    // When should we re-validation a field that currently has an error
-    autoRevalidate: 'change',   // [change|blur|false] false = none
+    // Specify initial form state, data and errors
+    initialState: {},
+    initialData: {},
+    initialErrors: {},
 
-    /**
-     * Override the default error messages for standard validations
-     */
-    errorMessages: {
-        required: ''
+    // CUSTOMIZE HELPER METHODS AND ERROR-MESSAGES
+    // Built-in defaults will be added by initFormConfiguration()
+    formatters: {},
+    validators: {},
+    converters: {},
+    errorMessages: {},
+
+    // form.onChange & onBlur is fired after ANY field same-event is fired
+    onChange: undefined,
+    onBlur: undefined,
+
+    fieldDefaults: {
+        /*
+         * Form validation options can be overridden per-field
+         * Validation can be triggered manually for a single field, or all fields
+         * Separate options exist for validating a field with or without errors
+         */
+        // When should we do an INITIAL auto-validation of each field
+        validateOnChange: false,
+        validateOnBlur: false,
+        // When should we re-validation a field that currently has an error
+        revalidateOnChange: true,
+        revalidateOnBlur: true,
+
+        // How should we return error messages (by default)
+        returnErrorsAsString: true, // false = return error(s) in an array
+
+        // Should fields be read-only or disabled by default?
+        readOnly: false,
+        disabled: false,
+
+        // DATA CLEANING/FORMATTING OPTIONS
+        trimText: true, // Trim leading-/trailing--spaces
+        fixMultiSpaces: true, // Replace multi-spaces/tabs with single space
+        monoCaseToProper: false, // Change all UPPER- or lower-case to Proper-Case
+        cleanDataOnBlur: false, // Clean and REPLACE field-data onBlur
     },
-    returnErrorsAsString: true, // false = always return error(s) in an array
 
-    /**
+    /*
      * Form-fields configuration; SHOWN HERE AFTER NORMALIZATION TO A HASH.
      * Can be passed as a hash keyed by fieldName OR as an array.
-     * When passed as an array, then items must include the 'name' key.
+     * When passed as an array, each item must include a 'name' key.
      * When passed as a hash, the key will be COPIED to item.name automatically.
      *
-     * Only fields requiring validation need to be included,
-     *  however it can be useful to include all for reference
+     * Only fields requiring validation or type-conversion need to be included,
+     *  however it can be useful to include all fields as a reference
      */
-    fields: {
-        /* SAMPLE field data using Hash format (same as internal format)
-        address: {
-            displayName:    'Address',  // Used only for error-messages
-            autoValidate:   'blur',     // OVERRIDE of a form-level option
-            onChange:       this.onAddressChange // OPTIONAL change callback
-            validation: {
-                required:   true,
-                address:    true, // PRESET validations; TBD
-                minLength:  20,
-                maxLength:  120,
-                // All validations have a default error message
-                // Form default messages can be overridden at field-level
-                // Use of placeholder is optional
-                errorMessages: {
-                    maxLength: '{name} cannot exceed {value} characters'
-                }
-            },
-        },
-        'person/age': {
-            aliasName:      'age',
-            displayName:    'Your Age',
-            defaultValue:   25,
-            validation: {
-                required:       true,
-                dataType:       'integer'
-                numberRange:    [ 18, 120 ],
-            },
-        },
-        expandSectionOne: {
-            name:   'expandSectionOne',
-            isData: false  // value stored in state.form, NOT state.form.data
-        },
-        // OPTIONALLY can include fieldnames just for reference
-        unvalidatedDate: { dataType: 'date' },
-        unvalidatedTime: { dataType: 'time' },
-        */
-    },
-
-    /**
-     * Fields with a nameAlias will be mapped here for quick access.
-     * If an aliasName duplicates a real fieldName, the real field is superior.
-     */
-    fieldAliasMap: {
-        // aliasName: 'realFieldName', // SAMPLE
-    },
-
-    // initialState is copied to Component.state.form
-    // If initialState includes a 'data' or 'errors' key, it will be IGNORED
-    initialState: {},
-
-    // initialData is copied to Component.state.form.data
-    initialData: {},
-
-    // initialData is copied to Component.state.form.errors
-    initialErrors: {},
+    fields: {},
 }
 ```
 

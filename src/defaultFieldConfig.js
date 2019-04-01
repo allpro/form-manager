@@ -7,20 +7,25 @@ const defaultFieldConfig = {
 	onChange: undefined, // Callback after FM done processing event
 	onBlur: undefined, // Callback after FM done processing event
 	validation: {}, // Validation options
-	errorMessages: {}, // Field overrides, and/or `custom` error message
+	errorMessages: {} // Field overrides, and/or `custom` error message
 }
 
-/**
- * Values from options-root will also be set if not specified per-field
+/*
+ * Values in config.fieldDefaults will be inherited if not specified per-field
  */
-const inheritedFieldConfigKeys = [
+const inheritedFieldDefaults = [
+	'validateOnChange',
+	'validateOnBlur',
+	'revalidateOnChange',
+	'revalidateOnBlur',
+	'returnErrorsAsString',
 	'readOnly',
 	'disabled',
-	'fixCase',
 	'trimText',
-	'fixSpaces',
-	'cleanDataOnBlur',
+	'fixMultiSpaces',
+	'monoCaseToProper',
+	'cleanDataOnBlur'
 ]
 
 export default defaultFieldConfig
-export { inheritedFieldConfigKeys }
+export { inheritedFieldDefaults }

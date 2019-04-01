@@ -1,31 +1,43 @@
 /**
  * Helper methods used by FormManager; exported as an object of methods
  */
-import _ from 'lodash'
+import forOwn from 'lodash/forOwn'
+import isArray from 'lodash/isArray'
+import isObject from 'lodash/isObject'
+import isObjectLike from 'lodash/isObjectLike'
+import isPlainObject from 'lodash/isPlainObject'
+import isNil from 'lodash/isNil'
+import isString from 'lodash/isString'
+import isUndefined from 'lodash/isUndefined'
+import clone from 'lodash/clone'
+import cloneDeep from 'lodash/cloneDeep'
+import merge from 'lodash/merge'
+import set from 'lodash/set'
+import transform from 'lodash/transform'
 
 function itemToArray( item ) {
 	// Avoid creating an array with just an empty string or other falsey value
 	if (!item) return []
 
-	// ARRAY already
-	if (_.isArray( item )) return item
+	// ARRAY already - ASSUME has no nested arrays
+	if (isArray( item )) return item
 
 	// HASH value; like a field-errors object
-	if (_.isPlainObject( item )) {
-		let arrErrors = [] // init, may change
+	if (isPlainObject( item )) {
+		let arrItems = [] // init, may change
 
-		_.forOwn( item, value => {
+		forOwn( item, value => {
 			if (value && value.length) {
-				if (_.isArray( value )) {
-					Array.prototype.push( arrErrors, value )
+				if (isArray( value )) {
+					arrItems = arrItems.concat(value)
 				}
 				else {
-					arrErrors.push( value )
+					arrItems.push( value )
 				}
 			}
 		} )
 
-		return arrErrors
+		return arrItems
 	}
 
 	// STRING or OTHER item
@@ -39,7 +51,7 @@ function itemToArray( item ) {
  * @param {Object} data
  */
 const emptyValuesToNull = data => {
-	_.forOwn( data, ( value, key ) => {
+	forOwn( data, ( value, key ) => {
 		if (value === '' || value === undefined) {
 			data[key] = null
 		}
@@ -49,19 +61,19 @@ const emptyValuesToNull = data => {
 const getChangedFields = ( src, cmp ) => {
 	const simpleValue = val => {
 		// Stringify Array and Hash values for simple comparison; rarely needed.
-		if (_.isObjectLike( val )) return JSON.stringify( val )
+		if (isObjectLike( val )) return JSON.stringify( val )
 
 		// Undefined and Null (aka Nil) are equal to "" for data comparison.
-		if (_.isNil( val )) return ''
+		if (isNil( val )) return ''
 
 		return val
 	}
 	const equal = ( val1, val2 ) => simpleValue( val1 ) === simpleValue( val2 )
 
 	// _.transform is a reduce over an object's key-value pairs
-	return _.transform(
+	return transform(
 		cmp,
-		( acc, val, key ) => (equal( src[key], val ) ? acc : _.set(
+		( acc, val, key ) => (equal( src[key], val ) ? acc : set(
 			acc,
 			key,
 			val,
@@ -71,27 +83,127 @@ const getChangedFields = ( src, cmp ) => {
 }
 
 const trimFormFields = obj => {
-	if (!_.isPlainObject( obj )) {
+	if (!isPlainObject( obj )) {
 		return obj
 	}
 
 	// _.transform is a reduce over an object's key-value pairs
-	return _.transform(
+	return transform(
 		obj,
 		( acc, value, key ) => {
-			if (_.isString( value )) {
-				return _.set( acc, key, value.trim() )
+			if (isString( value )) {
+				return set( acc, key, value.trim() )
 			}
-			else if (_.isPlainObject( value )) {
-				return _.set( acc, key, trimFormFields( value ) )
+			else if (isPlainObject( value )) {
+				return set( acc, key, trimFormFields( value ) )
 			}
 			else {
-				return _.set( acc, key, value )
+				return set( acc, key, value )
 			}
 		},
 		{},
 	)
 }
+
+
+const reAllPeriods = /\./g
+/**
+ * Convert a fieldName into an array of keys - may only be one key.
+ * NOT exported - helper for get/setObjectValue methods
+ *
+ * @param {string} path
+ */
+function pathToKeysArray( path ) {
+	// Slashes or dots in fieldName indicate data is stored in a subkey
+	return path.replace( reAllPeriods, '/' ).split( '/' )
+}
+
+/**
+ *
+ * @param {Object} hash		Object to modify
+ * @param {string} path		String-path like 'data/who/gender'
+ * @param {Object} [opts]   Configuration options
+ * @returns {*}				Value at specified path, or undefined if not found
+ */
+function getObjectValue( hash, path, opts = { cloneValue: false } ) {
+	let branch = hash
+
+	// If a path was passed, trace the path inside state.form
+	if (path && path !== '/') {
+		// Slash(es) in the path indicate that we should recurse downward
+		const keys = pathToKeysArray( path )
+		for (const key of keys) {
+			// If branch is not an object, then cannot recurse; abort
+			if (!isObjectLike(branch)) return undefined
+
+			branch = branch[key]
+
+			// If requested key not found, abort
+			if (isUndefined( branch )) return undefined
+		}
+	}
+
+	return opts.cloneValue ? cloneDeep( branch ) : branch
+}
+
+/**
+ *
+ * @param {Object} hash		Object to modify
+ * @param {string} path		String-path like 'data/who/gender'
+ * @param {*} value			Value - could be anything!
+ * @param {Object} [opts]   Configuration
+ * @returns {boolean}		True if value set; false if value is unchanged
+ */
+function setObjectValue( hash, path, value, opts = { cloneValue: false } ) {
+	// If a path was passed, recurse into the object
+	if (path && path !== '/') {
+		const keys = pathToKeysArray( path )
+		const lastIdx = keys.length - 1
+		const lastKey = keys[lastIdx]
+		let branch = hash
+
+		// Recurse into data hash for name-paths like 'who/location/address1'
+		for (let idx = 0; idx < lastIdx; idx++) {
+			const key = keys[idx]
+
+			// If this is not the last key in path, recurse into branch
+			if (idx < lastIdx) {
+				const branchValue = branch[key]
+
+				// Create a branch (hash) here if it doesn't exist yet
+				// OVERWRITE any non-object value because path specifies it!
+				if (!isPlainObject( branchValue )) {
+					branch[key] = {}
+				}
+
+				// Update branch for next loop
+				branch = branch[key]
+			}
+		}
+
+		// Check whether value has changed - ignore objects, assume changed
+		const oldValue = branch[lastKey]
+		if (!isObject(value) && value === oldValue) {
+			return false // Value was NOT updated
+		}
+
+		// Write the passed value at end of the path (last branch)
+		// Ignore any existing value - we do not merge data here.
+		branch[lastKey] = opts.cloneValue ? clone( value ) : value
+		return true // Value was updated
+	}
+	else if (isObjectLike( path )) {
+		merge( hash, opts.cloneValue ? cloneDeep( path ) : path )
+		return true // Values were updated
+	}
+	else {
+		console.warn(
+			'FormManager: No path specified to set value: "${value}"'
+		)
+		return false // Value was NOT updated
+	}
+}
+
 
 // Export as object with methods
 // noinspection JSUnusedGlobalSymbols
@@ -100,7 +212,6 @@ export default {
 	itemToArray,
 	getChangedFields,
 	trimFormFields,
+	getObjectValue,
+	setObjectValue,
 }
-
-// Also export as individually named methods
-export { emptyValuesToNull, itemToArray, getChangedFields, trimFormFields }

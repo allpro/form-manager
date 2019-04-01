@@ -1,79 +1,86 @@
-import _ from 'lodash'
-
-import validation from './validation'
-import utils from './utils'
-import { formatDate, formatPhone, formatTextCase } from './formatters'
+import assign from 'lodash/assign'
+import clone from 'lodash/clone'
+import cloneDeep from 'lodash/cloneDeep'
+import defaults from 'lodash/defaults'
+import defaultsDeep from 'lodash/defaultsDeep'
+import forOwn from 'lodash/forOwn'
+import isArray from 'lodash/isArray'
+import isBoolean from 'lodash/isBoolean'
+import isEmpty from 'lodash/isEmpty'
+import isFunction from 'lodash/isFunction'
+import isNil from 'lodash/isNil'
+import isObjectLike from 'lodash/isObjectLike'
+import isString from 'lodash/isString'
+import isUndefined from 'lodash/isUndefined'
+import isPlainObject from 'lodash/isPlainObject'
+import map from 'lodash/map'
+import merge from 'lodash/merge'
+// Alias validateField because we use an intermediate method with same name
+import performFieldValidation from './validateField'
+import defaultValidators from './validators'
+import defaultFormatters from './formatters'
+import defaultConverters from './converters'
 import defaultFormConfig from './defaultFormConfig'
-import defaultFieldConfig, { inheritedFieldConfigKeys } from './defaultFieldConfig'
+import defaultFieldConfig from './defaultFieldConfig'
+import defaultErrorMessages from './defaultErrorMessages'
+import utils from './utils'
 
 // Re-export tools for testing
 export { default as FieldsTestOutput } from './tools/FieldsTestOutput'
 export { default as logFormData } from './tools/logFormData'
 
-// Re-export utils
+// Re-export utils?
 // export * from './utils'
-// noinspection JSUnusedGlobalSymbols
-// export { default as demo } from '../demo'
 
-const protectedConfigKeys = [
-	'fields',
-	'fieldAliasMap',
-	'initialData',
-	'initialErrors',
-	'initialState',
-	'errorMessages',
-]
-
-const protectedStateKeys = ['data', 'errors']
-
-/**
- * Default state for each form thisInstance
- * This data is injected into: Component.state.form
- */
 const defaultFormState = {
 	// TODO: need to track load-values so know if current value is the same
-	// isDirty:    false,  // true if ANY field has changed
-	// hasErrors:  false,  // true if ANY field has an error
-	//  standard FormControl state keys
-	// dirty:          false,
-	// adornedStart:   false,
+	// isDirty:		false,	// true if ANY field has changed
+	// hasErrors:	false,	// true if ANY field has an error
+	// Standard FormControl state keys
+	// dirty:		false,
+	// adornedStart:	false,
 }
 
-const reFalseyString = /^(0|false)$/
-const reAllPeriods = /\./g
 
-// noinspection UnterminatedStatementJS
 /**
  * Helper for managing form data, error, validation, etc.
  * Uses component.state to store form data, with getter/setter methods
  *
- * @param {Object} Container    The component ('this') consuming this
- * @param {Object} [options]    Initial configuration of form
- * @param {Object} [extraData]  Data is dynamic so can be passed separately
- * @returns {Object}            Returns an API for this FormManager instance
+ * @param {(Object|Function)} componentObject    Class OR Hook setState method
+ * @param {Object} [options]        Initial configuration of form
+ * @param {Object} [extraData]            Data passed in at instantiation
+ * @returns {Object}                    Returns API for this instance
  * @constructor
  */
-function FormManager( Container, options = {}, extraData ) {
-	// Auto-instantiate thisInstance so 'new' keyword is NOT required
+function FormManager( componentObject, options = {}, extraData ) {
+	// Auto-instantiate instanceAPI so 'new' keyword is NOT required
 	// (It's best practice to not require 'new' as it's an internal design)
 	if (!(this instanceof FormManager)) {
-		return new FormManager( Container, options, extraData )
+		return new FormManager(componentObject, options, extraData)
 	}
 
 	// MUST assign to var to create closure and retain pointer to Container
 	// JS does NOT maintain 'arguments' in closure the same as it does vars
-	// Before adding this var, the 'Container' arg would become undefined
-	const Component = Container
+	// Before adding this var, the 'Container' arg could become undefined
+	// const setComponentState = componentObject
 
-	// Init form configuration data using defaults
-	const config = _.cloneDeep( defaultFormConfig )
+	let stateOfForm = cloneDeep(defaultFormState)
+	let stateOfData = {}
+	let stateOfErrors = {}
+
+	// Init form-configuration using passed options
+	const config = cloneDeep(options)
+
+	// Local alias for formatters object
+	const format = config.formatters
 
 	let stateInitialized = false
 
-	// INIT the component/FormManager
-	initComponentState()
+	// INIT FormManager
 	initFormConfiguration()
-	initFormData( extraData )
+	initFormData(extraData)
+
+	let formManagerIndex = 0
 
 	stateInitialized = true
 
@@ -81,43 +88,116 @@ function FormManager( Container, options = {}, extraData ) {
 	/**
 	 * PUBLIC API - provides simplified method names for internal functions
 	 * Methods are accessed like: form.value('name'), form.validate('address')
-	 * Assigned to thisInstance variable so can pass this API to callbacks
+	 * Assigned to instanceAPI variable so can pass this API to callbacks
 	 */
-	const thisInstance = {
+	const instanceAPI = {
 		reset: resetForm, // Method to reset form data, errors & state.
 
 		// The field-config is exposed, but should rarely be needed
-		fieldConfig: getSetFieldConfig, // SETTER/GETTER for field-configuration
+		fieldConfig: publicFieldConfig, // SETTER/GETTER for field-configuration
 		setFieldValidation, // SETTER for easy validation changes
 		setFieldIsRequired, // SETTER for easy 'required' changes
 
-		// Form-level getters
-		state: formState, // SETTER/GETTER for form-state ONLY
-		data: formData, // SETTER/GETTER for form-data
-
 		// Validation can be triggered manually, for one or all fields
 		validate: validateField, // ACTION for field OR form validation
-		errors: getErrors, // GETTER for field OR form errors
 
-		setFieldError, // SETTER for ONE error on 1 field
-		setFieldErrors, // SETTER for MULTIPLE errors on 1 field
-		clearFieldErrors, // SETTER clears ALL errors for 1 field
+		// Form-level setters/getters
+		state: formState,		// SETTER/GETTER for stateOfForm
+		data: formData,			// SETTER/GETTER for stateOfData
+		errors: getFieldErrors,	// GETTER for field OR form errors
+		getFieldErrors,			// GETTER for field OR form errors
+		setFieldError,			// SETTER for ONE error on 1 field
+		setFieldErrors,			// SETTER for MULTIPLE errors on 1 field
+		clearFieldErrors,		// SETTER - clears ALL errors for 1 field
 		hasErrors: doesItemHaveErrors, // CHECK if field OR form has errors
 
 		// Methods used when writing form component props
-		setFieldValues, // SETTER for MULTIPLE field-values
-		setFieldValue: fieldValue, // SETTER/GETTER for 1 field-values
-		value: fieldValue, // SETTER/GETTER for 1 field-value
+		value: publicFieldValue, // SETTER/GETTER for 1 field-value
+		values: setFieldValues, // SETTER for MULTIPLE field-values
 
 		dataProps: getDataProps, // HELPER for writing component props
 		errorProps: getErrorProps, // HELPER for writing component props
+		allProps: getAllProps, // HELPER for writing component props
+
 		onFieldChange, // HANDLER for component.onChange
 		onFieldFocus, // HANDLER for component.onFocus
-		onFieldBlur, // HANDLER for component.onBlur
+		onFieldBlur // HANDLER for component.onBlur
 	}
 
 	// RETURN THE PUBLIC API
-	return thisInstance
+	return instanceAPI
+
+
+	/**
+	 * Method to trigger a setState action in React component
+	 */
+	function triggerComponentUpdate() {
+		// Trigger a re-render only if component has been initialized
+		if (stateInitialized) {
+			// Increment unique index used as component-state value
+			formManagerIndex++
+
+			// noinspection JSUnresolvedVariable
+			if (componentObject.setState) {
+				// Class method
+				componentObject.setState({ formManagerIndex })
+			}
+			else {
+				// Hook setFormState method (or whatever its name is!)
+				componentObject(formManagerIndex)
+			}
+		}
+	}
+
+
+	/**
+	 * PUBLIC METHOD to reset form data, errors & state.
+	 * Does not reinitialize or reset field configuration.
+	 * Does not remove any handlers or data bound after creation.
+	 *
+	 * @param {Object} [data]
+	 */
+	function resetForm( data ) {
+		// RE-INIT all state-hashes
+		stateOfForm = cloneDeep(defaultFormState)
+		stateOfData = {}
+		stateOfErrors = {}
+
+		initFormData(data)
+	}
+
+	/**
+	 * Initialize form data, state and errors using only the config-options
+	 *
+	 * @param {Object} [data]
+	 */
+	function initFormData( data ) {
+		const { initialState, initialData, initialErrors } = options
+
+		// INITIAL-DATA - data is optional arg passed at instance creation
+		if (initialData) {
+			setFormData(initialData)
+		}
+		if (data) {
+			setFormData(data)
+		}
+
+		// INITIAL-ERRORS
+		if (initialErrors && isPlainObject(initialErrors)) {
+			forOwn(initialErrors, ( errors, fieldName ) => {
+				// noinspection JSIgnoredPromiseFromCall
+				setFieldErrors(fieldName, errors)
+			})
+		}
+
+		// INITIAL-STATE - can be anything!
+		if (initialState && isPlainObject(initialState)) {
+			forOwn(initialState, ( value, key ) => {
+				setFormState(key, value)
+			})
+		}
+	}
+
 
 	/**
 	 * Initialization method to set internal configuration.
@@ -126,85 +206,136 @@ function FormManager( Container, options = {}, extraData ) {
 	function initFormConfiguration() {
 		if (!options) return // nothing to process!
 
-		// Process config options now, ignoring special keys
-		_.forOwn( options, ( value, key ) => {
-			if (!_.includes( protectedConfigKeys, key )) {
-				config[key] = value
+		const configRootKeys = [
+			'onChange',
+			'onBlur'
+		]
+		// Copy options in the config root
+		for (const key of configRootKeys) {
+			if (!isUndefined(options[key])) {
+				config[key] = options[key]
 			}
-		} )
+		}
 
-		// Configure form-fields
-		getSetFieldConfig( options.fields )
+		defaultsDeep(config, defaultFormConfig)
+		defaults(config.formatters, defaultFormatters)
+		defaults(config.validators, defaultValidators)
+		defaults(config.converters, defaultConverters)
+		defaults(config.errorMessages, defaultErrorMessages)
+
+		// IGNORE any config.fieldAliasMap data specified by user;
+		// This will be autogenerated by setFieldConfig()
+		config.fieldAliasMap = {}
+
+		// Now configure all the form-fields
+		setFieldsConfig(options.fields)
 	}
+
 
 	/**
 	 * PUBLIC SETTER & GETTER for field-config(s).
 	 * If no args passed, returns clone of all fields config
-	 * If data arg is a fieldName (string), returns field's existing config.
+	 * If only a fieldName (string) passed, returns that field's config.
 	 * Otherwise is a setter for one or more field-config.
 	 * Accepts an array -or- hash keyed by fieldname to set multiple fields.
 	 *
 	 * NOTE: fieldConfig is a var-name so method uses a special internal name.
 	 *
+	 * @param {(string|Array|Object)} [name]
 	 * @param {(Object|Array|string)} [data]
-	 * @param {Object} [opts]   Option for merging with existing config
+	 * @param {Object} [opts]    Option for merging with existing config
 	 * @returns {Object}        Returns fieldConfig, even when is a SETTER
 	 */
-	function getSetFieldConfig( data, opts = {} ) {
-		const fields = config.fields
+	function publicFieldConfig(name, data, opts = {}) {
+		const hasFieldName = isString(name)
+		const fieldName = hasFieldName ? verifyFieldName(name) : ''
 
-		// GETTER - if data is a fieldName or nothing (get-all)
-		if (_.isNil( data ) || _.isString( data )) {
-			return data ? fields[data] : _.cloneDeep( fields )
+		// 2nd & 3rd arguments shift if 'name' (string) is not passed
+		const configData = hasFieldName ? data : name
+		const configOpts = hasFieldName ? opts : data
+
+		// GETTER for one -or- all fields
+		if (!configData) {
+			return getFieldConfig(fieldName)
 		}
 
-		// SETTER - MULTIPLE FIELD-CONFIGS AS ARRAY
-		if (_.isArray( data )) {
-			return data.map(
-				fieldConfig => setFieldConfig( fieldConfig, opts ) )
-		}
+		if (fieldName) configOpts.fieldName = fieldName
+		const returnData = setFieldsConfig( configData, configOpts )
 
-		const name = data['name'] || opts.fieldName
+		// Configuration may change how fields display, so update component
+		triggerComponentUpdate()
 
-		// SETTER - MULTIPLE FIELD-CONFIGS AS HASH KEYED BY FIELDNAMES
-		// NOTE: Also handle scenario like: fieldName == 'name'
-		if (!name || _.isPlainObject( name )) {
-			const { replace } = opts
-			return _.map( data, ( fieldConfig, fieldName ) =>
-				setFieldConfig( fieldConfig, { replace, fieldName } ),
-			)
-		}
-
-		// SETTER - SINGLE FIELD-CONFIG
-		return setFieldConfig( data, opts )
+		return returnData
 	}
 
 	/**
-	 * SETTER for a single field-config; merge or replace.
+	 * Get field-config for ONE-OR-MORE FIELDS
+	 *
+	 * @param {string} [name]
+	 * @returns {Object}	Returns fieldConfig for one -or- all fields
+	 */
+	function getFieldConfig( name ) {
+		const fieldName = verifyFieldName(name)
+		const fields = config.fields
+		return cloneDeep(fieldName ? fields[fieldName] : fields)
+	}
+
+	/**
+	 * Set field-config for ONE-OR-MORE FIELDS; merge or replace
 	 *
 	 * @param {(Object|Array|string)} [data]
-	 * @param {Object} [opts]   Option for merging with existing config
-	 * @returns {Object}        Returns fieldConfig, even when is a SETTER
+	 * @param {Object} [opts]	Option for merging with existing config
+	 * @returns {Object}		Returns fieldConfig, even when is a SETTER
+	 */
+	function setFieldsConfig( data, opts = {} ) {
+		// MULTIPLE FIELD-CONFIGS AS ARRAY
+		if (isArray(data)) {
+			return data.map(
+				fieldConfig => setFieldConfig(fieldConfig, opts))
+		}
+
+		// NOTE: Also handle scenario like: fieldName == 'name'
+		if (isPlainObject(data)) {
+			const name = data['name'] || opts.fieldName
+			const isSingleField = name && !isPlainObject(name)
+
+			if (isSingleField) {
+				// SETTER - HASH IS CONFIG FOR A SINGLE FIELD
+				return setFieldConfig(data, opts)
+			}
+			else {
+				// SETTER - MULTIPLE FIELD-CONFIGS AS HASH KEYED BY FIELDNAMES
+				// IS A HASH KEYED BY FIELDNAMES
+				const { replace } = opts
+				return map(data, ( fieldConfig, fieldName ) =>
+					setFieldConfig(fieldConfig, { replace, fieldName })
+				)
+			}
+		}
+	}
+
+	/**
+	 * Set field-config for a SINGLE FIELD; merge or replace
+	 *
+	 * @param {(Object|Array|string)} [data]
+	 * @param {Object} [opts]    Option for merging with existing config
+	 * @returns {Object}         Returns fieldConfig, even when is a SETTER
 	 */
 	function setFieldConfig( data, opts = { replace: false, fieldName: '' } ) {
-		const fieldName = verifyFieldName( data['name'] || opts.fieldName )
+		const fieldName = verifyFieldName(data['name'] || opts.fieldName)
 		const fields = config.fields
 		let fieldConfig = fields[fieldName]
 
 		// INIT fieldConfig if not exists, OR opts.replace specified
 		if (!fieldConfig || opts.replace) {
-			fieldConfig = fields[fieldName] = _.cloneDeep( defaultFieldConfig )
-
-			// Set field-config default values from root of config
-			for (const key of inheritedFieldConfigKeys) {
-				if (!_.isNil( config[key] )) {
-					fields[fieldName][key] = config[key]
-				}
-			}
+			fieldConfig = fields[fieldName] = cloneDeep(defaultFieldConfig)
+		}
+		else {
+			defaultsDeep(fieldConfig, defaultFieldConfig)
 		}
 
-		// Now merge the new configuration data
-		_.merge( fieldConfig, data )
+		// Merge the new configuration data; in case this is an 'update'
+		merge(fieldConfig, data)
 
 		// ensure field.name is set - may have been passed as opts.fieldName
 		fieldConfig.name = fieldName
@@ -216,509 +347,220 @@ function FormManager( Container, options = {}, extraData ) {
 		return fieldConfig
 	}
 
-	/**
-	 * PUBLIC SETTER for changing field(s) validation options easily
-	 *
-	 * @param {(Array|string)} name 	Fieldname, (or array of), for mass update
-	 * @param {Object} validationConfig New Validation setting(s)
-	 * @param {Object} [opts]    		Option for merging with existing config
-	 * @returns {*}                    Returns validation-config if single field
-	 */
-	function setFieldValidation( name, validationConfig, opts = { merge: false } ) {
-		// Allow passing an array of fieldnames to set them all the same
-		// This is useful for setting multiple fields required/not-required
-		if (_.isArray( name )) {
-			return name.map( fieldName =>
-				setFieldValidation( fieldName, validationConfig, opts ),
-			)
-		}
-
-		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
-		const field = config.fields[fieldName] || {}
-
-		// ensure field config exists
-		if (!field) return
-
-		if (opts.merge && field.validation) {
-			_.merge( field.validation, validationConfig )
-		}
-		else {
-			field.validation = _.clone( validationConfig )
-		}
-
-		return field.validation
-	}
 
 	/**
-	 * PUBLIC SETTER for dynamically setting 'required' flag for validation.
-	 * This may be a common need for multi-part forms or conditional fields.
-	 *
-	 * @param {(Array|string)} name    Fieldname, (or array), for mass update
-	 * @param {boolean} require            Is this field(s) required?
-	 * @returns {*}                        Returns new validation if a single
-	 *     name
-	 */
-	function setFieldIsRequired( name, require = true ) {
-		return setFieldValidation(
-			name,
-			{ required: !!require },
-			{ merge: true },
-		)
-	}
-
-	/**
-	 * Initialization method to init Component.state
-	 */
-	function initComponentState( reset ) {
-		// Init the Component state; this code probably running in constructor
-		// Avoid making any assumptions about the existing state structure
-		const state = Component.state || (Component.state = {})
-		const formKey = config.stateStorageKey
-		const newFormState = _.merge(
-			{
-				data: {},
-				errors: {},
-			},
-			defaultFormState,
-		)
-
-		// prettier-ignore
-		if (reset) {
-			// TODO: Quick fix for resetting errors
-			clearAllFieldErrors()
-
-			// TODO: Test this to ensure works as intended
-			Component.setState( {
-				[formKey]: newFormState,
-			} )
-		}
-		else {
-			state[formKey] = newFormState
-		}
-	}
-
-	function initFormData( data ) {
-		const { initialState, initialData, initialErrors, errorMessages } = options
-
-		// INITIAL-DATA - data is optional arg passed at instance creation
-		if (initialData) {
-			setData( initialData )
-		}
-		if (data) {
-			setData( data )
-		}
-
-		// INITIAL-ERRORS
-		if (initialErrors && _.isPlainObject( initialErrors )) {
-			_.forOwn( initialErrors, ( errors, fieldName ) => {
-				// noinspection JSIgnoredPromiseFromCall
-				setFieldErrors( fieldName, errors )
-			} )
-		}
-
-		// OVERRIDE DEFAULT ERROR MESSAGES
-		if (errorMessages && _.isPlainObject( errorMessages )) {
-			_.merge( config.errorMessages, errorMessages )
-		}
-
-		// INITIAL-STATE - can be anything!
-		if (initialState && _.isPlainObject( initialState )) {
-			_.forOwn( initialState, ( value, key ) => {
-				// IGNORE standard form subkeys - not allowed here
-				if (!_.includes( protectedStateKeys, key )) {
-					// noinspection JSIgnoredPromiseFromCall
-					formState( key, value )
-				}
-			} )
-		}
-	}
-
-	/**
-	 * SPECIAL method to reset form data, errors & state.
-	 * Does not reinitialize or reset field configuration.
-	 * Does not remove any handlers or data bound after creation.
-	 *
-	 * @param {Object} [data]
-	 */
-	function resetForm( data ) {
-		initComponentState( true ) // true = reset
-		initFormData( data )
-	}
-
-	/**
-	 * Alias Component.setState to handle object merging, immutables, etc.
-	 * ALL form-state is stored under the state.form branch. (stateStorageKey)
-	 *
-	 * @param {string} path     String-path like 'data/who/gender'
-	 * @param {*} value         Value - could be anything!
-	 * @param {Object} [opts]   Configuration options
-	 * @returns {Promise}       Promise resolves after state is set
-	 */
-	function setState(
-		path,
-		value,
-		opts = { cloneValue: false, waitForState: false },
-	) {
-		const form = _.clone( Component.state[config.stateStorageKey] )
-		let branch = form
-
-		// prettier-ignore
-		if (path && path !== '/') {
-			const keys = pathToKeysArray( path )
-			const lastIdx = keys.length - 1
-			const lastKey = keys[lastIdx]
-
-			for (let i = 0; i < lastKey; i++) {
-				const key = keys[i]
-				let branchValue = branch[key]
-
-				if (branchValue && _.isPlainObject( branchValue )) {
-					branch[key] = _.clone( branchValue )
-				}
-				else {
-					// Create a branch (hash) here if it doesn't exist yet
-					// OVERWRITE any simple value here because path specifies!
-					branch[key] = {}
-				}
-
-				// Update branch for next loop, if not done yet
-				branch = branch[key]
-			}
-
-			// Write the value
-			branch[lastKey] = opts.clone ? _.clone( value ) : value
-		}
-		else if (_.isObjectLike( value )) {
-			_.merge( form, value )
-		}
-		else {
-			console.warn(
-				`FormManager.setState() - 
-				no path specified to set state value: "${value}"`,
-			)
-			return Promise.resolve()
-		}
-
-		// prettier-ignore
-		// Return a promise that resolves AFTER state is updated
-		if (!stateInitialized) {
-			Component.state[config.stateStorageKey] = form
-			return Promise.resolve()
-		}
-		else if (opts.waitForState) {
-			// Wait for setState to complete before resolving promise
-			return new Promise( resolve => {
-				Component.setState(
-					{ [config.stateStorageKey]: form },
-					resolve,
-				)
-			} )
-		}
-		else {
-			Component.setState( { [config.stateStorageKey]: form } )
-			// resolve immediately; caller may be batching state updates
-			return Promise.resolve()
-		}
-	}
-
-	/**
-	 * @param {Object} data     Hash of Field-name/value pairs
-	 * @returns {Promise}       Promise resolves after state has updated
-	 */
-	function setFieldValues( data ) {
-		const form = _.clone( getState() )
-		form.data = _.clone( form.data )
-
-		_.forOwn( data, ( value, name ) => {
-			setFieldValue( name, value, form )
-		} )
-
-		return new Promise( resolve => {
-			Component.setState( { [config.stateStorageKey]: form }, resolve )
-		} )
-	}
-
-	/**
-	 * Helper to get a specific state branch or value.
-	 * If no path is specified, it returns the entire state.form hash.
-	 * If an object is returned, it is BY REF, so should NOT be mutated.
-	 * If state needs to be changed, pass a flag so it is cloned.
-	 *
-	 * @param {string} [path]   String-path like 'data/who/gender'
-	 * @param {Object} [opts]   Options, like { clone: true }
-	 * @returns {*}             SOMETHING from state; could be anything
-	 */
-	function getState( path, opts = { clone: false } ) {
-		const stateData = Component.state[config.stateStorageKey]
-		let state = opts.clone ? _.clone( stateData ) : stateData
-		let parentBranch = state
-
-		// If a path was passed, trace the path inside state.form
-		if (path) {
-			// Slash(es) in the path indicate that we should recurse downward
-			const keys = pathToKeysArray( path )
-			for (const key of keys) {
-				state = state[key]
-
-				if (opts.clone) {
-					state = _.clone( state )
-					parentBranch[key] = state
-					parentBranch = state
-				}
-
-				// If key not found in this object then return undefined
-				if (_.isUndefined( state )) return undefined
-			}
-		}
-
-		return state
-	}
-
-	/**
-	 * GETTER for form-state, which is stored in the root of state.form.
-	 *
-	 * @param {string} [key]
-	 * @param {Object} opts     Clone-value option
-	 * @returns {*}         Either all form-state or just the key requested
-	 */
-	function getFormState( key, opts = { cloneValue: true } ) {
-		// If a key is passed, then return value for just that, if exists
-		if (key) {
-			const value = getState( key )
-			return opts.cloneValue !== false && _.isObjectLike( value )
-				? _.cloneDeep( value )
-				: value // could be anything, including undefined
-		}
-
-		// Start with a shallow clone of entire state.form branch.
-		const state = _.clone( getState() )
-
-		// Remove special keys that are NOT part of 'form-state'.
-		// Do this BEFORE a deepClone because so will speeds up deepClone
-		delete state.data
-		delete state.errors
-
-		// Return a deep clone to ensure state cannot be mutated
-		return _.cloneDeep( state )
-	}
-
-	/**
-	 * Subroutine to set values in the root of form.state
+	 * PUBLIC SETTER/GETTER for values in the ROOT of state
 	 *
 	 * @param {(Object|string)} key        Fieldname OR a hash of data to set
 	 * @param {*} [value]                Value to SET, if key is a string
 	 * @param {Object} [opts]
-	 * @returns {Promise}
+	 * @returns {*}
 	 */
-	function formState( key, value, opts = { clone: true } ) {
-		// prettier-ignore
+	function formState( key, value, opts = { cloneValue: true } ) {
 		// GETTER - Return shallow clone of ALL state, MINUS 'data' and 'errors'
-		if (!key) {
-			return getFormState()
+		if (!key || (isString(key) && isUndefined(value))) {
+			return getFormState(key, opts)
 		}
-		// GETTER/SETTER - A string-key, _possibly_ with a value to set
-		else if (_.isString( key )) {
-			return value === undefined
-				// Return form.state[key], possibly cloned if value is an object
-				? getFormState( key, { cloneValue: opts.clone } )
-				// Return promise that will resolve after state is update
-				: setState( key, value, { cloneValue: true } )
-		}
-		// SETTER - hash of key/value pairs - set them all
-		else if (_.isPlainObject( key )) {
-			const promises = []
-			_.forOwn( key, ( v, k ) => {
-				promises.push(
-					setState( k, v, { cloneValue: true } ),
-				)
-			} )
-			return Promise.all( promises )
+		// SETTER
+		else {
+			setFormState(key, value)
+			triggerComponentUpdate()
 		}
 	}
 
 	/**
-	 * @param {string} name         Field-name or alias-name
-	 * @param {*} value             New value for specified fieldName
-	 * @param {Object} [objState]   Object to update instead of calling setState
-	 * @param {string} [event]    Name of event that triggered this ('change')
-	 * @returns {(Promise|Object)}  Promise resolves after state has
-	 * updated
+	 * @param {string} [key]
+	 * @param {Object} opts        Clone-value option
+	 * @returns {*}                All form-state OR just specific key requested
 	 */
-	function setFieldValue( name, value, objState, event ) {
+	function getFormState( key, opts ) {
+		// If a key is passed, then return value for just that, if exists
+		if (key) return utils.getObjectValue(stateOfForm, key, opts)
+
+		// Return a deep clone to ensure state cannot be mutated
+		return cloneDeep(stateOfForm)
+	}
+
+	/**
+	 * @param {(Object|string)} key        Fieldname OR a hash of data to set
+	 * @param {*} [value]                Value to SET, if key is a string
+	 * @param {Object} [opts]            Options, like { clone: true }
+	 */
+	function setFormState( key, value, opts = { cloneValue: true } ) {
+		utils.setObjectValue(stateOfForm, key, value, opts)
+	}
+
+
+	/**
+	 * PUBLIC SETTER for setting multiple field values
+	 *
+	 * @param {Object} data        Hash of Field-name/value pairs
+	 */
+	function setFieldValues( data ) {
+		forOwn(data, ( value, name ) => {
+			setFieldValue(name, value)
+		})
+	}
+
+	/**
+	 * Set the value of one field
+	 *
+	 * @param {string} name        Field-name or alias-name
+	 * @param {*} value            New value for specified fieldName
+	 * @param {string} [event]    Name of event that triggered this (eg:
+	 *     'change')
+	 * @returns {Object}
+	 */
+	function setFieldValue( name, value, event ) {
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
+		const fieldName = verifyFieldName(name)
 		const fieldConfig = config.fields[fieldName]
-		const isDataField = !fieldConfig || fieldConfig.isData
-		const fieldValidation = fieldConfig ? fieldConfig.validation : {}
-		const dataType = fieldValidation.dataType
-		const isNil = _.isNil( value )
 		let newValue = value
 
-		// prettier-ignore
-		// NOTE: Backend may pass NULL for empty string fields
-		if ((!dataType || dataType === 'text') && isNil) {
-			newValue = ''
-		}
-		// Allow Null/Undefined booleans - means no-default value
-		else if (dataType === 'boolean' && !isNil && !_.isBoolean( value )) {
-			newValue = valueToBoolean( value )
-		}
-		else if (dataType === 'date') {
-			// Transform dates to ISO standard; if dateType is set
-			newValue = formatDate( value, 'iso-string' )
-		}
-		else if (fieldValidation.phone) {
-			// Normalize phone-numbers to "[0-][000-]000-0000"
-			newValue = formatPhone( value )
-		}
+		// Field may NOT have a configuration...
+		if (fieldConfig) {
+			const isDataField = !fieldConfig || fieldConfig.isData
+			const fieldValidation = fieldConfig ? fieldConfig.validation : {}
+			const dataType = fieldValidation.dataType
 
-		if (!isDataField) {
-			if (objState) {
-				objState[fieldName] = newValue
-				return objState
-			}
-			else {
-				return formState( fieldName, newValue )
+			newValue = coerceDataType(value, dataType)
+
+			// if (fieldValidation.phone) {
+			// 	// Normalize phone-numbers to "[0-][000-]000-0000"
+			// 	newValue = format.phone( value )
+			// }
+
+			if (!isDataField) {
+				setFormState(fieldName, newValue)
+				triggerComponentUpdate()
+				return
 			}
 		}
 
-		const keys = pathToKeysArray( fieldName )
-		const lastIdx = keys.length - 1
-		const lastKey = keys[lastIdx]
-
-		// Get a cloned copy of the current data (shallow clone)
-		const data = objState ? objState.data : getState(
-			'data',
-			{ clone: true },
+		// Method will return false if newValue is same as existing value
+		const valueSet = utils.setObjectValue(
+			stateOfData,
+			fieldName,
+			value,
+			{ cloneValue: true }
 		)
-		let branch = data // for recursion
 
-		// Recurse into data for name-paths like 'who/location/address1'
-		for (let idx = 0; idx <= lastIdx; idx++) {
-			const key = keys[idx]
-			// If value is nested, recurse into branch
-			if (idx < lastIdx) {
-				const keyValue = branch[key]
-				// Create a nested object if doesn't exist yet
-				if (keyValue && _.isPlainObject( keyValue )) {
-					branch[key] = _.clone( keyValue )
-				}
-				// Update branch for next loop
-				// Create new object in tree if need to recurse deeper
-				if (idx < lastIdx && _.isNil( branch[key] )) {
-					branch = branch[key] = {}
-				}
-				else {
-					branch = branch[key]
-				}
+		triggerComponentUpdate()
+
+		if (event) {
+			if (fieldConfig) {
+				// A validation event MAY trigger validation & callback.
+				// Validation may or may not run, depending on event-type.
+				// Validation CAN BE async, so method always returns a promise.
+				// NOTE: Validate even if value unchanged; may be first event!
+				validateField(fieldName, newValue, event)
+				.then(() => {
+					// If field value was changed, then fire events
+					if (event === 'change' && valueSet) {
+						fireEventCallback(fieldConfig.onChange, value, name)
+						fireEventCallback(config.onChange, value, name)
+					}
+				})
+			}
+			else if (event === 'change' && valueSet) {
+				// Just fire form-level onChange, if one exists
+				fireEventCallback(config.onChange, value, name)
 			}
 		}
+	}
 
-		// If field value has not changed, do nothing - ABORT
-		if (branch[lastKey] === newValue) {
-			return objState || Promise.resolve()
+	function getFieldValue( fieldName, opts = { cleanValue: false } ) {
+		const fieldConfig = config.fields[fieldName] || {}
+		const fieldValidation = fieldConfig.validation || {}
+		const isData = fieldConfig.isData !== false
+		const state = isData ? stateOfData : stateOfForm
+
+		let value = utils.getObjectValue(
+			state,
+			fieldName,
+			{ clone: true }
+		)
+		// Clean value here, if requested
+		if (opts.cleanValue) {
+			value = cleanFieldValue(value, fieldConfig)
 		}
 
-		// Set the field value; shallow clone if value is a hash or array
-		branch[lastKey] = _.isObjectLike( newValue ) ? _.clone( newValue ) : newValue
-
-		// prettier-ignore
-		// Return updated object OR promise that resolves after state updates
-		if (objState) {
-			return objState
-		}
-		else if (event) {
-			// Passing a validation event can trigger validation & callback,
-			// so WAIT for state to be set before we validate
-			return setState( 'data', data, { waitForState: true } )
-				.then( () => validateField( fieldName, newValue, event ) )
-				// Note: onChange is called even if validation doesn't
-				.then( () => runFieldChangeCallback( fieldName, newValue ) )
-		}
-		else {
-			return setState( 'data', data )
-		}
+		return undefinedToDefaultValue(value, fieldValidation.dataType)
 	}
 
 	/**
 	 * PUBLIC SETTER & GETTER for a specific field value.
 	 *
-	 * @param {string} name     Field-name or alias-name
-	 * @param {Object} [opts]   Options
+	 * @param {string} name    Field-name or alias-name
+	 * @param {Object} [opts]    Options
 	 * @param {*} [value]
 	 */
-	function fieldValue( name, value, opts = { cleanValue: false } ) {
-		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
-		const fieldConfig = config.fields[fieldName] || {}
-		const fieldValidation = fieldConfig.validation || {}
-		const isData = fieldConfig.isData !== false
+	function publicFieldValue( name, value, opts = { cleanValue: false, validate: false } ) {
+		const fieldName = verifyFieldName(name)
 
-		// prettier-ignore
-		// SETTER - 0 and empty strings ARE 'values' to set
+		// SETTER - Note that 0 and empty strings ARE 'values' to set
 		if (value !== undefined) {
-			// Clean value here, if requested
-			const val = opts.cleanValue
-				? cleanFieldValue( value, fieldConfig )
-				: value
-
-			return isData
-				? setFieldValue( fieldName, val )
-				: formState( fieldName, val )
+			// If opts.validate, use 'validate' event to force validation;
+			//	otherwise consider this a standard 'change' event.
+			const event = opts.validate ? 'validate' : 'change'
+			setFieldValue( name, value, event )
 		}
 		// GETTER
 		else {
-			const path = isData ? `data/${fieldName}` : fieldName
-			let curValue = getState( path, { clone: true } )
-			return undefinedToDefaultValue( curValue, fieldValidation.dataType )
+			return getFieldValue(fieldName, opts)
 		}
 	}
 
-	function formData( data, opts ) {
-		return _.isPlainObject( data ) ? setData( data ) : getAllData( opts )
+
+	/**
+	 * PUBLIC SETTER/GETTER for form data
+	 *
+	 * @param {Object} [data]    Data to 'set' OR 'get' options
+	 */
+	function formData( data ) {
+		// There is only a single possible 'option', so check for it
+		return isPlainObject(data) && isUndefined(data.cleanData)
+			? setFormData(data)
+			: getFormData(data)
 	}
 
-	function setData( data ) {
-		if (_.isPlainObject( data ) && !_.isEmpty( data )) {
-			const newState = getState( '', { clone: true } )
-
-			_.forOwn( data, ( value, name ) => {
-				const fieldName = verifyFieldName( name )
+	/**
+	 * @param {Object} data        Data to be set
+	 */
+	function setFormData( data ) {
+		if (isPlainObject(data) && !isEmpty(data)) {
+			forOwn(data, ( value, name ) => {
+				const fieldName = verifyFieldName(name)
 				const field = config.fields[fieldName]
 
-				// prettier-ignore
 				if (!field || field.isData !== false) {
-					setFieldValue( fieldName, value, newState )
+					setFieldValue(fieldName, value)
 				}
 				else {
-					// noinspection JSIgnoredPromiseFromCall
-					formState( fieldName, value, newState )
+					setFormState(fieldName, value)
 				}
-			} )
+			})
 
-			// noinspection JSIgnoredPromiseFromCall
-			setState( '', newState )
+			triggerComponentUpdate()
 		}
 	}
 
 	/**
-	 * GETTER for the current form data values, stored in state.form.data
-	 *
-	 * @param {Object} [opts]    Options
-	 * @returns {Object} Data in JSON format ready to POST to server
+	 * @param {Object} [opts]    Options (cleanData)
+	 * @returns {Object}        Data in JSON format, ready to POST to server
 	 */
-	function getAllData( opts = { cleanData: true } ) {
-		let data = getState( 'data' )
+	function getFormData( opts = { cleanData: true } ) {
+		// Clone data so we don't mutate original object
+		let data = clone(stateOfData)
 
 		// Handle option to bypass automatic data-cleaning
 		if (opts.cleanData) {
-			// Clone data so we don't mutate original
-			data = cleanData( data, { clone: true } )
+			data = cleanData(data)
 		}
 
 		return data
 	}
+
 
 	/**
 	 * Clean field-value as specified in field options.
@@ -729,82 +571,80 @@ function FormManager( Container, options = {}, extraData ) {
 	 * @param {Object} [opts]            Options
 	 */
 	function cleanData( originalData, opts = { clone: false } ) {
-		const data = opts.clone ? _.clone( originalData ) : originalData
+		const data = opts.clone ? clone(originalData) : originalData
 
-		_.forOwn( data, ( value, name ) => {
+		forOwn(data, ( value, name ) => {
 			if (!value) return
 
-			// Currently only strings are cleaned
-			if (_.isString( value )) {
-				const fieldConfig = config.fields[name] || {}
-				data[name] = cleanFieldValue( value, fieldConfig )
-			}
-		} )
+			const fieldConfig = config.fields[name] || {}
+			data[name] = cleanFieldValue(value, fieldConfig)
+		})
 
 		return data
 	}
 
 	function cleanFieldValue( value, fieldConfig ) {
-		if (!value) return value
-		let val = value
+		// Only string values are cleaned
+		if (!value || !isString(value)) return value
 
-		// Currently only strings are cleaned
-		if (_.isString( value )) {
-			// Text and space cleaning are defaults
-			if (fieldConfig.trimText !== false) val = val.trim()
-			if (fieldConfig.fixSpaces !== false) {
-				val = val.replace(
-					/\s+/g,
-					' ',
-				)
-			}
-			if (fieldConfig.fixCase) val = formatTextCase( val, true )
-		}
+		const trimText = withFieldDefaults(fieldConfig, 'trimText')
+		const fixMultiSpaces = withFieldDefaults(fieldConfig, 'fixMultiSpaces')
+		const monoCaseToProper = withFieldDefaults(fieldConfig, 'monoCaseToProper')
+
+		let val = value
+		if (trimText) val = val.trim()
+		if (fixMultiSpaces) val = val.replace(/\s+/g, ' ')
+		if (monoCaseToProper) val = format.properCase(val, true)
 
 		return val
 	}
 
-	function getAllFormErrors( opts = { asArray: true } ) {
+	function coerceDataType( value, dataType ) {
+		// Coerce value if a dataType is specified
+		if (dataType && config.converters[dataType]) {
+			return config.converters[dataType](value)
+		}
+		return value
+	}
+
+
+	function getFormErrors( opts = { asArray: true } ) {
 		// Iterate everything in state.form.errors to create list of errors
 		// Error data is in a hash so can include fieldNames
-		const errorData = getState( 'errors' )
 		const arrErrors = []
 
-		_.forOwn( errorData, ( errors, fieldName ) => {
-			if (errors && !_.isEmpty( errors )) {
+		forOwn(stateOfErrors, ( errors, fieldName ) => {
+			if (errors && !isEmpty(errors)) {
 				// get field-config so we can add displayName to data
 				const fieldConfig = config.fields[fieldName]
 
-				arrErrors.push( {
+				arrErrors.push({
 					name: fieldName,
 					alias: fieldConfig.aliasName || fieldName,
 					display: fieldConfig.displayName, // undefined if not set
-					errors: utils.itemToArray( errors ),
-				} )
+					errors: utils.itemToArray(errors)
+				})
 			}
-		} )
+		})
 
 		// NOTE: Is an empty array if there are no field-error
 		// Auto-join errors into a string if option passed
-		return opts.asArray === false ? arrErrors.join( '\n' ) : arrErrors
+		return opts.asArray === false ? arrErrors.join('\n') : arrErrors
 	}
 
 	/**
 	 * Helper for error methods to keep things DRY
 	 */
 	function getFieldErrorsHash( fieldName ) {
-		// DO NOT use getState(`errors/${fieldName}`) - see NOTE below
-		const errors = getState( 'errors' )
-
 		// NOTE that we do NOT support nested structure for errors, so...
 		// A 'who/gender' field stores errors at: form.errors['who/gender']
-		// However the field data is NESTED at:   form.data.who.gender
-		let fieldErrors = errors[fieldName] || {}
+		// However the field data is NESTED at:	form.data.who.gender
+		let fieldErrors = stateOfErrors[fieldName] || {}
 
 		// If field-errors is a string, normalize it to a custom error
-		if (_.isString( fieldErrors )) {
+		if (isString(fieldErrors)) {
 			fieldErrors = {
-				custom: errors,
+				custom: fieldErrors
 			}
 		}
 
@@ -816,45 +656,54 @@ function FormManager( Container, options = {}, extraData ) {
 	 * Errors are stored in a hash, which we convert to a simple array.
 	 * Calling code can output message(s) using join() or iterate array.
 	 *
-	 * @param {string} name     Field-name or alias-name
-	 * @param {Object} opts     Options for return value
+	 * @param {string} name        Field-name or alias-name
+	 * @param {Object} opts        Options for return value
 	 * @returns {(string|Array)}
 	 */
-	function getErrors( name, opts = { asArray: false } ) {
+	function getFieldErrors( name, opts = { asArray: false } ) {
 		if (!name) {
-			return getAllFormErrors()
+			return getFormErrors()
 		}
 
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
-		const errors = getFieldErrorsHash( fieldName )
+		const fieldName = verifyFieldName(name)
+		const fieldConfig = config.fields[fieldName]
+		const errors = getFieldErrorsHash(fieldName)
 
 		// Iterate through all error-keys and combine errors into an array
-		const arrErrors = utils.itemToArray( errors )
+		const arrErrors = utils.itemToArray(errors)
 
-		// auto-join errors into a string if related config option is set
-		return config.returnErrorsAsString && !opts.asArray
-			? arrErrors.join( '\n' )
+		let returnAsString = withFieldDefaults(fieldConfig, 'returnErrorsAsString')
+		// If a specific option was passed, it overrides field-configuration
+		if (isBoolean(opts.asArray)) {
+			returnAsString = !opts.asArray
+		}
+
+		// Auto-join errors into a string if related config option is set,
+		return returnAsString
+			? arrErrors.join('\n')
 			: arrErrors
 	}
 
 	/**
 	 * PUBLIC SETTER for ONE field error, by fieldName
 	 *
-	 * @param {string} name     Field-name or alias-name
-	 * @param {string} type     Validation type, eg: 'required', 'custom'
-	 * @param {string} message  Error-message text for this type
-	 * @param {Object} opts     Merge options
-	 * @returns {Promise}       Promise returned by setState
+	 * @param {string} name        Field-name or alias-name
+	 * @param {string} type        Validation type, eg: 'required', 'custom'
+	 * @param {string} message    Error-message text for this type
+	 * @param {Object} opts        Merge options
 	 */
 	function setFieldError( name, type, message, opts = { merge: true } ) {
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
-		const curErrMsg = getState( `errors/${fieldName}/${type}` )
+		const fieldName = verifyFieldName(name)
+		const curErrMsg = utils.getObjectValue(
+			stateOfErrors,
+			`${fieldName}/${type}`
+		)
 
 		// Skip update if this error-message is already set
 		if (curErrMsg !== message) {
-			return setFieldErrors( name, { [type]: message || '' }, opts )
+			setFieldErrors(name, { [type]: message || '' }, opts)
 		}
 	}
 
@@ -863,224 +712,260 @@ function FormManager( Container, options = {}, extraData ) {
 	 * This hash is a single-level, unlike data, eg:form.errors.'key/subkey'.
 	 * If errors is falsey or an empty array, current errors will be cleared.
 	 *
-	 * @param {string} name         Name or aliasName of field
-	 * @param {(Object|Array|string|boolean|null)} errors
-	 * @param {Object} opts         Merge options
+	 * @param {string} name                    Name or aliasName of field
+	 * @param {(Object|Array|string|boolean|null)} [errors]
+	 * @param {Object} opts                    Merge options
 	 */
 	function setFieldErrors( name, errors, opts = { merge: false } ) {
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
-
-		// Get current state.form.errors
-		const errorsState = getState( 'errors', { clone: true } )
+		const fieldName = verifyFieldName(name)
 
 		// Any falsey value means clear all field errors
-		// prettier-ignore
 		if (!errors) {
-			delete errorsState[fieldName]
+			delete stateOfErrors[fieldName]
 		}
 		else {
 			// TODO: Verify this is correct handling for non-object 'errors'
 			// Normalize custom error to a hash
-			const newErrors = !_.isPlainObject( errors )
+			const newErrors = !isPlainObject(errors)
 				? { custom: errors }
 				: errors
 
 			// MERGE FIELD ERRORS
 			if (opts.merge) {
-				// Clone errors.fieldName branch
-				const fieldErrors = _.clone( errorsState[fieldName] || {} )
+				const fieldErrors = stateOfErrors[fieldName] || {}
 
-				// Shallow-merge new error(s) into existing errors hash
-				_.assign( fieldErrors, newErrors )
+				// Shallow-merge new error(s) into errors hash
+				assign(fieldErrors, newErrors)
 
-				// Attach NEW fieldErrors object to errorState object
-				errorsState[fieldName] = fieldErrors
+				// Set NEW fieldErrors object
+				stateOfErrors[fieldName] = fieldErrors
 			}
+			// REPLACE FIELD ERRORS - clone to break byRef connection
 			else {
-				// REPLACE FIELD ERRORS - clone errors to break byRef
-				// connections
-				errorsState[fieldName] = newErrors ? _.clone( newErrors ) : {}
+				stateOfErrors[fieldName] = clone(newErrors)
 			}
 		}
-
-		return setState( 'errors', errorsState )
 	}
 
 	/**
 	 * PUBLIC SETTER for field errors - remove errors only
 	 *
-	 * @param {(Array|string)} name     Field-name(s) or alias-name(s)
+	 * @param {(Array|string)} [name]        Field-name(s) and/or alias-name(s)
 	 */
 	function clearFieldErrors( name ) {
 		if (!name) {
-			clearAllFieldErrors()
+			stateOfErrors = {}
 		}
-		else if (_.isArray( name )) {
-			// noinspection JSUnresolvedFunction
-			name.map( setFieldErrors )
+		else if (isArray(name)) {
+			map(name, setFieldErrors)
 		}
 		else {
-			// noinspection JSIgnoredPromiseFromCall
-			setFieldErrors( name, null )
+			setFieldErrors(name)
 		}
-	}
-
-	/**
-	 * SETTER for field errors - clears all
-	 * IMPORTANT: Must 'empty' existing form.errors and reuse object;
-	 *    otherwise certain sequences of setState will keep the OLD object!
-	 */
-	function clearAllFieldErrors() {
-		const errors = getState( 'errors' )
-		for (const key in errors) {
-			// noinspection JSUnfilteredForInLoop
-			delete errors[key]
-		}
-		// noinspection JSIgnoredPromiseFromCall
-		setState( 'errors', errors )
 	}
 
 	/**
 	 * PUBLIC GETTER to check if a specific field has any errors
 	 *
-	 * @param {string} name     Field-name or alias-name
+	 * @param {string} name        Field-name or alias-name
 	 * @returns {boolean}
 	 */
 	function doesItemHaveErrors( name ) {
 		if (name) {
-			return getErrors( name, { asArray: true } ).length > 0
+			const fieldName = verifyFieldName(name)
+			const fieldErrors = stateOfErrors[fieldName]
+			return !!fieldErrors && !isEmpty(fieldErrors)
 		}
 		else {
-			return !_.isEmpty( getState( 'errors' ) )
+			return !isEmpty(stateOfErrors)
 		}
 	}
 
+
 	/**
-	 * @param {string} name     Field-name or alias-name
-	 * @param {*} value
-	 * @param {string} [event]  Name of event that triggered this, eg: 'change'
-	 * @returns {Promise}
+	 * PUBLIC SETTER for changing field(s) validation options easily
+	 *
+	 * @param {(Array|string)} name        Fieldname (or array of), for mass
+	 *     update
+	 * @param {Object} validationConfig New Validation setting(s)
+	 * @param {Object} [opts]            Option for merging with existing
+	 *     config
+	 * @returns {*}                        Validation-config if for 1 field
+	 *     only
 	 */
-	function validateField( name, value, event ) {
-		if (!name || _.isObjectLike( name )) {
-			return validateAllFields( name )
+	function setFieldValidation(
+		name,
+		validationConfig,
+		opts = { merge: false }
+	) {
+		// Allow passing an array of fieldnames to set them all the same
+		// This is useful for setting multiple fields required/not-required
+		if (isArray(name)) {
+			return name.map(fieldName =>
+				setFieldValidation(fieldName, validationConfig, opts)
+			)
 		}
 
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
+		const fieldName = verifyFieldName(name)
+		const field = config.fields[fieldName] || {}
+
+		// ensure field config exists
+		if (!field) return
+
+		if (opts.merge && field.validation) {
+			merge(field.validation, validationConfig)
+		}
+		else {
+			field.validation = clone(validationConfig)
+		}
+
+		return field.validation
+	}
+
+	/**
+	 * PUBLIC SETTER for dynamically setting 'required' flag for validation.
+	 * This may be a common need for multi-part forms or conditional fields.
+	 *
+	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
+	 * @param {boolean} require        Is this field(s) required?
+	 * @returns {*}                    Returns new validation if a single name
+	 */
+	function setFieldIsRequired( name, require = true ) {
+		return setFieldValidation(
+			name,
+			{ required: !!require },
+			{ merge: true }
+		)
+	}
+
+
+	/**
+	 * @param {string} name        Field-name or alias-name
+	 * @param {*} value            Field value to validate
+	 * @param {string} [event]    Name of event that triggered this, eg:
+	 *     'change'
+	 * @returns {Promise}        Validation can be async so returns a promise
+	 */
+	function validateField( name, value, event ) {
+		if (!name || isObjectLike(name)) {
+			return validateAllFields(name)
+		}
+
+		// field MAY have an aliasName
+		const fieldName = verifyFieldName(name)
 		const fieldConfig = config.fields[fieldName] || {}
 
+		const forceValidation = event === 'validate'
+		const suffixes = {
+			blur: 'OnBlur',
+			change: 'OnChange'
+		}
+
 		// If an event was passed, check to see if we should validate or not.
-		// If not, then abort validation
-		if (event) {
-			const hasErrors = doesItemHaveErrors( fieldName )
+		// If not, then abort without doing validation
+		if (event && !forceValidation) {
+			const hasErrors = doesItemHaveErrors(fieldName)
+			const prefix = hasErrors ? 'revalidate' : 'validate'
+			const suffix = suffixes[event]
+			const validate = withFieldDefaults(fieldConfig, `${prefix}${suffix}`)
 
-			// validation options at field-level override those at form-level
-			const autoValidate =
-				fieldConfig.autoValidate ||
-				(fieldConfig.autoValidate !== false && config.autoValidate)
-
-			const autoRevalidate =
-				fieldConfig.autoRevalidate ||
-				(fieldConfig.autoRevalidate !== false && config.autoRevalidate)
-
-			if (
-				(hasErrors && autoRevalidate !== event) ||
-				(!hasErrors && autoValidate !== event)
-			) {
-				return Promise.resolve()
+			if (!validate) {
+				// ABORT by returning a resolved promise
+				return Promise.resolve(!hasErrors)
 			}
 		}
 
-		return validation.field( {
-			fieldName,
-			value,
-			config,
-			setState,
-			getState,
-			getAllData,
-			thisInstance,
-		} )
+		// Return the validation promise - will return true if is-valid value
+		return performFieldValidation({
+			fieldName,		// Field to validate
+			value,			// Value to validate
+			config,			// Read config.fields[fieldName] & config.validators
+			stateOfErrors,	// Hash of existing field errors
+			instanceAPI,	// Passed to custom validation functions
+			triggerComponentUpdate // Will be called if anything changes
+		})
 	}
 
 	function validateAllFields( opts ) {
 		const fields = config.fields
-		const data = getState( 'data' )
-		const errors = getState( 'errors', { clone: true } )
 
 		let only, skip
 
-		if (opts && _.isPlainObject( opts )) {
-			only = arrayToHash( opts.only, true )
-			skip = arrayToHash( opts.ignore, true )
+		if (opts && isPlainObject(opts)) {
+			only = arrayToHash(opts.only, true)
+			skip = arrayToHash(opts.ignore, true)
 		}
-		else if (opts && _.isArray( opts )) {
-			only = arrayToHash( opts, true )
+		else if (opts && isArray(opts)) {
+			only = arrayToHash(opts, true)
 		}
 
-		_.forOwn( fields, ( field, fieldName ) => {
+		const fieldValidations = []
+
+		forOwn(fields, ( field, fieldName ) => {
 			// Skip fields if specified in opts
 			if (only && !only[fieldName]) return
 			if (skip && skip[fieldName]) return
 			// Skip fields that are really 'form.state'; those don't validate
 			if (field.isData === false) return
 
-			validation.field( {
-				fieldName: fieldName,
-				value: data[fieldName],
-				config,
-				getState: () => errors, // pass accumulated errors object
-				// setState, DO NOT pass setState because we are accumulating
-				getAllData,
-				thisInstance,
-			} )
-		} )
+			fieldValidations.push(
+				performFieldValidation({
+					fieldName,		// Field to validate
+					value: utils.getObjectValue(stateOfData, fieldName),
+					config,			// Read config.fields[fieldName] & config.validators
+					stateOfErrors,	// Hash of existing field errors
+					instanceAPI,	// Passed to custom validation functions
+					triggerComponentUpdate // Will be called if anything changes
+				})
+			)
+		})
 
-		const allFieldsValid = _.isEmpty( errors )
-
-		// Return Promise from setState so we wait until state updates
-		return (
-			setState( 'errors', errors )
-			// return true if NO errors; false otherwise
-			.then( () => allFieldsValid )
-		)
+		// WAIT for all validations to complete, then resolve
+		return Promise.all(fieldValidations)
+			.then(() => {
+				// Return Promise with true if NO errors; false otherwise
+				const allFieldsErrorFree = isEmpty(stateOfErrors)
+				return Promise.resolve(allFieldsErrorFree)
+			})
 	}
 
+
 	/**
-	 * Helper for components to integrate with FormManager.
+	 * PUBLIC HELPER for components to integrate with FormManager.
 	 *
-	 * @param {string} name     Field-name or alias-name
+	 * @param {string} name    Field-name or alias-name
 	 * @returns {Object}        Props for components like a TextField
 	 */
 	function getErrorProps( name ) {
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
-		const errorMessage = getErrors( fieldName )
+		const fieldName = verifyFieldName(name)
+		const errorMessage = getFieldErrors(fieldName)
 
 		return {
 			error: errorMessage.length > 0,
 			helperText: errorMessage,
 			FormHelperTextProps: {
-				className: 'hide-when-empty',
-			},
+				className: 'hide-when-empty'
+			}
 		}
 	}
 
 	/**
-	 * Helper for components to integrate with FormManager.
+	 * PUBLIC HELPER for components to integrate with FormManager.
 	 *
-	 * @param {string} name     Field-name or alias-name
+	 * @param {string} name    Field-name or alias-name
 	 * @param {Object} [opts]    Options, like non-text field details
 	 * @returns {*}
 	 */
 	function getDataProps( name, opts = { checkbox: false, radio: false } ) {
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName( name )
+		const fieldName = verifyFieldName(name)
 		const fieldConfig = config.fields[fieldName] || {}
 		const fieldValidation = fieldConfig.validation || {}
 		const dataType = fieldValidation.dataType
-		const value = fieldValue( fieldName )
+		const value = getFieldValue(fieldName)
 
 		// noinspection JSUnusedGlobalSymbols
 		const props = {
@@ -1088,7 +973,7 @@ function FormManager( Container, options = {}, extraData ) {
 			'aria-label': fieldName, // default, can override in view
 			onChange: onFieldChange,
 			onFocus: onFieldFocus,
-			onBlur: onFieldBlur,
+			onBlur: onFieldBlur
 		}
 
 		if (fieldValidation.required) {
@@ -1098,92 +983,69 @@ function FormManager( Container, options = {}, extraData ) {
 		// prettier-ignore
 		if (fieldConfig.disabled) {
 			props.InputProps = {
-				disabled: true,
+				disabled: true
 			}
 		}
 		else if (fieldConfig.readOnly) {
 			props.InputProps = {
-				readOnly: true,
+				readOnly: true
 			}
 		}
 
 		if (opts.checkbox) {
 			// Checkboxes can only be true or false
-			props.checked = valueToBoolean( value )
+			props.checked = config.converters.boolean(value)
 		}
 		else if (dataType === 'boolean') {
 			// Allow NULL for other booleans; means no value selected
-			props.value = _.isNil( value ) ? null : valueToBoolean( value )
+			props.value = config.converters.boolean(value)
 				? '1'
 				: '0'
 		}
 		// else if (opts.radio) {} // Any radio value can be valid
 		else if (value && dataType === 'date') {
 			// Transform dates to input.type="date" format
-			props.value = formatDate( value, 'date-input-field' )
+			props.value = format.date(value, 'date-input-field')
 		}
 		else {
-			props.value = undefinedToDefaultValue( value )
+			props.value = undefinedToDefaultValue(value)
 		}
 
 		return props
 	}
 
+
 	/**
-	 * @param {Object} e     Event object
+	 * PUBLIC HELPER for components to integrate with FormManager.
+	 *
+	 * @param {string} name    Field-name or alias-name
+	 * @param {Object} [opts]  Options, like non-text field details
+	 * @returns {*}
+	 */
+	function getAllProps( name, opts ) {
+		return {
+			...getDataProps(name, opts),
+			...getErrorProps(name, opts)
+		}
+	}
+
+
+	/**
+	 * @param {Object} e    Event object
 	 */
 	function onFieldChange( e ) {
 		const field = e.target
-		const inputType = field.type || ''
+		const value = /checkbox/.test(field.type || '')
+			? field.checked
+			: field.value
 
-		const fieldName = verifyFieldName( field.name )
-		const fieldConfig = config.fields[fieldName] || {}
-		const fieldValidation = fieldConfig.validation || {}
-		const dataType = fieldValidation.dataType || 'text'
-
-		let value = /checkbox/.test( inputType ) ? field.checked : field.value
-
-		// prettier-ignore
-		if (dataType === 'text' || inputType === 'text') {
-			// Text-Inputs MUST have string values, even if string is numbers
-			value = value || '' // avoid undefined or null values
-		}
-		// Coerce string-value to correct dataType
-		else if (_.isString( value )) {
-			if (dataType === 'date') {
-				// Leave dates as strings
-			}
-			else if (dataType === 'integer') {
-				value = parseInt( value, 10 )
-				if (isNaN( value )) value = null
-			}
-			else if (dataType === 'number') {
-				value = Number( value )
-				if (isNaN( value )) value = null
-			}
-			else if (dataType === 'boolean') {
-				const isFalsey = !value || reFalseyString.test( value )
-				value = !isFalsey
-			}
-		}
-
-		return setFieldValue( fieldName, value, null, 'change' )
-	}
-
-	function runFieldChangeCallback( fieldName, value ) {
-		const fieldConfig = config.fields[fieldName] || {}
-		const onChange = fieldConfig.onChange
-
-		if (_.isFunction( onChange )) {
-			onChange( fieldName, value, thisInstance )
-		}
-
-		return Promise.resolve()
+		// We will fire onChange callbacks AFTER updating field-value
+		setFieldValue(field.name, value, 'change')
 	}
 
 	/**
-	 * @TODO This method requires a closure to work on most components
-	 * // @param {Object} e     Event object
+	 * @TODO This requires a closure or currying to work on most components
+	 * // @param {Object} e    Event object
 	 */
 	function onFieldFocus() {
 		// NOTE: Select controls do not return a target we can use
@@ -1191,8 +1053,8 @@ function FormManager( Container, options = {}, extraData ) {
 	}
 
 	/**
-	 * @TODO This method requires a closure to work on most components
-	 * @param {Object} e     Event object
+	 * @TODO This requires a closure or currying to work on most components
+	 * @param {Object} e    Event object
 	 */
 	function onFieldBlur( e ) {
 		// NOTE: Select controls do not return a target we can use
@@ -1201,48 +1063,42 @@ function FormManager( Container, options = {}, extraData ) {
 
 		let { name, value } = field
 
-		// prettier-ignore
-		// noinspection JSIgnoredPromiseFromCall
-		validateField( name, value, 'blur' )
-		.then( () => {
+		validateField(name, value, 'blur')
+		.then(() => {
 			// Note: This will run even if validation did not run
 			const fieldConfig = config.fields[name] || {}
-			const hasErrors = doesItemHaveErrors( name )
+			const hasErrors = doesItemHaveErrors(name)
+			const cleanDataOnBlur = withFieldDefaults(fieldConfig, 'cleanDataOnBlur')
 
 			// Skip data-cleaning if field currently has errors
-			if (!hasErrors && fieldConfig.cleanDataOnBlur) {
-				const newValue = cleanFieldValue( value, fieldConfig )
+			if (!hasErrors && cleanDataOnBlur) {
+				const newValue = cleanFieldValue(value, fieldConfig)
 				if (newValue !== value) {
-					// prettier=ignore
-					fieldValue( name, newValue )
-					.then( () => {
-						runFieldBlurCallback( name, newValue )
-					} )
-					return
+					// Pass 'change' event so will fire event with new value
+					setFieldValue(name, newValue, 'change' )
 				}
 			}
 
-			runFieldBlurCallback( name, value )
-		} )
+			fireEventCallback(fieldConfig.onBlur, value, name)
+			fireEventCallback(config.onBlur, value, name)
+		})
 	}
 
-	function runFieldBlurCallback( fieldName, value ) {
-		const fieldConfig = config.fields[fieldName] || {}
-		const onBlur = fieldConfig.onBlur
-
-		if (_.isFunction( onBlur )) {
-			onBlur( fieldName, value, thisInstance )
+	function fireEventCallback( func, value, fieldName ) {
+		if (isFunction(func)) {
+			func(value, fieldName, instanceAPI)
 		}
 	}
 
+
 	/**
 	 * Internal helper to convert aliasName to fieldName
-	 * @param name          The name OR aliasName of a field
+	 * @param name            The name OR aliasName of a field
 	 * @returns {string}    If alias found then mapped fieldName, else name
 	 */
 	function verifyFieldName( name ) {
 		if (!name) return name
-		if (_.isArray( name )) return name.map( verifyFieldName )
+		if (isArray(name)) return name.map(verifyFieldName)
 
 		if (config.fields[name]) return name
 
@@ -1253,8 +1109,9 @@ function FormManager( Container, options = {}, extraData ) {
 		return name
 	}
 
+
 	function undefinedToDefaultValue( value, dataType ) {
-		if (!_.isUndefined( value )) return value
+		if (!isUndefined(value)) return value
 
 		switch (dataType) {
 			case 'boolean':
@@ -1264,41 +1121,31 @@ function FormManager( Container, options = {}, extraData ) {
 		}
 	}
 
-	function valueToBoolean( value ) {
-		if (_.isBoolean( value )) return value
-
-		// Any non-zero number is true
-		if (_.isNumber( value )) return value !== 0
-
-		// Any string other than these becomes true
-		if (_.isString( value )) return !/^(|0|false|no)$/.test( value )
-
-		// DO NOT test for NULL or undefined - those mean 'unspecified'
-	}
-
 	/**
 	 * Convert array to hash with 'true' values for easier value check
 	 */
 	function arrayToHash( arr, isFieldNames = false ) {
-		if (!_.isArray( arr )) return arr
+		if (!isArray(arr)) return arr
 
 		const hash = {}
 		for (let value of arr) {
 			// Handle alias fieldNames in array
-			if (isFieldNames) value = verifyFieldName( value )
+			if (isFieldNames) value = verifyFieldName(value)
 			hash[value] = true
 		}
 		return hash
 	}
 
-	/**
-	 * Convert a fieldName into an array of keys - may only be one key.
-	 *
-	 * @param {string} path
-	 */
-	function pathToKeysArray( path ) {
-		// Slashes or dots in fieldName indicate data is stored in a subkey
-		return path.replace( reAllPeriods, '/' ).split( '/' )
+
+	function withFieldDefaults(fieldConfig, key) {
+		// If field specifies a value, use it!
+		const fieldConfigValue = (fieldConfig || {})[key]
+		if (!isNil(fieldConfigValue)) return fieldConfigValue
+
+		const defaultValue = config.fieldDefaults[key]
+		if (!isNil(defaultValue)) return defaultValue
+
+		return undefined
 	}
 }
 

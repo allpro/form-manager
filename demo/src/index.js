@@ -1,129 +1,71 @@
 import React, { Component, Fragment } from 'react'
 import { render } from 'react-dom'
-import _ from 'lodash'
+import PropTypes from 'prop-types'
 
+import AppBar from '@material-ui/core/AppBar'
+import Tabs from '@material-ui/core/Tabs'
+import Tab from '@material-ui/core/Tab'
 import Typography from '@material-ui/core/Typography'
-import Card from '@material-ui/core/Card'
-import CardContent from '@material-ui/core/CardContent'
 
-// This demo also includes test output using BOTH dev-helper tools
-import FormManager, { FieldsTestOutput, logFormData } from '../../src'
-import FormSection from './form'
-import sampleData from './data'
+import LongForm from './LongForm'
+import LogFormData from './LogFormData'
 
-// Demo of category/subcategory synchronization
-let selectedCategory = sampleData.categories[0].value
-function handleCategoryChange( field, category, formManager ) {
-	if (category !== selectedCategory) {
-		selectedCategory = category
-		const subcategories = sampleData.subcategories[category] || []
+const { array, element, oneOfType } = PropTypes
 
-		// Set the correct subcategories list, or a blank list
-		formManager.state( 'subcategoryList', subcategories )
-		// Always clear the subcategory value when category changes
-		formManager.value( 'subcategory', '' )
+function TabContainer( props ) {
+	return (
+		<div style={{ padding: '0', border: '1px solid rgba(0,0,0,0.14)' }}>
+			{props.children}
+		</div>
+	)
+}
+TabContainer.propTypes = {
+	children: oneOfType([array, element])
+}
+
+
+class FormManagerDemos extends Component {
+	state = {
+		currentTab: 0,
 	}
-}
 
-
-const formManagerConfig = {
-	autoValidate: 'blur', // [change|blur|falsey]
-	autoRevalidate: 'change', // [change|blur|falsey]
-
-	fields: {
-		category: {
-			displayName: 'Category',
-			onChange: handleCategoryChange,
-			autoValidate: 'change', // on-blur doesn't work for Select, yet
-			validation: {
-				required: true,
-			},
-		},
-		subcategory: {
-			displayName: 'Subcategory',
-			autoValidate: 'change', // on-blur doesn't work for Select, yet
-			validation: {
-				required: true,
-			},
-		},
-		'who/gender': {
-			displayName: 'Gender',
-			aliasName: 'gender',
-			display: 'Gender',
-			autoValidate: 'change', // [change|blur|submit]
-			validation: {
-				required: true,
-			},
-		},
-		message: {
-			displayName: 'Details',
-			validation: {
-				required: true,
-				minLength: 10,
-			},
-		},
-	},
-	/* ALTERNATE FIELD-CONFIG FORMAT - ARRAY
-	 fields: [
-	 {
-	 name:       'who/gender',
-	 alias:      'gender',
-	 display:    'Gender',
-	 autoValidate: 'change',   // [change|blur|submit]
-	 validation: {
-	 required: true,
-	 }
-	 },
-	 {
-	 name:       'message',
-	 display:    'Details',
-	 },
-	 {
-	 name:       'age',
-	 validation: {
-	 required:       true,
-	 dataType:       'integer',
-	 numberRange:    [ 18, 120 ],
-	 }
-	 },
-	 ],
-	 */
-	initialData: _.cloneDeep( sampleData.formData ),
-	initialErrors: _.cloneDeep( sampleData.formErrors ),
-	initialState: {
-		categoryList: sampleData.categories,
-		subcategoryList: sampleData.subcategories[selectedCategory],
-	},
-}
-
-
-export class Demo extends Component {
-	constructor( props ) {
-		super(props)
-
-		this.form = FormManager( this, formManagerConfig )
+	onChangeTab = ( event, currentTab ) => {
+		this.setState( { currentTab } ) // eslint-disable-line
 	}
 
 	render() {
-		logFormData(this.form, 'Form Manager Data')
+		const { currentTab } = this.state
 
 		return (
 			<Fragment>
-				<Card style={{ margin: '24px' }}>
-					<CardContent>
-						<Typography variant="display1">
-							React FormManager Demo
-						</Typography>
+				<Typography variant="headline" style={{ margin: '10px' }}>
+					Form Manager Examples
+				</Typography>
 
-						<FormSection form={this.form}/>
-					</CardContent>
-				</Card>
+				<AppBar position="static" color="default">
+					<Tabs
+						value={currentTab}
+						onChange={this.onChangeTab}
+						indicatorColor="primary"
+						textColor="primary"
+						variant="scrollable"
+						scrollButtons="auto"
+					>
+						<Tab label="MUI Form"/>
+						<Tab label="Fields Test Output"/>
+					</Tabs>
+				</AppBar>
 
-				<FieldsTestOutput form={this.form}/>
+				{currentTab === 0 && (
+					<TabContainer><LongForm /></TabContainer>
+				)}
+				{currentTab === 1 && (
+					<TabContainer><LogFormData /></TabContainer>
+				)}
 			</Fragment>
 		)
 	}
 }
 
 
-render( <Demo/>, document.querySelector( '#demo' ) )
+render( <FormManagerDemos/>, document.querySelector( '#demo' ) )

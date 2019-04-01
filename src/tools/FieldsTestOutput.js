@@ -1,23 +1,26 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import isDate from 'lodash/isDate'
 
-import Typography from '@material-ui/core/Typography'
+import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
+import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
 import Checkbox from '@material-ui/core/Checkbox'
 import FormControl from '@material-ui/core/FormControl'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormHelperText from '@material-ui/core/FormHelperText'
 
-import { formatDate } from '../formatters'
+import format from '../formatters'
+import convertTo from '../converters'
 
-// THESE ARE JUST DEMO HELPERS - not needed in real form
+// THESE ARE JUST DEMO HELPERS - not needed in a real form
 const getFieldValue = ( field, form ) => {
 	const dataType = (field.validation || {}).dataType || 'text'
 	const value = form.value( field.name )
 
 	if (dataType === 'date' && value) {
-		return formatDate( value, 'date-input-field' )
+		return format.date( value, 'date-input-field' )
 	}
 	else if (dataType === 'boolean') {
 		// For boolean values, it is the 'checked' attribute this is used for
@@ -34,17 +37,30 @@ const getFieldValue = ( field, form ) => {
 
 const getFieldName = field => field.aliasName || field.name
 
-const getDisplayName = field =>
+const getDisplayName = field => (
 	field.displayName || field.aliasName || field.name
+)
 
 const getInputType = field => {
-	switch ((field.validation || {}).dataType) {
-		case 'date':
-			return 'date'
-		case 'boolean':
-			return 'checkbox'
-		default:
-			return 'text'
+	const v = field.validation || {}
+	const type = v.dataType
+
+	if (v.number || v.integer || /(number|integer)/.test(type)) return 'number'
+	if (v.date || /date/.test(type)) return 'date'
+	if (v.email) return 'email'
+	if (type === 'boolean') return 'checkbox'
+	return 'text'
+}
+
+
+const helperTextStyles = {
+	root: {
+		whiteSpace: 'pre-line', // Puts each error-message on its own line
+		lineHeight: '1.3em',
+		display: 'none' // Hide blocks when not in error-state
+	},
+	error: {
+		display: 'block',
 	}
 }
 
@@ -69,7 +85,7 @@ class FieldsTestOutput extends React.Component {
 
 	render() {
 		const { props } = this
-		const { form } = props
+		const { form, classes } = props
 		const formFields = form.fieldConfig()
 
 		// Transform hash to array for easy looping below
@@ -84,6 +100,9 @@ class FieldsTestOutput extends React.Component {
 			margin: '24px',
 			padding: '16px',
 		}
+		if (props.style) {
+			Object.assign(style, props.style)
+		}
 
 		return (
 			<section style={style}>
@@ -96,6 +115,26 @@ class FieldsTestOutput extends React.Component {
 					This tool can be used to verify data, field-configuration and
 					validation options.
 				</Typography>
+
+				<section>
+					<Button
+						color="primary"
+						variant="contained"
+						style={{ margin: '10px 0 10px 10px' }}
+						onClick={form.validate}
+					>
+						Validate All
+					</Button>
+
+					<Button
+						color="secondary"
+						variant="contained"
+						style={{ margin: '10px 0 10px 10px' }}
+						onClick={form.reset}
+					>
+						Reset Form
+					</Button>
+				</section>
 				<hr/>
 
 				{arrFields.map( field => {
@@ -108,13 +147,8 @@ class FieldsTestOutput extends React.Component {
 					// indicates the field is 'uncontrolled'
 					this.formAliasData[aliasName] = getFieldValue( field, form )
 
-					/* DEBUGGING
-					 console.log(
-					 `${displayName}:`,
-					 `${/(text|date)/.test(inputType) ? '"' + value + '"' : value}`,
-					 ` (${inputType})`
-					 )
-					 */
+					let value = form.value(aliasName)
+					if (isDate(value)) value = convertTo.dateString(value)
 
 					if (inputType === 'checkbox') {
 						return (
@@ -137,7 +171,7 @@ class FieldsTestOutput extends React.Component {
 										/>
 									}
 								/>
-								<FormHelperText className="hide-when-empty">
+								<FormHelperText classes={classes}>
 									{form.errors( aliasName )}
 								</FormHelperText>
 							</FormControl>
@@ -150,9 +184,12 @@ class FieldsTestOutput extends React.Component {
 								label={displayName}
 								{...form.dataProps( aliasName )}
 								{...form.errorProps( aliasName )}
+								value={value}
+								type={inputType}
 								fullWidth={true}
 								margin="dense"
 								inputRef={ref}
+								FormHelperTextProps={{ classes }}
 							/>
 						)
 					}
@@ -171,12 +208,13 @@ class FieldsTestOutput extends React.Component {
 }
 
 
-const { func, string } = PropTypes
+const { func, string, object } = PropTypes
 
 FieldsTestOutput.propTypes = {
 	focus: string,
 	submitForm: func,
+	classes: object
 }
 
 
-export default FieldsTestOutput
+export default withStyles(helperTextStyles)(FieldsTestOutput)

@@ -10,13 +10,6 @@
 const defaultErrorMessages = {
 	required: '{name} is required',
 
-	// Data-type errors - usually won't happen; see validators instead
-	'type-text': 'This must be text',
-	'type-number': 'This is not a valid number',
-	'type-integer': 'This is not a valid integer',
-	'type-boolean': 'This must be true or false',
-	'type-date': 'This is not a valid date',
-
 	// Standard, preset validators - no values required
 	phone: 'Enter a valid 10-digit phone number',
 	address: 'Enter a valid address',

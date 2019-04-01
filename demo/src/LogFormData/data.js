@@ -28,11 +28,11 @@ const subcategories = {
 }
 
 const formData = {
-	category: categories[0].value,
-	subcategory: subcategories[categories[0].value][0].value,
-	message: 'This is my sample message',
+	category: '',
+	subcategory: '', // subcategories[categories[0].value][0].value,
+	message: 'This is a sample message',
 	who: {
-		gender: 'other',
+		gender: '',
 	},
 }
 

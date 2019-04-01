@@ -27,7 +27,6 @@ module.exports = {
 	rules: {
 		'brace-style': ['error', 'stroustrup', { allowSingleLine: true }],
 		camelcase: ["error", { allow: ['^UNSAFE_'] }],
-		'comma-dangle': ['error', 'always-multiline'],
 		'capitalized-comments': [
 			'error',
 			'always',
