@@ -174,7 +174,7 @@ The FM object has a rich API. It provides integration with form-field
 components, plus many methods for interacting with the data.
 
 See 
-**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
+**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/API.md)** 
 for details.
 
 
