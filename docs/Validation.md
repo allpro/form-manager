@@ -1,4 +1,4 @@
-#FormManager Validation
+# FormManager Validation
 
 Validation is a key feature of FormManager (**"FM"**). It is designed to make
  field validation and error handling as simple as possible. As with all other

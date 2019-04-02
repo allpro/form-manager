@@ -144,7 +144,7 @@ kept in perfect sync with the state stored in the container.
 FM can also clean, reformat and transform form values.
 
 See 
-**[FormManager Data Handling](https://github.com/allpro/react-fluid-grid/blob/master/docs/Data.md)** 
+**[FormManager Data Handling](https://github.com/allpro/form-manager/blob/master/docs/Data.md)** 
 for details.
 
 ### Validation
@@ -155,7 +155,7 @@ Validation is a key feature of FormManager (**"FM"**). It is designed to make
  config, not inside the presentation components.
  
 See 
-**[FormManager Validation](https://github.com/allpro/react-fluid-grid/blob/master/docs/Validation.md)** 
+**[FormManager Validation](https://github.com/allpro/form-manager/blob/master/docs/Validation.md)** 
 for details.
 
 
@@ -164,7 +164,7 @@ for details.
 The power of FormManager is in its configuration.
 
 See 
-**[FormManager Configuration](https://github.com/allpro/react-fluid-grid/blob/master/docs/Configuration.md)** 
+**[FormManager Configuration](https://github.com/allpro/form-manager/blob/master/docs/Configuration.md)** 
 for details.
 
 
@@ -174,7 +174,7 @@ The FM object has a rich API. It provides integration with form-field
 components, plus many methods for interacting with the data.
 
 See 
-**[FormManager API Reference](https://github.com/allpro/react-fluid-grid/blob/master/docs/Implementation.md)** 
+**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
 for details.
 
 
@@ -185,7 +185,7 @@ implemented in a 'container component' that handles all the data and view logic
 for the 'presentation components' that it uses.
 
 See 
-**[Implementing FormManager in Components](https://github.com/allpro/react-fluid-grid/blob/master/docs/Implementation.md)** 
+**[Implementing FormManager in Components](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
 for details.
 
 

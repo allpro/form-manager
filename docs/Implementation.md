@@ -25,7 +25,7 @@ but it is not necessary or recommended.
 This page does not cover the configuration for the form.
 
 See 
-**[FormManager Configuration](https://github.com/allpro/react-fluid-grid/blob/master/docs/Configuration.md)** 
+**[FormManager Configuration](https://github.com/allpro/form-manager/blob/master/docs/Configuration.md)** 
 for that information.
 
 
