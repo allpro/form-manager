@@ -41,8 +41,11 @@
 
 ---
 FormManager (**"FM'**) is a data-centric solution for handling forms, 
-inluding validation, formatting, type-conversion, and more. The goal is
- a **total solution for forms**, requiring as little custom code as possible.
+including validation, formatting, type-conversion, and more. The goal is
+a **total solution for forms**, requiring as little custom code as possible.
+FM is easy to learn for beginners, but it can also handle highly complex, rich
+forms full of custom controls. 
+**There are no limitations to what it can handle.**
  
 FM does not 'render' anything, nor does it
  handle fetching or posting data - that's not its job! 
@@ -51,40 +54,60 @@ FM does not 'render' anything, nor does it
  **FM does not require any extra mark-up**. It does not know or care 
 how you create or design forms, or what kinds of controls you use. 
 
-FM integrates with form-fields using standard properties and event handlers. 
-It doesn't use component wrappers; it doesn't use any globals; and it doesn't 
-use Context in React. There is no magic behind the curtain!
+FM integrates with form-fields using standard properties and event handlers.
+Or you can use its rich API to easily integrate any non-standard control. 
+FM does not use component wrappers, it does not use globals (when a module),
+and it does not use Context in React. 
+**It's pure Javascript; there is no magic behind the curtain!**
 
 I created this version of FM when using Material UI form components in React. 
-However, since FM is a pure data component, **it is not reliant on React or 
-any other library**. It can be used in any environment, for any purpose.
+However, since FM is a pure Javascript component, 
+**it is not reliant on React or any other library**. 
+It can be used in any environment, for any purpose.
 
 ## Why Another Form Handler?
 
-No form handler I've found has the functionality of this one. 
-Formik&trade; is one popular form helper for React, but it doesn't include 
-validation. For me that's a key requirement so I want it built-in. 
+**No form handler I've found has the data handling capabities of FM.** 
+The Formik&trade; form helper is popular for React, but it doesn't include 
+validation. For me that's a major feature so I want it built-in. 
 Plus, like virtually all form handlers, Formik requires extra mark-up. 
-This adds complexity to screens, and means that the _dumb_ presentational 
+This adds complexity to markup, and means that supposedly _dumb_ presentation 
 components must contain some form logic. 
 This goes against my preference for **_total_ separation of concerns**.
-These are just some ways that FM is different from all other form handlers.
+These are just some of the ways FM is different from all other form handlers.
 
-When using FormManager, _ALL_ data handling and logic is in one place, 
+When using FormManager, **_ALL_ data handling and logic is in one place**, 
 and this is **completely separate from the mark-up**. 
 If you have a complex form configuration, 
 it's can even go its own file, like `formConfig.js`.
 
+If you are already using a validation system, like Yup&trade;, 
+it's very simple to integrate that with FM. 
+Every feature in FM is designed to be easily extended and/or overridden.
+
+**FM does _not_ handle data fetching or posting.** Every app has its 
+own communications system and standards. 
+There are plenty of helpers that assist with backend data-flow, caching, etc.
+This is _not_ a responsibility of a form manager in my opinion, 
+and it's not the challenging aspect of forms!
+
 ## How Do I Use It?
 
-Below is a sample form presenation component. The 'form' prop is 
-the instance of FormManager created in the container component. 
-The `handleSubmit` prop is _not_ part of FM, but that method can call FM to 
-do validation or to _clean_ the data in preparation for posting.
-I'm using the Material UI TextField here to show how simple the markup can be...
+Below is a sample presentation component for a form. The FM instance was 
+created in the parent/container component, and passed in as **`props.form`**. 
+I'm using the **Material UI TextField** in this sample to show how simple 
+the form markup can be with FM. 
+The `form.allProps('fieldname')` helper method is adding about 8 different 
+properties to the field, giving FM full control of it.
+
+**NOTE that the `form.submit` method is NOT part of FM!**
+It's actually a container method that was _attached_ to the FM object rather 
+than passing a separate prop. 
+If necessary, that submit method can _call_ FM to get the form data,
+perform validation, or _clean/transform_ the data in preparation for posting.
 ```javascript static
 const MyForm = (props) => {
-    const { form, handleSubmit } = props.form;
+    const { form } = props;
 
     return (
         <div>
@@ -98,7 +121,7 @@ const MyForm = (props) => {
             <TextField label="Email"      {...form.allProps('email')} />
 
             <div>
-                <Button color="primary" onClick={handleSubmit}>
+                <Button color="primary" onClick={form.submit}>
                     Submit
                 </Button>
                 <Button color="secondary" onClick={form.reset}>
@@ -106,11 +129,11 @@ const MyForm = (props) => {
                 </Button>
             </div>
         </div>
-    )
+    );
 }
 ```
 
-What you _don't see_ above is the logic behind this form; that's the point! 
+**What you _don't see_ above is the logic behind this form; that's the point!**
 This form _could_ have validation for every field, with auto-generated error 
 messages. Field-level validation can occur onChange, onBlur or onSubmit, and 
 this may change depending whether a field is already in-error. The values can 
@@ -119,15 +142,16 @@ and can be auto-transformed for posting (eg: "6045551212"). Fields can even
 be disabled in response to data-entry. 
 **All things are possible, and this mark-up never needs to change!**
 
-All data handling and logic is set in the form-configuration. If you 
-want to adjust validation requirements, you do it there; _not_ inside the 
-presentation components. You can add cosmetic properties to the form-fields 
-as you like; FM does not know or care about this.
+**ALL data handling and logic is set in the form-configuration.** 
+If you want to adjust validation requirements, you do it there; _not_ inside the 
+presentation components. 
+You can add cosmetic properties to the form-fields 
+in your presentation component as normal; FM does not know or care about this.
 
-If you have a rich form that spans multiple screens, with some fields that 
-popup in dialog boxes, this is no problem. FM does not 'wrap' your form, so 
-you can use any component structure you wish - just pass it `props.form` so 
-you can integrate the data with FM.
+If you have a rich form that spans multiple screens, with some controls inside
+a popup dialog-box, that's no problem. FM does not 'wrap' your form, so 
+you can create any component structure required -
+just pass in `props.form` so you can integrate the data with FM.
 
 
 ## What Can FormManager Do?
