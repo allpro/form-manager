@@ -153,7 +153,7 @@ class FormSection extends Component {
 						error={form.hasErrors('birthdate')}
 					>
 						<FormHelperText classes={classes}>
-							{form.errors('birthdate')}
+							{form.error('birthdate')}
 						</FormHelperText>
 					</FormControl>
 				</section>
@@ -190,7 +190,7 @@ class FormSection extends Component {
 						</Select>
 
 						<FormHelperText classes={classes}>
-							{form.errors('category')}
+							{form.error('category')}
 						</FormHelperText>
 					</FormControl>
 
@@ -219,7 +219,7 @@ class FormSection extends Component {
 						</Select>
 
 						<FormHelperText classes={classes}>
-							{form.errors('subcategory')}
+							{form.error('subcategory')}
 						</FormHelperText>
 					</FormControl>
 				</section>
@@ -247,7 +247,7 @@ class FormSection extends Component {
 
 						<RadioGroup
 							{...form.dataProps('gender')}
-							error={form.errors('gender')}
+							error={form.error('gender')}
 							aria-label="gender"
 						>
 							<FormControlLabel
@@ -274,7 +274,7 @@ class FormSection extends Component {
 						</RadioGroup>
 
 						<FormHelperText classes = {classes}>
-							{form.errors('who/gender')}
+							{form.error('who/gender')}
 						</FormHelperText>
 					</FormControl>
 				</section>

@@ -154,7 +154,7 @@ function getObjectValue( hash, path, opts = { cloneValue: false } ) {
  * @param {Object} [opts]   Configuration
  * @returns {boolean}		True if value set; false if value is unchanged
  */
-function setObjectValue( hash, path, value, opts = { cloneValue: false } ) {
+function setObjectValue( hash, path, value, opts = { cloneValue: false, merge: false } ) {
 	// If a path was passed, recurse into the object
 	if (path && path !== '/') {
 		const keys = pathToKeysArray( path )
@@ -189,10 +189,17 @@ function setObjectValue( hash, path, value, opts = { cloneValue: false } ) {
 
 		// Write the passed value at end of the path (last branch)
 		// Ignore any existing value - we do not merge data here.
-		branch[lastKey] = opts.cloneValue ? clone( value ) : value
+		if (opts.merge && isObjectLike(branch[lastKey]) && isObjectLike(value)) {
+			merge(branch[lastKey], opts.cloneValue ? clone( value ) : value)
+		}
+		else {
+			branch[lastKey] = opts.cloneValue ? clone( value ) : value
+		}
+
 		return true // Value was updated
 	}
 	else if (isObjectLike( path )) {
+		// The path is an object (key/value pairs) to merge into hash-root
 		merge( hash, opts.cloneValue ? cloneDeep( path ) : path )
 		return true // Values were updated
 	}
@@ -213,5 +220,5 @@ export default {
 	getChangedFields,
 	trimFormFields,
 	getObjectValue,
-	setObjectValue,
+	setObjectValue
 }

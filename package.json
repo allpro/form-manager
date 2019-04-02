@@ -1,7 +1,7 @@
 {
   "name": "@allpro/form-manager",
-  "version": "0.2.0",
-  "description": "Form/Data Manager for React forms, particularly Material UI controls",
+  "version": "0.3.0",
+  "description": "Form/Data Manager for forms, including React and Material UI controls",
   "license": "MIT",
   "author": "Kevin Dalman",
   "repository": {

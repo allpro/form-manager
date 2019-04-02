@@ -7,7 +7,8 @@ import Tabs from '@material-ui/core/Tabs'
 import Tab from '@material-ui/core/Tab'
 import Typography from '@material-ui/core/Typography'
 
-import LongForm from './LongForm'
+import LongFormClass from './LongForm'
+import LongFormHook from './LongForm/Hook'
 import LogFormData from './LogFormData'
 
 const { array, element, oneOfType } = PropTypes
@@ -19,18 +20,19 @@ function TabContainer( props ) {
 		</div>
 	)
 }
+
 TabContainer.propTypes = {
-	children: oneOfType([array, element])
+	children: oneOfType([ array, element ])
 }
 
 
 class FormManagerDemos extends Component {
 	state = {
-		currentTab: 0,
+		currentTab: 0
 	}
 
 	onChangeTab = ( event, currentTab ) => {
-		this.setState( { currentTab } ) // eslint-disable-line
+		this.setState({ currentTab }) // eslint-disable-line
 	}
 
 	render() {
@@ -51,15 +53,19 @@ class FormManagerDemos extends Component {
 						variant="scrollable"
 						scrollButtons="auto"
 					>
-						<Tab label="MUI Form"/>
-						<Tab label="Fields Test Output"/>
+						<Tab label="Class Form" />
+						<Tab label="Hooks Form" />
+						<Tab label="Fields Test Output" />
 					</Tabs>
 				</AppBar>
 
 				{currentTab === 0 && (
-					<TabContainer><LongForm /></TabContainer>
+					<TabContainer><LongFormClass /></TabContainer>
 				)}
 				{currentTab === 1 && (
+					<TabContainer><LongFormHook /></TabContainer>
+				)}
+				{currentTab === 2 && (
 					<TabContainer><LogFormData /></TabContainer>
 				)}
 			</Fragment>
@@ -68,4 +74,4 @@ class FormManagerDemos extends Component {
 }
 
 
-render( <FormManagerDemos/>, document.querySelector( '#demo' ) )
+render(<FormManagerDemos />, document.querySelector('#demo'))

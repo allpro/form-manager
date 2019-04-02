@@ -172,7 +172,7 @@ class FieldsTestOutput extends React.Component {
 									}
 								/>
 								<FormHelperText classes={classes}>
-									{form.errors( aliasName )}
+									{form.error( aliasName )}
 								</FormHelperText>
 							</FormControl>
 						)

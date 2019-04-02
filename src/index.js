@@ -29,8 +29,8 @@ import utils from './utils'
 export { default as FieldsTestOutput } from './tools/FieldsTestOutput'
 export { default as logFormData } from './tools/logFormData'
 
-// Re-export utils?
-// export * from './utils'
+// Extract utils for code brevity
+const { getObjectValue, setObjectValue, itemToArray } = utils
 
 const defaultFormState = {
 	// TODO: need to track load-values so know if current value is the same
@@ -74,15 +74,16 @@ function FormManager( componentObject, options = {}, extraData ) {
 	// Local alias for formatters object
 	const format = config.formatters
 
-	let stateInitialized = false
 
-	// INIT FormManager
+	let formRevision = 0
+	let formInitialized = false
+
+	// INIT FormManager fields and data
 	initFormConfiguration()
 	initFormData(extraData)
 
-	let formManagerIndex = 0
+	formInitialized = true
 
-	stateInitialized = true
 
 	// noinspection JSUnusedGlobalSymbols
 	/**
@@ -91,37 +92,39 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * Assigned to instanceAPI variable so can pass this API to callbacks
 	 */
 	const instanceAPI = {
+		// FIELD CONFIGURATION METHODS (rarely needed)
+		fieldConfig: publicFieldConfig, // SETTER/GETTER for field configuration
+		fieldValidation,			// SETTER/GETTER for validation config
+		fieldRequired,				// SETTER/GETTER for validation.required
+		fieldDisabled,				// SETTER/GETTER for field.disabled
+		fieldReadonly,				// SETTER/GETTER for field.readonly
+
+		// FIELD VALUE METHODS
+		fieldValue, 				// SETTER/GETTER for 1+ field-values
+		value: fieldValue,			// SETTER/GETTER ALIAS for fieldValue
+
+		// FORM/FIELD VALIDATION METHOD - for one or all fields
+		validate: validateField,	// ACTION for field OR form validation
+
+		// FORM RESET METHOD - resets *everything* back to initial state
 		reset: resetForm, // Method to reset form data, errors & state.
 
-		// The field-config is exposed, but should rarely be needed
-		fieldConfig: publicFieldConfig, // SETTER/GETTER for field-configuration
-		setFieldValidation, // SETTER for easy validation changes
-		setFieldIsRequired, // SETTER for easy 'required' changes
+		// FORM DATA, STATE & ERROR METHODS
+		state: formState,			// SETTER/GETTER for stateOfForm
+		data: formData,				// SETTER/GETTER for stateOfData
+		error: fieldError,			// SETTER/GETTER for field OR form errors
+		clearErrors,				// SETTER - clears ALL errors for 1 field
+		hasErrors: itemHasErrors,	// GETTER - does field OR form have errors
 
-		// Validation can be triggered manually, for one or all fields
-		validate: validateField, // ACTION for field OR form validation
+		// FORM-ELEMENT PROPERTY SETTERS (HELPERS)
+		dataProps: getDataProps,	// HELPER for writing component props
+		errorProps: getErrorProps,	// HELPER for writing component props
+		allProps: getAllProps,		// HELPER for writing component props
 
-		// Form-level setters/getters
-		state: formState,		// SETTER/GETTER for stateOfForm
-		data: formData,			// SETTER/GETTER for stateOfData
-		errors: getFieldErrors,	// GETTER for field OR form errors
-		getFieldErrors,			// GETTER for field OR form errors
-		setFieldError,			// SETTER for ONE error on 1 field
-		setFieldErrors,			// SETTER for MULTIPLE errors on 1 field
-		clearFieldErrors,		// SETTER - clears ALL errors for 1 field
-		hasErrors: doesItemHaveErrors, // CHECK if field OR form has errors
-
-		// Methods used when writing form component props
-		value: publicFieldValue, // SETTER/GETTER for 1 field-value
-		values: setFieldValues, // SETTER for MULTIPLE field-values
-
-		dataProps: getDataProps, // HELPER for writing component props
-		errorProps: getErrorProps, // HELPER for writing component props
-		allProps: getAllProps, // HELPER for writing component props
-
-		onFieldChange, // HANDLER for component.onChange
-		onFieldFocus, // HANDLER for component.onFocus
-		onFieldBlur // HANDLER for component.onBlur
+		// FORM-ELEMENT EVENT-HANDLERS
+		onFieldChange,				// EVENT HANDLER for field.onChange
+		onFieldFocus,				// EVENT HANDLER for field.onFocus
+		onFieldBlur					// EVENT HANDLER for field.onBlur
 	}
 
 	// RETURN THE PUBLIC API
@@ -133,18 +136,18 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 */
 	function triggerComponentUpdate() {
 		// Trigger a re-render only if component has been initialized
-		if (stateInitialized) {
+		if (formInitialized) {
 			// Increment unique index used as component-state value
-			formManagerIndex++
+			formRevision++
 
 			// noinspection JSUnresolvedVariable
 			if (componentObject.setState) {
 				// Class method
-				componentObject.setState({ formManagerIndex })
+				componentObject.setState({ formRevision })
 			}
 			else {
 				// Hook setFormState method (or whatever its name is!)
-				componentObject(formManagerIndex)
+				componentObject(formRevision)
 			}
 		}
 	}
@@ -243,36 +246,34 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 *
 	 * @param {(string|Array|Object)} [name]
 	 * @param {(Object|Array|string)} [data]
-	 * @param {Object} [opts]    Option for merging with existing config
-	 * @returns {Object}        Returns fieldConfig, even when is a SETTER
+	 * @param {Object} [opts]   Option for merging with existing config
+	 * @returns {*}                Returns fieldConfig in getter mode
 	 */
-	function publicFieldConfig(name, data, opts = {}) {
-		const hasFieldName = isString(name)
-		const fieldName = hasFieldName ? verifyFieldName(name) : ''
+	function publicFieldConfig( name, data, opts = {} ) {
+		const singleField = isString(name)
+		const fieldName = singleField ? verifyFieldName(name) : ''
 
 		// 2nd & 3rd arguments shift if 'name' (string) is not passed
-		const configData = hasFieldName ? data : name
-		const configOpts = hasFieldName ? opts : data
+		const configData = singleField ? data : name
+		const configOpts = singleField ? opts : data
 
 		// GETTER for one -or- all fields
 		if (!configData) {
 			return getFieldConfig(fieldName)
 		}
 
-		if (fieldName) configOpts.fieldName = fieldName
-		const returnData = setFieldsConfig( configData, configOpts )
-
+		// SETTER
+		if (singleField) configOpts.fieldName = fieldName
+		setFieldsConfig(configData, configOpts)
 		// Configuration may change how fields display, so update component
 		triggerComponentUpdate()
-
-		return returnData
 	}
 
 	/**
-	 * Get field-config for ONE-OR-MORE FIELDS
+	 * Get field-config for ONE-OR-ALL FIELDS
 	 *
 	 * @param {string} [name]
-	 * @returns {Object}	Returns fieldConfig for one -or- all fields
+	 * @returns {Object}    Returns fieldConfig for one -or- all fields
 	 */
 	function getFieldConfig( name ) {
 		const fieldName = verifyFieldName(name)
@@ -284,8 +285,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * Set field-config for ONE-OR-MORE FIELDS; merge or replace
 	 *
 	 * @param {(Object|Array|string)} [data]
-	 * @param {Object} [opts]	Option for merging with existing config
-	 * @returns {Object}		Returns fieldConfig, even when is a SETTER
+	 * @param {Object} [opts]    Option for merging with existing config
+	 * @returns {Object}        Returns fieldConfig, even when is a SETTER
 	 */
 	function setFieldsConfig( data, opts = {} ) {
 		// MULTIPLE FIELD-CONFIGS AS ARRAY
@@ -375,7 +376,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 */
 	function getFormState( key, opts ) {
 		// If a key is passed, then return value for just that, if exists
-		if (key) return utils.getObjectValue(stateOfForm, key, opts)
+		if (key) return getObjectValue(stateOfForm, key, opts)
 
 		// Return a deep clone to ensure state cannot be mutated
 		return cloneDeep(stateOfForm)
@@ -387,19 +388,43 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @param {Object} [opts]            Options, like { clone: true }
 	 */
 	function setFormState( key, value, opts = { cloneValue: true } ) {
-		utils.setObjectValue(stateOfForm, key, value, opts)
+		setObjectValue(stateOfForm, key, value, opts)
 	}
 
 
 	/**
-	 * PUBLIC SETTER for setting multiple field values
+	 * PUBLIC SETTER & GETTER for a specific field value.
 	 *
-	 * @param {Object} data        Hash of Field-name/value pairs
+	 * @param {string} name        Field-name or alias-name
+	 * @param {*} [value]        Any value OR the opts object in multi-field
+	 *     mode
+	 * @param {Object} [opts]   Options
 	 */
-	function setFieldValues( data ) {
-		forOwn(data, ( value, name ) => {
-			setFieldValue(name, value)
-		})
+	function fieldValue(
+		name,
+		value,
+		opts = { cleanValue: false, validate: false }
+	) {
+		// Handle data-hash syntax: value(data, opts)
+		if (isObjectLike(name)) {
+			forOwn(name, ( v, n ) => {
+				fieldValue(n, v, opts)
+			})
+		}
+
+		const fieldName = verifyFieldName(name)
+
+		// SETTER - Note that 0 and empty strings ARE 'values' to set
+		if (value !== undefined) {
+			// If opts.validate, use 'validate' event to force validation;
+			//	otherwise consider this a standard 'change' event.
+			const event = opts.validate ? 'validate' : 'change'
+			setFieldValue(name, value, event)
+		}
+		// GETTER
+		else {
+			return getFieldValue(fieldName, opts)
+		}
 	}
 
 	/**
@@ -420,12 +445,12 @@ function FormManager( componentObject, options = {}, extraData ) {
 		// Field may NOT have a configuration...
 		if (fieldConfig) {
 			const isDataField = !fieldConfig || fieldConfig.isData
-			const fieldValidation = fieldConfig ? fieldConfig.validation : {}
-			const dataType = fieldValidation.dataType
+			const fieldValidations = fieldConfig ? fieldConfig.validation : {}
+			const dataType = fieldValidations.dataType
 
 			newValue = coerceDataType(value, dataType)
 
-			// if (fieldValidation.phone) {
+			// if (fieldValidations.phone) {
 			// 	// Normalize phone-numbers to "[0-][000-]000-0000"
 			// 	newValue = format.phone( value )
 			// }
@@ -438,7 +463,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 		}
 
 		// Method will return false if newValue is same as existing value
-		const valueSet = utils.setObjectValue(
+		const valueSet = setObjectValue(
 			stateOfData,
 			fieldName,
 			value,
@@ -471,11 +496,11 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 	function getFieldValue( fieldName, opts = { cleanValue: false } ) {
 		const fieldConfig = config.fields[fieldName] || {}
-		const fieldValidation = fieldConfig.validation || {}
+		const fieldValidations = fieldConfig.validation || {}
 		const isData = fieldConfig.isData !== false
 		const state = isData ? stateOfData : stateOfForm
 
-		let value = utils.getObjectValue(
+		let value = getObjectValue(
 			state,
 			fieldName,
 			{ clone: true }
@@ -485,30 +510,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 			value = cleanFieldValue(value, fieldConfig)
 		}
 
-		return undefinedToDefaultValue(value, fieldValidation.dataType)
-	}
-
-	/**
-	 * PUBLIC SETTER & GETTER for a specific field value.
-	 *
-	 * @param {string} name    Field-name or alias-name
-	 * @param {Object} [opts]    Options
-	 * @param {*} [value]
-	 */
-	function publicFieldValue( name, value, opts = { cleanValue: false, validate: false } ) {
-		const fieldName = verifyFieldName(name)
-
-		// SETTER - Note that 0 and empty strings ARE 'values' to set
-		if (value !== undefined) {
-			// If opts.validate, use 'validate' event to force validation;
-			//	otherwise consider this a standard 'change' event.
-			const event = opts.validate ? 'validate' : 'change'
-			setFieldValue( name, value, event )
-		}
-		// GETTER
-		else {
-			return getFieldValue(fieldName, opts)
-		}
+		return undefinedToDefaultValue(value, fieldValidations.dataType)
 	}
 
 
@@ -589,7 +591,10 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 		const trimText = withFieldDefaults(fieldConfig, 'trimText')
 		const fixMultiSpaces = withFieldDefaults(fieldConfig, 'fixMultiSpaces')
-		const monoCaseToProper = withFieldDefaults(fieldConfig, 'monoCaseToProper')
+		const monoCaseToProper = withFieldDefaults(
+			fieldConfig,
+			'monoCaseToProper'
+		)
 
 		let val = value
 		if (trimText) val = val.trim()
@@ -609,21 +614,23 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 
 	function getFormErrors( opts = { asArray: true } ) {
-		// Iterate everything in state.form.errors to create list of errors
+		// Iterate everything in state.form.error to create list of errors
 		// Error data is in a hash so can include fieldNames
 		const arrErrors = []
 
 		forOwn(stateOfErrors, ( errors, fieldName ) => {
 			if (errors && !isEmpty(errors)) {
-				// get field-config so we can add displayName to data
-				const fieldConfig = config.fields[fieldName]
-
-				arrErrors.push({
+				const error = {
 					name: fieldName,
-					alias: fieldConfig.aliasName || fieldName,
-					display: fieldConfig.displayName, // undefined if not set
-					errors: utils.itemToArray(errors)
-				})
+					errors: itemToArray(errors)
+				}
+
+				// Add aliasName & displayName to error from field-config
+				const { aliasName, displayName } = config.fields[fieldName] || {}
+				if (aliasName) error.aliasName = aliasName
+				if (displayName) error.displayName = displayName
+
+				arrErrors.push(error)
 			}
 		})
 
@@ -637,7 +644,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 */
 	function getFieldErrorsHash( fieldName ) {
 		// NOTE that we do NOT support nested structure for errors, so...
-		// A 'who/gender' field stores errors at: form.errors['who/gender']
+		// A 'who/gender' field stores errors at: form.error['who/gender']
 		// However the field data is NESTED at:	form.data.who.gender
 		let fieldErrors = stateOfErrors[fieldName] || {}
 
@@ -652,6 +659,46 @@ function FormManager( componentObject, options = {}, extraData ) {
 	}
 
 	/**
+	 * PUBLIC SETTER/GETTER for field errors
+	 * NOTE: This method has 3 possible signatures, to suit 3 subroutines
+	 *
+	 * @param {string} name                        Field-name or alias-name
+	 * @param {(string|Object)} type            Validation type OR opts
+	 * @param {(string|Array|Object)} [message] Error-message(s) OR opts
+	 * @param {Object} [opts]                    Get -or- Set options
+	 */
+	function fieldError(
+		name,
+		type,
+		message,
+		opts = { merge: true, asArray: false }
+	) {
+		// Getter can be only for: a single field OR all fields
+		// Signature: {str} [name], {Obj} [opts]
+		if (!name || isObjectLike(name) || (type)) {
+			// GETTER
+			return getFieldError(name, type)
+		}
+
+		// Setter for 1 error on 1 field
+		// Signature: {str} name, {str} type, {(Arr|str)} message, {Obj} [opts]
+		if (isString(name) && isString(type) && isString(message)) {
+			// SETTER
+			return setFieldError(name, type, message, opts)
+		}
+
+		// Setter for multiple errors on 1 field
+		// Signature: {str} name, {Object} errors, {Obj} [opts]
+		if (isString(name) && isString(type) && isObjectLike(message)) {
+			// SETTER
+			return setFieldError(name, type, message, opts)
+		}
+
+		// NOTE: Errors can only be set ONE FIELD AT A TIME; user must call
+		// method multiple times to set errors on 2 or more fields.
+	}
+
+	/**
 	 * Public method to fetch error(s) for a specific field.
 	 * Errors are stored in a hash, which we convert to a simple array.
 	 * Calling code can output message(s) using join() or iterate array.
@@ -660,7 +707,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @param {Object} opts        Options for return value
 	 * @returns {(string|Array)}
 	 */
-	function getFieldErrors( name, opts = { asArray: false } ) {
+	function getFieldError( name, opts = { asArray: false } ) {
 		if (!name) {
 			return getFormErrors()
 		}
@@ -671,9 +718,12 @@ function FormManager( componentObject, options = {}, extraData ) {
 		const errors = getFieldErrorsHash(fieldName)
 
 		// Iterate through all error-keys and combine errors into an array
-		const arrErrors = utils.itemToArray(errors)
+		const arrErrors = itemToArray(errors)
 
-		let returnAsString = withFieldDefaults(fieldConfig, 'returnErrorsAsString')
+		let returnAsString = withFieldDefaults(
+			fieldConfig,
+			'returnErrorsAsString'
+		)
 		// If a specific option was passed, it overrides field-configuration
 		if (isBoolean(opts.asArray)) {
 			returnAsString = !opts.asArray
@@ -686,82 +736,73 @@ function FormManager( componentObject, options = {}, extraData ) {
 	}
 
 	/**
-	 * PUBLIC SETTER for ONE field error, by fieldName
+	 * Setter for 1 type of error on 1 field; can be an array of errors
 	 *
-	 * @param {string} name        Field-name or alias-name
-	 * @param {string} type        Validation type, eg: 'required', 'custom'
-	 * @param {string} message    Error-message text for this type
-	 * @param {Object} opts        Merge options
+	 * @param {string} name                Field-name or alias-name
+	 * @param {string} type                Type, eg: 'required', 'custom'
+	 * @param {(Array|string)} error    Error-message text for this type
+	 * @param {Object} opts                Merge options
 	 */
-	function setFieldError( name, type, message, opts = { merge: true } ) {
+	function setFieldError( name, type, error, opts = { merge: true } ) {
 		// field MAY have an aliasName
 		const fieldName = verifyFieldName(name)
-		const curErrMsg = utils.getObjectValue(
+		const curErrMsg = getObjectValue(
 			stateOfErrors,
 			`${fieldName}/${type}`
 		)
 
 		// Skip update if this error-message is already set
-		if (curErrMsg !== message) {
-			setFieldErrors(name, { [type]: message || '' }, opts)
+		if (curErrMsg !== error) {
+			setFieldErrors(name, { [type]: error || '' }, opts)
 		}
 	}
 
 	/**
-	 * PUBLIC SETTER for field errors in form.errors; keyed by fieldName.
-	 * This hash is a single-level, unlike data, eg:form.errors.'key/subkey'.
-	 * If errors is falsey or an empty array, current errors will be cleared.
+	 * Setter for multiple errors for 1 field; keyed by error-type
 	 *
-	 * @param {string} name                    Name or aliasName of field
-	 * @param {(Object|Array|string|boolean|null)} [errors]
-	 * @param {Object} opts                    Merge options
+	 * @param {string} name     Name or aliasName of field
+	 * @param {Object} errors    Errors keyed by 'type', eg: 'phone' or 'custom'
+	 * @param {Object} [opts]   Merge options
 	 */
 	function setFieldErrors( name, errors, opts = { merge: false } ) {
 		// field MAY have an aliasName
 		const fieldName = verifyFieldName(name)
 
-		// Any falsey value means clear all field errors
-		if (!errors) {
-			delete stateOfErrors[fieldName]
+		// MERGE FIELD ERRORS
+		if (opts.merge) {
+			const fieldErrors = stateOfErrors[fieldName] || {}
+
+			// Shallow-merge new error(s) into errors hash
+			assign(fieldErrors, errors)
+
+			// Set NEW fieldErrors object
+			stateOfErrors[fieldName] = fieldErrors
 		}
+		// REPLACE FIELD ERRORS - clone to break byRef connection
 		else {
-			// TODO: Verify this is correct handling for non-object 'errors'
-			// Normalize custom error to a hash
-			const newErrors = !isPlainObject(errors)
-				? { custom: errors }
-				: errors
-
-			// MERGE FIELD ERRORS
-			if (opts.merge) {
-				const fieldErrors = stateOfErrors[fieldName] || {}
-
-				// Shallow-merge new error(s) into errors hash
-				assign(fieldErrors, newErrors)
-
-				// Set NEW fieldErrors object
-				stateOfErrors[fieldName] = fieldErrors
-			}
-			// REPLACE FIELD ERRORS - clone to break byRef connection
-			else {
-				stateOfErrors[fieldName] = clone(newErrors)
-			}
+			stateOfErrors[fieldName] = clone(errors)
 		}
 	}
 
 	/**
-	 * PUBLIC SETTER for field errors - remove errors only
+	 * PUBLIC SETTER for field errors - removes errors only
+	 * Can remove for 1 field (string), multiple fields (Array) or all (blank)
 	 *
 	 * @param {(Array|string)} [name]        Field-name(s) and/or alias-name(s)
 	 */
-	function clearFieldErrors( name ) {
+	function clearErrors( name ) {
 		if (!name) {
 			stateOfErrors = {}
 		}
 		else if (isArray(name)) {
-			map(name, setFieldErrors)
+			for (const n of name) {
+				const fieldName = verifyFieldName(n)
+				delete stateOfErrors[fieldName]
+			}
 		}
 		else {
-			setFieldErrors(name)
+			const fieldName = verifyFieldName(name)
+			delete stateOfErrors[fieldName]
 		}
 	}
 
@@ -771,7 +812,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @param {string} name        Field-name or alias-name
 	 * @returns {boolean}
 	 */
-	function doesItemHaveErrors( name ) {
+	function itemHasErrors( name ) {
 		if (name) {
 			const fieldName = verifyFieldName(name)
 			const fieldErrors = stateOfErrors[fieldName]
@@ -784,60 +825,95 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 
 	/**
-	 * PUBLIC SETTER for changing field(s) validation options easily
+	 * PUBLIC SETTER/GETTER for field validation options
 	 *
-	 * @param {(Array|string)} name        Fieldname (or array of), for mass
-	 *     update
-	 * @param {Object} validationConfig New Validation setting(s)
-	 * @param {Object} [opts]            Option for merging with existing
-	 *     config
-	 * @returns {*}                        Validation-config if for 1 field
-	 *     only
+	 * @param {string} name            Fieldname to get/set
+	 * @param {Object} [settings]    New Validation setting(s)
+	 * @param {Object} [opts]       Option for merging with existing config
+	 * @returns {*}                 Validation-config in getter mode
 	 */
-	function setFieldValidation(
-		name,
-		validationConfig,
-		opts = { merge: false }
-	) {
-		// Allow passing an array of fieldnames to set them all the same
-		// This is useful for setting multiple fields required/not-required
-		if (isArray(name)) {
-			return name.map(fieldName =>
-				setFieldValidation(fieldName, validationConfig, opts)
-			)
-		}
-
-		// field MAY have an aliasName
+	function fieldValidation( name, settings, opts = { merge: false } ) {
 		const fieldName = verifyFieldName(name)
-		const field = config.fields[fieldName] || {}
+		const path = `fields.${fieldName}.validation`
 
-		// ensure field config exists
-		if (!field) return
-
-		if (opts.merge && field.validation) {
-			merge(field.validation, validationConfig)
-		}
-		else {
-			field.validation = clone(validationConfig)
+		// GETTER
+		if (!settings) {
+			return clone(getObjectValue(config, path))
 		}
 
-		return field.validation
+		// SETTER
+		setObjectValue(
+			config,
+			path,
+			settings,
+			{ cloneValue: true, merge: opts.merge }
+		)
 	}
 
 	/**
-	 * PUBLIC SETTER for dynamically setting 'required' flag for validation.
-	 * This may be a common need for multi-part forms or conditional fields.
+	 * PUBLIC SETTER/GETTER for validation 'required' flag.
 	 *
 	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
-	 * @param {boolean} require        Is this field(s) required?
-	 * @returns {*}                    Returns new validation if a single name
+	 * @param {boolean} [require]      Is this field(s) required?
+	 * @returns {*}                    Returns true or false in getter mode
 	 */
-	function setFieldIsRequired( name, require = true ) {
-		return setFieldValidation(
-			name,
-			{ required: !!require },
-			{ merge: true }
-		)
+	function fieldRequired( name, require ) {
+		const fieldName = verifyFieldName(name)
+		const path = `fields.${fieldName}.validation.required`
+
+		// GETTER
+		if (!isBoolean((require))) {
+			return getObjectValue(config, path) || false
+		}
+		// SETTER
+		else {
+			setObjectValue(config, path, !!require)
+			triggerComponentUpdate()
+		}
+	}
+
+	/**
+	 * PUBLIC SETTER/GETTER for field.disabled flag.
+	 *
+	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
+	 * @param {boolean} [disable]      Is this field(s) disabled?
+	 * @returns {*}                    Returns true or false in getter mode
+	 */
+	function fieldDisabled( name, disable ) {
+		const fieldName = verifyFieldName(name)
+		const path = `fields.${fieldName}.validation.disabled`
+
+		// GETTER
+		if (!isBoolean((require))) {
+			return getObjectValue(config, path) || false
+		}
+		// SETTER
+		else {
+			setObjectValue(config, path, disable)
+			triggerComponentUpdate()
+		}
+	}
+
+	/**
+	 * PUBLIC SETTER/GETTER for field.readonly flag.
+	 *
+	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
+	 * @param {boolean} [readonly]     Is this field(s) disabled?
+	 * @returns {*}                    Returns true or false in getter mode
+	 */
+	function fieldReadonly( name, readonly ) {
+		const fieldName = verifyFieldName(name)
+		const path = `fields.${fieldName}.validation.disabled`
+
+		// GETTER
+		if (!isBoolean((require))) {
+			return getObjectValue(config, path) || false
+		}
+		// SETTER
+		else {
+			setObjectValue(config, path, readonly)
+			triggerComponentUpdate()
+		}
 	}
 
 
@@ -866,10 +942,13 @@ function FormManager( componentObject, options = {}, extraData ) {
 		// If an event was passed, check to see if we should validate or not.
 		// If not, then abort without doing validation
 		if (event && !forceValidation) {
-			const hasErrors = doesItemHaveErrors(fieldName)
+			const hasErrors = itemHasErrors(fieldName)
 			const prefix = hasErrors ? 'revalidate' : 'validate'
 			const suffix = suffixes[event]
-			const validate = withFieldDefaults(fieldConfig, `${prefix}${suffix}`)
+			const validate = withFieldDefaults(
+				fieldConfig,
+				`${prefix}${suffix}`
+			)
 
 			if (!validate) {
 				// ABORT by returning a resolved promise
@@ -912,9 +991,9 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 			fieldValidations.push(
 				performFieldValidation({
-					fieldName,		// Field to validate
-					value: utils.getObjectValue(stateOfData, fieldName),
-					config,			// Read config.fields[fieldName] & config.validators
+					fieldName,	// Field to validate
+					value: getObjectValue(stateOfData, fieldName),
+					config,		// Read config.fields & config.validators
 					stateOfErrors,	// Hash of existing field errors
 					instanceAPI,	// Passed to custom validation functions
 					triggerComponentUpdate // Will be called if anything changes
@@ -924,11 +1003,11 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 		// WAIT for all validations to complete, then resolve
 		return Promise.all(fieldValidations)
-			.then(() => {
-				// Return Promise with true if NO errors; false otherwise
-				const allFieldsErrorFree = isEmpty(stateOfErrors)
-				return Promise.resolve(allFieldsErrorFree)
-			})
+		.then(() => {
+			// Return Promise with true if NO errors; false otherwise
+			const allFieldsErrorFree = isEmpty(stateOfErrors)
+			return Promise.resolve(allFieldsErrorFree)
+		})
 	}
 
 
@@ -941,7 +1020,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	function getErrorProps( name ) {
 		// field MAY have an aliasName
 		const fieldName = verifyFieldName(name)
-		const errorMessage = getFieldErrors(fieldName)
+		const errorMessage = getFieldError(fieldName)
 
 		return {
 			error: errorMessage.length > 0,
@@ -963,8 +1042,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 		// field MAY have an aliasName
 		const fieldName = verifyFieldName(name)
 		const fieldConfig = config.fields[fieldName] || {}
-		const fieldValidation = fieldConfig.validation || {}
-		const dataType = fieldValidation.dataType
+		const fieldValidations = fieldConfig.validation || {}
+		const dataType = fieldValidations.dataType
 		const value = getFieldValue(fieldName)
 
 		// noinspection JSUnusedGlobalSymbols
@@ -976,7 +1055,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 			onBlur: onFieldBlur
 		}
 
-		if (fieldValidation.required) {
+		if (fieldValidations.required) {
 			props.required = true
 		}
 
@@ -1025,7 +1104,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	function getAllProps( name, opts ) {
 		return {
 			...getDataProps(name, opts),
-			...getErrorProps(name, opts)
+			...getErrorProps(name)
 		}
 	}
 
@@ -1067,15 +1146,18 @@ function FormManager( componentObject, options = {}, extraData ) {
 		.then(() => {
 			// Note: This will run even if validation did not run
 			const fieldConfig = config.fields[name] || {}
-			const hasErrors = doesItemHaveErrors(name)
-			const cleanDataOnBlur = withFieldDefaults(fieldConfig, 'cleanDataOnBlur')
+			const hasErrors = itemHasErrors(name)
+			const cleanDataOnBlur = withFieldDefaults(
+				fieldConfig,
+				'cleanDataOnBlur'
+			)
 
 			// Skip data-cleaning if field currently has errors
 			if (!hasErrors && cleanDataOnBlur) {
 				const newValue = cleanFieldValue(value, fieldConfig)
 				if (newValue !== value) {
 					// Pass 'change' event so will fire event with new value
-					setFieldValue(name, newValue, 'change' )
+					setFieldValue(name, newValue, 'change')
 				}
 			}
 
@@ -1112,13 +1194,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 	function undefinedToDefaultValue( value, dataType ) {
 		if (!isUndefined(value)) return value
-
-		switch (dataType) {
-			case 'boolean':
-				return false
-			default:
-				return ''
-		}
+		return dataType === 'boolean' ? false : ''
 	}
 
 	/**
@@ -1137,7 +1213,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	}
 
 
-	function withFieldDefaults(fieldConfig, key) {
+	function withFieldDefaults( fieldConfig, key ) {
 		// If field specifies a value, use it!
 		const fieldConfigValue = (fieldConfig || {})[key]
 		if (!isNil(fieldConfigValue)) return fieldConfigValue

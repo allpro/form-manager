@@ -7,7 +7,7 @@
 function logFormData(form, label) {
 	console.log(label || 'Form-Manager', {
 		'form.data()': form.data(),
-		'form.errors()': form.errors(),
+		'form.error()': form.error(),
 		'form.state()': form.state()
 	})
 }

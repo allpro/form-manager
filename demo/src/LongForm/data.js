@@ -31,7 +31,7 @@ const formData = {
 	message: '',
 	password: '',
 	birthdate: '1980-06-22',
-	birthdate2: new Date('1980-06-22T12:00:00'),
+	// birthdate: new Date('1980-06-22T12:00:00'),
 	category: '',
 	subcategory: '', // subcategories[categories[0].value][0].value,
 	who: {
