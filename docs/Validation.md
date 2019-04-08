@@ -7,33 +7,78 @@ Validation is a key feature of FormManager (**"FM"**). It is designed to make
  
 ## Validation Configuration
 
-In forms, data is automatically validated, in the manner specified by the form
- configuration. The most common "validation types" are built-in. These 
- validators can be enabled and configured with simple values, like:
+Some time-consuming aspects of creating highly usable forms are
+validation and error-messages. FM's built-in validators can handle many
+common requirements so you don't need to write your own validators, 
+or even your own error-messages! 
+Simple options are all that's needed to enable automatic validation and 
+intelligent error-messages generation.
+
+Here are a few validation configuration samples:
 
 ```javascript static
-emailAddress: {
-    aliasName: 'email',
-    displayName: 'Email',
-    validation: {
-        required: true,
-        email: true,
-        maxLength: 100,
+fields: {
+    name: {
+        displayName: 'Your Name',
+        validation: {
+            required: true,
+            minLength: 2,
+            maxLength: 60
+        }
+    },
+    password: {
+        displayName: 'Account Password',
+        validation: {
+            required: true,
+            password: true,
+            minLength: 8,
+            maxLength: 24,
+            passwordComplexity: { lower: 1, upper: 1, number: 1, symbol: 0 },
+            custom: myCustomPasswordTester
+        }
+    },
+    email: {
+        displayName: 'Email',
+        validation: {
+            required: true,
+            email: true
+        }
+    },
+    phone: {
+        displayName: 'Phone',
+        validation: {
+            phone: true
+        }
+    },
+    address: {
+        displayName: 'Phone',
+        validation: {
+            address: true
+        }
+    },
+    dateJoined: {
+        displayName: 'Date Joined',
+        dataType: 'dateISO',
+        validation: {
+            date: true,
+            dateRange: [ '2008-06-15', new Date() ]
+        }
+    },
+    age: {
+        displayName: 'Your Age',
+        dataType: 'integer',
+        validation: {
+            integer: true,
+            numberRange: [ 18, 80 ]
+        }
+    },
+    SIN: {
+        displayName: 'Socal Insurance Number',
+        validation: {
+            integer: true,
+            exactLength: 9
+        }
     }
-},
-homePhone: {
-    displayName: 'Home Phone',
-    validation: {
-        phone: true,
-        minLength: 10,
-    }
-},
-age: {
-    displayName: 'Your Age',
-    validation: {
-        minNumber: 18,
-    }
-}
 ```
 
 | Type         | Values         | Applies To |
@@ -93,7 +138,7 @@ unitNumber: {
 ```
 
 A custom validation function can get any data it needs from the FormManager 
-object. For examle:
+object. For example:
 ```javascript static
 function myValidator(value, fieldname, form) {
     const otherValue = form.value('anotherFieldname');
