@@ -1,12 +1,12 @@
 /**
  * Helper methods used by FormManager; exported as an object of methods
  */
+import assign from 'lodash/assign'
 import forOwn from 'lodash/forOwn'
 import isArray from 'lodash/isArray'
-import isObject from 'lodash/isObject'
+import isNil from 'lodash/isNil'
 import isObjectLike from 'lodash/isObjectLike'
 import isPlainObject from 'lodash/isPlainObject'
-import isNil from 'lodash/isNil'
 import isString from 'lodash/isString'
 import isUndefined from 'lodash/isUndefined'
 import clone from 'lodash/clone'
@@ -61,7 +61,7 @@ const emptyValuesToNull = data => {
 const getChangedFields = ( src, cmp ) => {
 	const simpleValue = val => {
 		// Stringify Array and Hash values for simple comparison; rarely needed.
-		if (isObjectLike( val )) return JSON.stringify( val )
+		if (isPlainObject( val )) return JSON.stringify( val )
 
 		// Undefined and Null (aka Nil) are equal to "" for data comparison.
 		if (isNil( val )) return ''
@@ -125,7 +125,10 @@ function pathToKeysArray( path ) {
  * @param {Object} [opts]   Configuration options
  * @returns {*}				Value at specified path, or undefined if not found
  */
-function getObjectValue( hash, path, opts = { cloneValue: false } ) {
+function getObjectValue( hash, path, opts ) {
+	if (!hash || !isPlainObject(hash)) return undefined
+
+	const getOpts = assign({ cloneValue: false, deepClone: true }, opts)
 	let branch = hash
 
 	// If a path was passed, trace the path inside state.form
@@ -134,7 +137,7 @@ function getObjectValue( hash, path, opts = { cloneValue: false } ) {
 		const keys = pathToKeysArray( path )
 		for (const key of keys) {
 			// If branch is not an object, then cannot recurse; abort
-			if (!isObjectLike(branch)) return undefined
+			if (!isPlainObject(branch)) return undefined
 
 			branch = branch[key]
 
@@ -143,7 +146,11 @@ function getObjectValue( hash, path, opts = { cloneValue: false } ) {
 		}
 	}
 
-	return opts.cloneValue ? cloneDeep( branch ) : branch
+	return !getOpts.cloneValue
+		? branch
+		: getOpts.deepClone
+			? cloneDeep( branch )
+			: clone( branch )
 }
 
 /**
@@ -154,7 +161,11 @@ function getObjectValue( hash, path, opts = { cloneValue: false } ) {
  * @param {Object} [opts]   Configuration
  * @returns {boolean}		True if value set; false if value is unchanged
  */
-function setObjectValue( hash, path, value, opts = { cloneValue: false, merge: false } ) {
+function setObjectValue( hash, path, value, opts ) {
+	if (!hash || !isPlainObject(hash)) return undefined
+
+	const setOpts = assign({ cloneValue: false, merge: false }, opts)
+
 	// If a path was passed, recurse into the object
 	if (path && path !== '/') {
 		const keys = pathToKeysArray( path )
@@ -183,30 +194,28 @@ function setObjectValue( hash, path, value, opts = { cloneValue: false, merge: f
 
 		// Check whether value has changed - ignore objects, assume changed
 		const oldValue = branch[lastKey]
-		if (!isObject(value) && value === oldValue) {
+		if (!isObjectLike(value) && value === oldValue) {
 			return false // Value was NOT updated
 		}
 
 		// Write the passed value at end of the path (last branch)
 		// Ignore any existing value - we do not merge data here.
-		if (opts.merge && isObjectLike(branch[lastKey]) && isObjectLike(value)) {
-			merge(branch[lastKey], opts.cloneValue ? clone( value ) : value)
+		if (setOpts.merge && isPlainObject(branch[lastKey]) && isPlainObject(value)) {
+			merge(branch[lastKey], setOpts.cloneValue ? clone( value ) : value)
 		}
 		else {
-			branch[lastKey] = opts.cloneValue ? clone( value ) : value
+			branch[lastKey] = setOpts.cloneValue ? clone( value ) : value
 		}
 
 		return true // Value was updated
 	}
-	else if (isObjectLike( path )) {
+	else if (isPlainObject( path )) {
 		// The path is an object (key/value pairs) to merge into hash-root
-		merge( hash, opts.cloneValue ? cloneDeep( path ) : path )
+		merge( hash, setOpts.cloneValue ? cloneDeep( path ) : path )
 		return true // Values were updated
 	}
 	else {
-		console.warn(
-			'FormManager: No path specified to set value: "${value}"'
-		)
+		console.warn('FormManager: No path specified to set value: "${value}"')
 		return false // Value was NOT updated
 	}
 }

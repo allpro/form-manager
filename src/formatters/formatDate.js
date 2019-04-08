@@ -1,11 +1,13 @@
 // TEMPORARY IMPORTS
 import moment from 'moment'
-import _ from 'lodash'
+import assign from 'lodash/assign'
+import isArray from 'lodash/isArray'
+import isString from 'lodash/isString'
 
 const timeFormats = {
 	'short-time': 'h A', // 10 AM
 	'medium-time': 'h:mm A', // 10:22 AM
-	'long-time': 'h:mm:ss A', // 10:22:35 AM
+	'long-time': 'h:mm:ss A' // 10:22:35 AM
 }
 
 const dateFormats = {
@@ -21,8 +23,7 @@ const dateFormats = {
 
 	'short-day-month': 'ddd, MMM D', // Fri, Feb 23
 	'medium-day-month': 'dddd, MMM D', // Friday, Feb 23
-	'day-month': 'dddd, MMMM D', // Friday, February 23
-	// TODO: rename 'day-month' to 'long-day-month
+	'long-day-month': 'dddd, MMMM D', // Friday, February 23
 
 	'short-month-day': 'MM-dd', // 10-22 - NOT USED
 	'medium-month-day': 'MMM d', // Oct 22 - Used in date-range when same year
@@ -36,35 +37,49 @@ const dateFormats = {
 	'medium-year-quarter': 'YYYY [Q]Q',
 
 	// NON-DISPLAY FORMATS
-	'date-input-field': 'YYYY-MM-DD', // SPECIAL for input.type="date" value
-	'iso-string': '', // empty format string means iso-8601 standard format
+	'date-input': 'YYYY-MM-DD', 			// input.type="date"
+	'time-input': 'HH:mm',					// input.type="time"
+	'datetime-input': 'YYYY-MM-DDTHH:mm',	// input.type="datetime-local"
+	'iso-string': '' // empty format string means iso-8601 standard format
 }
-_.assign( dateFormats, {
+assign(dateFormats, {
 	'short-date-time': [dateFormats['short-date'], timeFormats['short-time']],
 	'medium-date-time': [
 		dateFormats['medium-date'],
-		timeFormats['medium-time'],
+		timeFormats['medium-time']
 	],
 	'long-date-time': [dateFormats['long-date'], timeFormats['medium-time']],
 	'long-date-day-time': [
 		dateFormats['long-date-day'],
-		timeFormats['medium-time'],
-	],
-} )
+		timeFormats['medium-time']
+	]
+})
 
+
+const reTimeOnly = /^[0-9]+:[0-9]+[0-9:]*$/
 const reBadTimestamp = /\.0{1,4}Z$/ // SAMPLE: "19891102T120000.0Z"
 const reDissectBadTimestamp = /^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/
 
-const fixTimestamp = strDate => {
-	if (_.isString( strDate ) && reBadTimestamp.test( strDate )) {
-		const match = strDate.match( reDissectBadTimestamp )
+function fixTimestamp(strDate) {
+	if (isString(strDate)) {
+		if (reTimeOnly.test(strDate)) {
+			return `1970-01-01T${strDate}`
+		}
 
-		if (match && match.length > 6) {
-			return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}Z`
+		if (reBadTimestamp.test(strDate)) {
+			const match = strDate.match(reDissectBadTimestamp)
+			if (match && match.length > 6) {
+				return `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}Z`
+			}
 		}
 	}
 
 	return strDate
+}
+
+function toMoment( date ) {
+	if (!date) return date
+	return moment(fixTimestamp(date))
 }
 
 /**
@@ -76,12 +91,12 @@ const fixTimestamp = strDate => {
 function formatDate( date, dateFmt, timeFmt ) {
 	if (!date) return ''
 
-	const mDate = moment( fixTimestamp( date ) )
+	const mDate = toMoment( date )
 
 	// If the date is missing or invalid, log it and return 'Invalid Date'.
 	// The return value will help developers instantly spot format errors.
 	if (!date || !mDate.isValid()) {
-		console.log( `The date provided to formatDate is invalid: ${date}` )
+		console.log(`The date provided to formatDate is invalid: ${date}`)
 		return 'Invalid Date'
 	}
 
@@ -92,11 +107,11 @@ function formatDate( date, dateFmt, timeFmt ) {
 
 	if (dateFmt) {
 		dt = dateFormats[dateFmt] // NOTE: empty-string == iso-format
-		if (!_.isString( dt )) {
+		if (!isString(dt)) {
 			dt = dateFmt || ''
 		}
 
-		if (_.isArray( dt )) {
+		if (isArray(dt)) {
 			tm = dt[1]
 			dt = dt[0]
 		}
@@ -105,7 +120,8 @@ function formatDate( date, dateFmt, timeFmt ) {
 		tm = timeFormats[timeFmt] || timeFmt
 	}
 
-	return mDate.format( tm ? `${dt} ${tm}` : dt )
+	return mDate.format(tm ? `${dt} ${tm}` : dt)
 }
 
 export default formatDate
+export { toMoment }

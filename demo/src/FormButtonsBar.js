@@ -11,7 +11,7 @@ function FormButtonsBar(props) {
 				color="primary"
 				variant="contained"
 				style={{ margin: '10px 0 10px 10px' }}
-				onClick={form.validate}
+				onClick={form.validateAll}
 			>
 				Validate All
 			</Button>

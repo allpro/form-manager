@@ -7,30 +7,6 @@
 [![coverage][coveralls-badge]][coveralls]
 [![donate][donate-badge]][donate]
 
-[gzip-size-badge]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js?compression=gzip
-[gzip-size]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js
-
-[install-size-badge]: https://packagephobia.now.sh/badge?p=@allpro/form-manager
-[install-size]: https://packagephobia.now.sh/result?p=@allpro/form-manager
-
-[npm-badge]: http://img.shields.io/npm/v/@allpro/form-manager.svg?style=flat-round
-[npm]: https://www.npmjs.com/package/@allpro/form-manager
-
-[build-badge]: https://travis-ci.org/allpro/form-manager.svg?branch=master
-[build]: https://travis-ci.org/allpro/form-manager
-
-[coveralls-badge]: https://coveralls.io/repos/github/allpro/form-manager/badge.svg?branch=master
-[coveralls]: https://coveralls.io/github/allpro/form-manager?branch=master
-
-[donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-round
-[donate]: https://paypal.me/KevinDalman
-
-[dependency-badge]: https://badgen.now.sh/david/dep/styfle/packagephobia
-[dependency]: https://david-dm.org/styfle/packagephobia
-
-[devDependency-badge]: https://badgen.now.sh/david/dev/styfle/packagephobia
-[devDependency]: https://david-dm.org/styfle/packagephobia?type=dev
-
 ---
 
 -   NPM: `npm install @allpro/form-manager`
@@ -40,58 +16,198 @@
     -   JSDelivr: `<script src="https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
 
 ---
-FormManager (**"FM'**) is a data-centric solution for handling forms, 
-including validation, formatting, type-conversion, and more. The goal is
-a **total solution for forms**, requiring as little custom code as possible.
-FM is easy to learn for beginners, but it can also handle highly complex, rich
-forms full of custom controls. 
-**There are no limitations to what it can handle.**
+FormManager (**"FM'**) is a data-handler for forms, or any data actually.
+The motivation is to have **a total data solution for forms**,
+that requires as little custom code as possible.
+
+**FM's capabilities include:**
+
+- Integration with any type of form control, standard or custom
+- Optimizations for use with **Material UI controls**
+- Comprehensive validation of data, with the most common validators built-in.
+- Error-message auto-generation, using a templating system
+- Parsing, cleaning and reformatting of form-field entries
+- Automated data-type conversion between form-fields and the data object
+- Form-field event handling, with customizable validation events
+- Form-field property-setter helpers to simplify form mark-up
+- Ability to _alias_ fieldnames; to normalize names or to flatten nested data
+- Configuration options at both the form and field level for maximum control
+- All features are easily customizable and extensible
+- Development tools make it easy to test and refine form configurations
+- **Is compatible with ANY UI library, including React and React Native**
+
+**FM does NOT do/require:**
  
-FM does not 'render' anything, nor does it
- handle fetching or posting data - that's not its job! 
- **It is a _pure_ data and logic component.** 
- I promote a strong separation of concerns, so 
- **FM does not require any extra mark-up**. It does not know or care 
-how you create or design forms, or what kinds of controls you use. 
+- **Does not require any special mark-up or structure**.
+- Does NOT 'render' anything - **it's a _pure_ data and logic handler.**
+- Does NOT 'wrap' your forms; it is _agnostic_ about form mark-up
+- Does NOT fetch or post data, though it can _convert_ data in each direction.
+- Does NOT create any global vars (unless imported as a `<script />`)
+- Does NOT use Context in React or any similar trickery
 
-FM integrates with form-fields using standard properties and event handlers.
-Or you can use its rich API to easily integrate any non-standard control. 
-FM does not use component wrappers, it does not use globals (when a module),
-and it does not use Context in React. 
-**It's pure Javascript; there is no magic behind the curtain!**
+FM is **_pure_ Javascript**. There is no magic behind the curtain!
 
-I created this version of FM when using Material UI form components in React. 
-However, since FM is a pure Javascript component, 
-**it is not reliant on React or any other library**. 
-It can be used in any environment, for any purpose.
+## How Is FormManager Different?
 
-## Why Another Form Handler?
+**No form helpers I've found has the data handling capabilities of FM.** 
+Some popular helpers focus on backend communications, 
+but have no built-in validation features. 
+For me, validation is a primary feature, while 
+communications is NOT something I want or need a helper for.
 
-**No form handler I've found has the data handling capabities of FM.** 
-The Formik&trade; form helper is popular for React, but it doesn't include 
-validation. For me that's a major feature so I want it built-in. 
-Plus, like virtually all form handlers, Formik requires extra mark-up. 
-This adds complexity to markup, and means that supposedly _dumb_ presentation 
-components must contain some form logic. 
+Most form helpers requires extra mark-up, which adds complexity to markup.
+It also means that _dumb_ presentation components must contain some form logic. 
 This goes against my preference for **_total_ separation of concerns**.
-These are just some of the ways FM is different from all other form handlers.
+
+Most helpers don't provide any formatting or data-conversion capabilities.
+This means you must write your own code, often repetitively.
+FM is a TOTAL data handler, so these features are built-in and simple to use.
 
 When using FormManager, **_ALL_ data handling and logic is in one place**, 
-and this is **completely separate from the mark-up**. 
+and this configuration is **completely separate from the mark-up**. 
 If you have a complex form configuration, 
 it's can even go its own file, like `formConfig.js`.
 
-If you are already using a validation system, like Yup&trade;, 
-it's very simple to integrate that with FM. 
+If you are already use some helpers, like a validation system, 
+it's simple to integrate these with FM. 
 Every feature in FM is designed to be easily extended and/or overridden.
 
-**FM does _not_ handle data fetching or posting.** Every app has its 
-own communications system and standards. 
-There are plenty of helpers that assist with backend data-flow, caching, etc.
-This is _not_ a responsibility of a form manager in my opinion, 
-and it's not the challenging aspect of forms!
+I created this version of FM when using Material UI components in a React app. 
+However, **FM is not reliant on React or any other library**. 
+It can be used in any environment, for any purpose.
 
-## How Do I Use It?
+**FM is designed for professional developers with diverse needs**. 
+It is designed to handle rich forms using a wide range of controls,
+in potentially complex designs.
+**There are no limitations on what kind of form FM can handle.**
+
+Although FM's focus is _not_ creating simple forms for beginners,
+it is extremely easy to learn and to use.
+Anyone who has created an HTML form already knows how to implement FM. 
+
+### Validation Is Key!
+
+Some time-consuming aspects of creating highly usable forms are
+validation and error-messages. FM's built-in validators can handle many
+common requirements so you don't need to write your own validators, 
+or even your own error-messages! 
+Simple options are all that's needed to enable automatic validation and 
+intelligent error-messages generation.
+
+Here are a few validation configuration samples:
+
+```javascript static
+fields: {
+    name: {
+        displayName: 'Your Name',
+        validation: {
+            required: true,
+            minLength: 2,
+            maxLength: 60
+        }
+    },
+    password: {
+        displayName: 'Account Password',
+        validation: {
+            required: true,
+            password: true,
+            minLength: 8,
+            maxLength: 24,
+            passwordComplexity: { lower: 1, upper: 1, number: 1, symbol: 0 },
+            custom: myCustomPasswordTester
+        }
+    },
+    dateJoined: {
+        displayName: 'Date Joined',
+        validation: {
+            date: true,
+            minDate: '20008-06-15',
+            maxDate: new Date()
+        }
+    }
+    age: {
+        displayName: 'Your Age',
+        validation: {
+            integer: true,
+            numberRange: [ 18, 80 ]
+        }
+    }
+    SIN: {
+        displayName: 'Socal Insurance Number',
+        dataType: 'string',
+        validation: {
+            integer: true,
+            exactLength: 9
+        }
+    }
+    email: {
+        displayName: 'Email',
+        validation: {
+            required: true,
+            email: true
+        }
+    },
+    phone: {
+        displayName: 'Phone',
+        validation: {
+            phone: true
+        }
+    },
+    address: {
+        displayName: 'Phone',
+        validation: {
+            address: true
+        }
+    },
+```
+
+These are some of the ways FM is different.
+
+
+## How does FM work?
+
+
+## How Do I Implement It?
+
+FM integrates with form controls using standard properties and event handlers.
+Below are some basic examples. These React JSX markup, but it could be normal
+HTML mark-up if not using React.
+
+```javascript static
+// Native control
+<input
+    name="firstName"
+    value={form.value('firstName')}
+    required={form.fieldRequired('firstName')}
+    disabled={form.fieldDisabled('firstName')}
+    readOnly={form.fieldReadonly('firstName')}
+    onChange={form.onFieldChange}
+    onBlur={form.onFieldBlur}
+    onFocus={form.onFieldFocus}
+    aria-label="First Name"
+>
+// OR using prop-setter helper...
+<input {...form.dataProps('firstName')} />
+
+// Material UI control using props setter, including error messages
+<TextField {...form.allProps('firstName') />
+
+// Custom control that has non-standard events
+<DatePicker
+    name="birthdate"
+    value={form.value('birthdate')}
+    aria-label="First Name"
+    required={form.fieldRequired('birthdate')}
+    disabled={form.fieldDisabled('birthdate')}
+    readOnly={form.fieldReadonly('birthdate')}
+    onChange={date => form.onFieldChange('birthdate', date)}
+/>
+// OR using prop-setter helper, and then overriding onChange
+<DatePicker
+    {...form.dataProps('birthdate')}
+    onChange={date => form.onFieldChange('birthdate', date)}
+/>
+```
 
 Below is a sample presentation component for a form. The FM instance was 
 created in the parent/container component, and passed in as **`props.form`**. 
@@ -154,9 +270,7 @@ you can create any component structure required -
 just pass in `props.form` so you can integrate the data with FM.
 
 
-## What Can FormManager Do?
-
-Here is an overview of FM's capabilities...
+## FormManager Documentation
 
 ### Data Handling
 
@@ -204,9 +318,8 @@ for details.
 
 ## Implementing FormManager
 
-FormManager (**"FM"**) can be used any way you want, but usually will be 
-implemented in a 'container component' that handles all the data and view logic 
-for the 'presentation components' that it uses.
+FM can be used any way you want, but usually will be 
+implemented in a 'container component' that handles the data and view logic.
 
 See 
 **[Implementing FormManager in Components](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
@@ -222,3 +335,28 @@ The next priorities for this update are:
 - _Track_ data so can know when form is 'dirty', and which values changed.
 - Add tests for all functionality, for confidence it is production-ready.
 - Improve all documentation.
+
+
+[gzip-size-badge]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js?compression=gzip
+[gzip-size]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js
+
+[install-size-badge]: https://packagephobia.now.sh/badge?p=@allpro/form-manager
+[install-size]: https://packagephobia.now.sh/result?p=@allpro/form-manager
+
+[npm-badge]: http://img.shields.io/npm/v/@allpro/form-manager.svg?style=flat-round
+[npm]: https://www.npmjs.com/package/@allpro/form-manager
+
+[build-badge]: https://travis-ci.org/allpro/form-manager.svg?branch=master
+[build]: https://travis-ci.org/allpro/form-manager
+
+[coveralls-badge]: https://coveralls.io/repos/github/allpro/form-manager/badge.svg?branch=master
+[coveralls]: https://coveralls.io/github/allpro/form-manager?branch=master
+
+[donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-round
+[donate]: https://paypal.me/KevinDalman
+
+[dependency-badge]: https://badgen.now.sh/david/dep/styfle/packagephobia
+[dependency]: https://david-dm.org/styfle/packagephobia
+
+[devDependency-badge]: https://badgen.now.sh/david/dev/styfle/packagephobia
+[devDependency]: https://david-dm.org/styfle/packagephobia?type=dev

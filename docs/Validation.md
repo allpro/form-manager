@@ -166,11 +166,13 @@ const globalConfig = {
         revalidateOnChange: true,
         revalidateOnBlur: false,
 
-        // DATA CLEANING/FORMATTING OPTIONS
-        cleanDataOnBlur: true, // Clean and REPLACE field-data onBlur
-        trimText: true, // Trim leading-/trailing--spaces
-        fixMultiSpaces: true // Replace multi-spaces/tabs with single space
-    },
+ 		// TEXT-FIELD CLEANING/FORMATTING OPTIONS
+ 		cleaning: {
+ 			cleanOnBlur: true, // Clean field-text onBlur
+ 			trim: true, // Trim leading-/trailing--spaces
+ 			trimInner: false, // Replace multi-spaces/tabs with single space
+ 		}
+    }
 };
 
 function AppFormManager(obj, config, data) {

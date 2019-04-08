@@ -28,14 +28,18 @@ const subcategories = {
 }
 
 const formData = {
-	message: '',
+	username: '',
 	password: '',
-	birthdate: '1980-06-22',
-	// birthdate: new Date('1980-06-22T12:00:00'),
+	remember: false,
+	age: null,
+	dateJoined: '2005-06-22T12:00:00',
+	startTime: '1970-01-01T08:00:00',
+	appointment: '2019-06-15T14:00:00',
 	category: '',
-	subcategory: '', // subcategories[categories[0].value][0].value,
-	who: {
-		gender: '',
+	subcategory: '',
+	profile: {
+		homePhone: '5555555555',
+		gender: 'other',
 	},
 }
 

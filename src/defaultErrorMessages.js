@@ -1,3 +1,6 @@
+import formatters from './formatters'
+const { date } = formatters
+
 /**
  * Default error messages used for standard validation errors
  * Message strings can contain variables that will be substituted:
@@ -17,15 +20,43 @@ const defaultErrorMessages = {
 	number: '{name} must be a number',
 	integer: '{name} must be only numbers',
 
+	password: {
+		default: 'This is not a valid password',
+		mixedCase: '{name} must have both uppercase and lowercase characters,',
+		lowerCase: '{name} must have {value} or more lowercase characters,',
+		upperCase: '{name} must have {value} or more uppercase characters,',
+		number: '{name} must have {value} or more numbers,',
+		symbol: '{name} must have {value} or more symbols,',
+		invalidChars: `These characters are INVALID: {value}`
+	},
+
 	// Generic, preset validators - require value(s) to be set
 	minLength: '{name} must be at least {value} characters',
 	maxLength: '{name} must be less than {value} characters.',
 	exactLength: '{name} must be exactly {value} characters.',
-	minDate: '{name} must be on or after {value}',
-	maxDate: '{name} must be on or before {value}',
 	minNumber: '{name} must be at least {value}',
 	maxNumber: '{name} must be less than or equal to {value}',
 	numberRange: '{name} must be between {value1} and {value2}',
+	minDate: (name, value) => (
+		`${name || 'Date'} must be on or after ${date(value, 'medium-date')}`
+	),
+	maxDate: (name, value) => (
+		`${name || 'Date'} must be on or before ${date(value, 'medium-date')}`
+	),
+	dateRange: (name, value) => (
+		`${name || 'Date'} must be between ` +
+		`${date(value[0], 'medium-date')} and ${date(value[1], 'medium-date')}`
+	),
+	minTime: (name, value) => (
+		`${name || 'Time'} must be at or after ${date(value, 'medium-time')}`
+	),
+	maxTime: (name, value) => (
+		`${name || 'Time'} must be at or before ${date(value, 'medium-time')}`
+	),
+	timeRange: (name, value) => (
+		`${name || 'Time'} must be between ` +
+		`${date(value[0], 'medium-time')} and ${date(value[1], 'medium-time')}`
+	),
 
 	// The 'unknown' message should never be needed, but just in case...
 	unknown: 'This entry is invalid',

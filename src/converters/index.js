@@ -1,4 +1,3 @@
-import moment from 'moment'
 import isBoolean from 'lodash/isBoolean'
 import isDateObject from 'lodash/isDate'
 import isNil from 'lodash/isNil'
@@ -9,43 +8,48 @@ import toNumber from 'lodash/toNumber'
 import toString from 'lodash/toString'
 import trim from 'lodash/trim'
 
+import formatters from '../formatters'
+const { toMoment } = formatters
 
-const string = value => toString( value )
 
-const integer = value => toInteger( value )
+const string = value => toString(value)
 
-const number = value => toNumber( value )
+const integer = value => isNil(value) ? null : toInteger(value)
+
+const number = value => isNil(value) ? null : toNumber(value)
 
 const boolean = value => {
-	// DO NOT convert NULL or undefined - these mean 'unspecified'
-	if (isBoolean( value ) || isNil( value )) return value
+	if (isBoolean(value)) return value
+
+	// DO NOT convert NULL or undefined to boolean - these mean 'unspecified'
+	if (isNil(value)) return null
 
 	// Any non-zero number is true
-	if (isNumber( value )) return value !== 0
+	if (isNumber(value)) return value !== 0
 
 	// Any string other than these special string values becomes true
-	if (isString( value )) {
+	if (isString(value)) {
 		const val = trim(value)
-		return val && !/^(|0|false|no)$/.test( value )
+		return val && !/^(|0|false|no)$/.test(value)
 	}
 
 	// For all other types, convert truthy/falsey to a boolean
 	return !!value
 }
 
+
+const date = ( value, format = 'YYYY-MM-DD' ) => formatters.date(value, format)
+
+const dateISO = value => formatters.date(value, 'iso-string')
+
 const dateObject = value => {
 	if (!value) return null
 	if (isDateObject(value)) return value
-
 	// Avoid arrays and objects that will result in a Now date
 	if (!isString(value) && !isNumber(value)) return null
 
-	return moment( value ).valueOf()
+	return toMoment(value).valueOf()
 }
-const dateString = value => (
-	isString(value) ? value : moment( value ).format('YYYY-MM-DD')
-)
-const dateISOString = value => moment( value ).toISOString()
 
 
 export default {
@@ -53,7 +57,7 @@ export default {
 	string,
 	integer,
 	number,
-	dateObject,
-	dateString,
-	dateISOString,
+	date,
+	dateISO,
+	dateObject
 }

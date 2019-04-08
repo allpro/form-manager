@@ -32,7 +32,7 @@ for that information.
 ## Implementing in a 'Container' Component
 
 Below are 2 examples: one implementing FormManager in a class component and one 
-implementing inside a functional component using hooks. 
+implementing inside a functional component using the useFormManager hook. 
 These examples show only basic FM configuration to keep it simple.
 
 #### How to handle render optimization
@@ -43,9 +43,11 @@ rendering logic.
 optimize updates, then at least one 'prop' must change to trigger an update.** 
 The FormManager 'object' never changes, and FM eliminate the need to pass 
 individual values, therefore no new prop value is passed. 
-To address this, FM writes a unique revision-number into state each time it 
-does a state update. This value can be passed to child components to force an 
-update. This optional prop is shown in these examples, but you may not need it.
+To address this: in class-components FM writes a unique revision-number into 
+state each time it does a state update; 
+in functional components using hookds, the form.getRevision() method returns it.
+This 'revision number' can be passed to child components to force an update. 
+This optional prop is shown in the examples below, but you may not need it.
 
 ### Class Component
 
@@ -69,7 +71,6 @@ export default class MyComponent extends React.Component {
     constructor(props) {
         super(props);
 
-        // Form-data can be set from props, if applicable
         this.form = FormManager(this, formConfig, props.data);
     }
 
@@ -96,8 +97,8 @@ For hooks, FM writes the bare formRevision number to make it easy to use.
 NOTE that the render output here is _identical_ to the Class example above.
 
 ```javascript static
-import React, { Fragment, useState, useRef } from 'react';
-import FormManager from 'form-manager';
+import React, { Fragment } from 'react';
+import { useFormManager } from 'form-manager';
 
 import FormPartOne from './FormPartOne';
 import FormPartTwo from './FormPartTwo';
@@ -107,10 +108,8 @@ const formConfig = {
 };
 
 export default function MyComponent(props) {
-    // Create a state hook for FM to use; pass the setter to the FM factory.
-    // The naming of these states does not matter; use whatever you want.
-    const [ rev, setRevision ] = useState(0)
-    const [ form ] = useState(() => FormManager(setRevision, formConfig, props.data))
+    const form = useFormManager(formConfig, props.data))
+    const rev = form.getRevision()
 
     return (
         <Fragment>
@@ -160,7 +159,7 @@ const MyForm = (props) => {
                     )}
                 </Select>
                 <FormHelperText className="hide-when-empty">
-                    {form.error('category')}
+                    {form.errors('category')}
                 </FormHelperText>
             </FormControl>
 
@@ -186,7 +185,7 @@ const MyForm = (props) => {
                     <FormControlLabel value="other" label="Other" control={<Radio/>} />
                 </RadioGroup>
                 <FormHelperText className="hide-when-empty">
-                    {form.error('user/gender')}
+                    {form.errors('user/gender')}
                 </FormHelperText>
             </FormControl>
 

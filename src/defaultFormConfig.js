@@ -23,6 +23,9 @@ const formConfig = {
 	fieldAliasMap: {},
 
 	fieldDefaults: {
+		// Are fields MaterialUI controls? true = Use MUI-specific props
+		isMUIControl: false,
+
 		/*
 		 * Form validation options can be overridden per-field
 		 * Validation can be triggered manually for a single field, or all fields
@@ -42,11 +45,14 @@ const formConfig = {
 		readOnly: false,
 		disabled: false,
 
-		// DATA CLEANING/FORMATTING OPTIONS
-		cleanDataOnBlur: true, // Clean and REPLACE field-data onBlur
-		trimText: true, // Trim leading-/trailing--spaces
-		fixMultiSpaces: false, // Replace multi-spaces/tabs with single space
-		monoCaseToProper: false, // Change UPPER or lower case to Proper-Case
+		// TEXT-FIELD CLEANING/FORMATTING OPTIONS
+		cleaning: {
+			cleanOnBlur: true, // Clean field-text onBlur
+			trim: true, // Trim leading-/trailing--spaces
+			trimInner: false, // Replace multi-spaces/tabs with single space
+			monoCaseToProper: false, // UPPER-CASE or lower-case to Proper-Case
+			reformat: '' // {(string|Function)} Apply a formatter to value
+		}
 	},
 
 	/*
@@ -82,8 +88,8 @@ const formConfig = {
 			aliasName:		'age', // name user passes to get data-props, etc.
 			displayName:	'Your Age',
 			defaultValue:	25,
+			dataType:		'integer',
 			validation: {
-				dataType:		'integer',
 				fieldType:		'dataISOString',
 				required:		true,
 				numberRange:	[ 18, 120 ],

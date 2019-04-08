@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 
 // This demo also includes test output using BOTH dev-helper tools
-import FormManager, { FieldsTestOutput } from '../../../src'
+import { useFormManager, FieldsTestOutput } from '../../../src'
 
 import FormSection from './form'
 import formConfig from './formConfig'
@@ -29,10 +29,8 @@ const styles = {
 
 
 function LongFormHookDemo(props) {
-	const [ revision, setRevision ] = useState(0)
-	const [ form ] = useState(
-		() => FormManager(setRevision, formConfig, props.data)
-	)
+	const form = useFormManager(formConfig, props.data)
+	const revision = form.getRevision()
 
 	return (
 		<div style={styles.wrapper}>

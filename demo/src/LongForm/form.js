@@ -1,9 +1,10 @@
 import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
-import isDate from 'lodash/isDate'
 
 import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
+import Checkbox from '@material-ui/core/Checkbox'
+import Switch from '@material-ui/core/Switch'
 import Radio from '@material-ui/core/Radio'
 import RadioGroup from '@material-ui/core/RadioGroup'
 import TextField from '@material-ui/core/TextField'
@@ -20,7 +21,6 @@ import DateFnsUtils from '@date-io/date-fns'
 import { MuiPickersUtilsProvider, DatePicker } from 'material-ui-pickers'
 
 import FormButtonsBar from '../FormButtonsBar'
-import convertTo from '../../../src/converters'
 
 const styles = {
 	formSection: {
@@ -28,8 +28,7 @@ const styles = {
 		paddingTop: '16px',
 		marginTop: '24px'
 	},
-	formSectionTop: {
-	}
+	formSectionTop: {}
 }
 
 const helperTextStyles = {
@@ -39,16 +38,13 @@ const helperTextStyles = {
 		display: 'none' // Hide blocks when not in error-state
 	},
 	error: {
-		display: 'block',
+		display: 'block'
 	}
 }
 
 
-const datePickerValue = val => (isDate(val) ? convertTo.dateString(val) : val)
-
-
 class FormSection extends Component {
-	constructor(props) {
+	constructor( props ) {
 		super(props)
 
 		this.form = props.form
@@ -71,15 +67,15 @@ class FormSection extends Component {
 
 				<section style={styles.formSection}>
 					<Typography variant="title">
-						MUI Text Fields
+						Text & Numbers
 					</Typography>
 					<Typography variant="body1" className="form-tip">
 						Field is required and has a minimum-length.
 					</Typography>
 
 					<TextField
-						label="Details of Issue"
-						{...form.allProps('message')}
+						label="Username"
+						{...form.allProps('username')}
 						fullWidth={true}
 						margin="dense"
 						multiline
@@ -87,24 +83,31 @@ class FormSection extends Component {
 						inputRef={this.messageInput}
 						FormHelperTextProps={{ classes }}
 					/>
+
+					<TextField
+						label="Password"
+						{...form.allProps('password')}
+						fullWidth={true}
+						margin="dense"
+						FormHelperTextProps={{ classes }}
+					/>
 				</section>
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
-						Multiple Rule Field
-					</Typography>
-					<Typography variant="body1" className="form-tip">
-						Uses both standard and custom validators.
-						Custom validator adds <em>multiple</em> error messages.
-					</Typography>
+					<TextField
+						label="Phone"
+						{...form.allProps('phone')}
+						margin="dense"
+						fullWidth={true}
+						FormHelperTextProps={{ classes }}
+					/>
 
 					<TextField
-						label="Password"
-						type="password"
-						{...form.allProps('password')}
-						fullWidth={true}
+						label="Age"
+						{...form.allProps('age')}
 						margin="dense"
+						fullWidth={true}
 						FormHelperTextProps={{ classes }}
 					/>
 				</section>
@@ -115,45 +118,129 @@ class FormSection extends Component {
 						Date Pickers
 					</Typography>
 					<Typography variant="body1" className="form-tip">
-						Valid dates are between Jan-1990 and Jan-2000.
+						Valid dates are between Jan-2000 and Jan-2015.
 					</Typography>
 
-					<TextField
-						label="Birthdate (native)"
-						type="date"
-						{...form.allProps('birthdate')}
-						value={datePickerValue(form.value('birthdate'))}
-						fullWidth={true}
-						margin="dense"
-						FormHelperTextProps={{ classes }}
-						InputLabelProps={{
-							shrink: true,
-						}}
-					/>
-				</section>
-
-				<section style={styles.formSection}>
 					<MuiPickersUtilsProvider utils={DateFnsUtils}>
 						<DatePicker
-							label="Birthdate (picker)"
-							{...form.dataProps('birthdate')}
-							value={datePickerValue(form.value('birthdate'))}
+							label="Date Joined (DatePicker)"
+							{...form.allProps('dateJoined')}
+							// Override type="date" config for DatePicker
+							type="text"
+							// DatePicker requires the ISO date value
+							value={form.getData('dateJoined')}
+							fullWidth={true}
+							margin="normal"
+							// DatePicker options
 							format="MMM d, yyyy"
 							autoOk
 							clearable
-							onChange={date => {
-								form.value('birthdate', date)
-							}}
 						/>
 					</MuiPickersUtilsProvider>
 
-					<FormControl
+					<TextField
+						label="Date Joined (native date)"
+						{...form.allProps('dateJoined')}
 						fullWidth={true}
-						margin="none" // [none|normal|dense] Vertical spacing
-						error={form.hasErrors('birthdate')}
+						margin="normal"
+						FormHelperTextProps={{ classes }}
+						InputLabelProps={{ shrink: true }}
+					/>
+
+					<TextField
+						label="Start Time (native time)"
+						{...form.allProps('startTime')}
+						fullWidth={true}
+						margin="normal"
+						FormHelperTextProps={{ classes }}
+						InputLabelProps={{ shrink: true }}
+					/>
+
+					<TextField
+						label="Appointment (native datetime)"
+						{...form.allProps('appointment')}
+						fullWidth={true}
+						margin="normal"
+						FormHelperTextProps={{ classes }}
+						InputLabelProps={{ shrink: true }}
+					/>
+				</section>
+
+
+				<section style={styles.formSection}>
+					<Typography variant="title">
+						Selection Controls
+					</Typography>
+
+					<FormControlLabel
+						label="Remember Me"
+						control={
+							<Checkbox
+								{...form.dataProps('remember')}
+							/>
+						}
+					/>
+
+					<FormControlLabel
+						label="Remember Me"
+						control={
+							<Switch
+								{...form.dataProps('remember')}
+							/>
+						}
+					/>
+				</section>
+
+
+				<section style={styles.formSection}>
+					<Typography variant="title">
+						Radio Buttons
+					</Typography>
+
+					<Typography variant="body1" className="form-tip">
+						Errors display inside a FormHelperText element.
+					</Typography>
+
+					<FormControl
+						error={form.hasErrors('gender')}
+						component="fieldset" // [element-name|Component]
+						margin="dense" // [none|normal|dense] Vertical spacing
+						fullWidth={false}
 					>
+						<FormLabel variant="title" component="legend">
+							Select your gender
+						</FormLabel>
+
+						<RadioGroup
+							{...form.dataProps('gender')}
+							error={form.errors('gender')}
+							aria-label="gender"
+						>
+							<FormControlLabel
+								value="male"
+								label="Male"
+								control={<Radio color="primary" />}
+							/>
+							<FormControlLabel
+								value="female"
+								label="Female"
+								control={<Radio color="secondary" />}
+							/>
+							<FormControlLabel
+								value="other"
+								label="Other"
+								control={<Radio color="default" />}
+							/>
+							<FormControlLabel
+								value="disabled"
+								label="Disabled"
+								control={<Radio color="primary" />}
+								disabled
+							/>
+						</RadioGroup>
+
 						<FormHelperText classes={classes}>
-							{form.error('birthdate')}
+							{form.errors('who/gender')}
 						</FormHelperText>
 					</FormControl>
 				</section>
@@ -161,7 +248,7 @@ class FormSection extends Component {
 
 				<section style={styles.formSection}>
 					<Typography variant="title">
-						Synced MUI Picklists
+						Synced Picklists
 					</Typography>
 
 					<Typography variant="body1" className="form-tip">
@@ -178,10 +265,13 @@ class FormSection extends Component {
 						<Select
 							{...form.dataProps('category')}
 							input={
-								<Input name="form-category" id="form-category"/>
+								<Input
+									id="form-category"
+									name="form-category"
+								/>
 							}
 						>
-							<MenuItem value=""/>
+							<MenuItem value="" />
 							{form.state('categoryList').map(item => (
 								<MenuItem value={item.value} key={item.value}>
 									{item.display}
@@ -190,7 +280,7 @@ class FormSection extends Component {
 						</Select>
 
 						<FormHelperText classes={classes}>
-							{form.error('category')}
+							{form.errors('category')}
 						</FormHelperText>
 					</FormControl>
 
@@ -207,10 +297,13 @@ class FormSection extends Component {
 						<Select
 							{...form.dataProps('subcategory')}
 							input={
-								<Input name="subcategory" id="form-subcategory"/>
+								<Input
+									id="form-subcategory"
+									name="subcategory"
+								/>
 							}
 						>
-							<MenuItem value=""/>
+							<MenuItem value="" />
 							{form.state('subcategoryList').map(item => (
 								<MenuItem value={item.value} key={item.value}>
 									{item.display}
@@ -219,62 +312,7 @@ class FormSection extends Component {
 						</Select>
 
 						<FormHelperText classes={classes}>
-							{form.error('subcategory')}
-						</FormHelperText>
-					</FormControl>
-				</section>
-
-
-				<section style={styles.formSection}>
-					<Typography variant="title">
-						MUI Radio Buttons
-					</Typography>
-
-					<Typography variant="body1" className="form-tip">
-						Errors display inside a FormHelperText element.
-					</Typography>
-
-					<FormControl
-						error={form.hasErrors('gender')}
-						component="fieldset" // [element-name|Component]
-						required={true}
-						margin="dense" // [none|normal|dense] Vertical spacing
-						fullWidth={false}
-					>
-						<FormLabel variant="title" component="legend">
-							Select your gender
-						</FormLabel>
-
-						<RadioGroup
-							{...form.dataProps('gender')}
-							error={form.error('gender')}
-							aria-label="gender"
-						>
-							<FormControlLabel
-								value="male"
-								label="Male"
-								control={<Radio color="primary"/>}
-							/>
-							<FormControlLabel
-								value="female"
-								label="Female"
-								control={<Radio color="secondary"/>}
-							/>
-							<FormControlLabel
-								value="other"
-								label="Other"
-								control={<Radio color="default"/>}
-							/>
-							<FormControlLabel
-								value="disabled"
-								label="Disabled"
-								control={<Radio color="primary"/>}
-								disabled
-							/>
-						</RadioGroup>
-
-						<FormHelperText classes = {classes}>
-							{form.error('who/gender')}
+							{form.errors('subcategory')}
 						</FormHelperText>
 					</FormControl>
 				</section>
@@ -282,6 +320,7 @@ class FormSection extends Component {
 		)
 	}
 }
+
 
 const { object } = PropTypes
 

@@ -52,11 +52,14 @@ const formConfig = {
         readOnly: false,
         disabled: false,
 
-        // DATA CLEANING/FORMATTING OPTIONS
-        trimText: true, // Trim leading-/trailing--spaces
-        fixMultiSpaces: true, // Replace multi-spaces/tabs with single space
-        monoCaseToProper: false, // Change all UPPER- or lower-case to Proper-Case
-        cleanDataOnBlur: false, // Clean and REPLACE field-data onBlur
+        // TEXT-FIELD CLEANING/FORMATTING OPTIONS
+        cleaning: {
+            cleanOnBlur: true, // Clean field-text onBlur
+            trim: true, // Trim leading-/trailing--spaces
+            trimInner: false, // Replace multi-spaces/tabs with single space
+			monoCaseToProper: false, // UPPER-CASE or lower-case to Proper-Case
+			reformat: '' // {(string|Function)} Apply a formatter to value
+        }
     },
 
     /*
@@ -86,15 +89,19 @@ Using form-state can be done 2 ways:
 1. Use the methods available for setting and getting form-state, primarily:
 
     ```javascript static
-    form.state(key);         // GETTER
-    form.state(key, value);  // SETTER
+    form.setState(name, value);  // SETTER
+    form.getState(name);         // GETTER
+    form.state(name);            // GETTER ALIAS
     ```
 
-2. Add a field configuration and specify `isData: false`; then this 'data field' is stored as form-state instead of with other form-data. This syntax can be useful to hide the details of what's data and what's state; eg:
+2. Add a field configuration and specify `isData: false`; 
+then this 'data field' is stored as form-state instead of with other form-data. 
+This syntax can be useful to hide the details of what's data and what's state:
 
     ```javascript static
-    form.data(key);         // GETTER
-    form.data(key, value);  // SETTER
+    form.setValue(name, value);  // SETTER
+    form.getValue(name);         // GETTER
+    form.value(name);            // GETTER ALIAS
     ```
 
 Below is an example for **syncing category and subcategory lists**. It requires a simple onChange function and a little FM configuration. Two variations are shown to illustrate the 2 methods described above.
@@ -109,10 +116,10 @@ function handleCategoryChange(field, category, form) {
         const subcategories = sampleSubcategories[category] || [];
 
         // Set the correct subcategories list, or a blank list
-        form.state('subcategoryList', subcategories);
+        form.setState('subcategoryList', subcategories);
 
         // Always clear the subcategory value when category changes
-        form.value('subcategory', '');
+        form.setValue('subcategory', '');
     }
 }
 
