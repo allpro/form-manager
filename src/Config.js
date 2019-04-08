@@ -53,7 +53,7 @@ function Config( formManager, components ) {
 		setField: setFieldConfig, 	// SETTER for field configuration
 		getValidation: getFieldValidation,	// GETTER for field configuration
 		setValidation: setFieldValidation, 	// SETTER for field configuration
-		verifyFieldName,
+		aliasToRealName,
 		withFieldDefaults,
 
 		// Methods exposed in FormManager API
@@ -104,7 +104,7 @@ function Config( formManager, components ) {
 	 * @returns {Object}    Returns fieldConfig for one or all fields
 	 */
 	function getFieldConfig( name ) {
-		const fieldName = verifyFieldName(name)
+		const fieldName = aliasToRealName(name)
 		const fields = config.fields
 		return cloneDeep(name ? fields[fieldName] : fields)
 	}
@@ -133,7 +133,7 @@ function Config( formManager, components ) {
 			// A field-name is required
 			if (!n) return
 
-			const fieldName = verifyFieldName(n)
+			const fieldName = aliasToRealName(n)
 			let fieldConfig = fields[fieldName]
 
 			// INIT fieldConfig if not exists, OR if opts.replace specified
@@ -289,7 +289,7 @@ function Config( formManager, components ) {
 	 */
 	function getField( name, branch ) {
 		const get = n => {
-			const fieldName = verifyFieldName(n)
+			const fieldName = aliasToRealName(n)
 			const path = `fields.${fieldName}.${branch}`
 			return getObjectValue(config, path)
 		}
@@ -311,7 +311,7 @@ function Config( formManager, components ) {
 		let somethingChanged = false
 
 		const set = n => {
-			const fieldName = verifyFieldName(n)
+			const fieldName = aliasToRealName(n)
 			const path = `fields.${fieldName}.${branch}`
 			const oldValue = getObjectValue(config, path)
 
@@ -339,9 +339,9 @@ function Config( formManager, components ) {
 	 * @param name            The name OR aliasName of a field
 	 * @returns {string}    If alias found then mapped fieldName, else name
 	 */
-	function verifyFieldName( name ) {
+	function aliasToRealName( name ) {
 		if (!name) return name
-		if (isArray(name)) return name.map(verifyFieldName)
+		if (isArray(name)) return name.map(aliasToRealName)
 
 		if (config.fields[name]) return name
 

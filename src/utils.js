@@ -106,7 +106,6 @@ const trimFormFields = obj => {
 }
 
 
-const reAllPeriods = /\./g
 /**
  * Convert a fieldName into an array of keys - may only be one key.
  * NOT exported - helper for get/setObjectValue methods
@@ -114,8 +113,8 @@ const reAllPeriods = /\./g
  * @param {string} path
  */
 function pathToKeysArray( path ) {
-	// Slashes or dots in fieldName indicate data is stored in a subkey
-	return path.replace( reAllPeriods, '/' ).split( '/' )
+	// Dots in fieldName indicate a 'path' - data is nested
+	return path.split( '.' )
 }
 
 /**

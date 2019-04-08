@@ -37,7 +37,7 @@ function Validation( formManager, components ) {
 	const { config, data, internal } = components
 
 	// Extract helper methods from config for brevity
-	const { verifyFieldName, withFieldDefaults } = config
+	const { aliasToRealName, withFieldDefaults } = config
 
 	// Form-Errors cache - data accessible only via config methods
 	let stateOfErrors = {}
@@ -141,7 +141,7 @@ function Validation( formManager, components ) {
 		}
 
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName(name)
+		const fieldName = aliasToRealName(name)
 		const fieldConfig = config.getField(fieldName)
 		const errors = getErrorsHash(fieldName)
 
@@ -175,7 +175,7 @@ function Validation( formManager, components ) {
 	 */
 	function setErrors( name, type, errorMsg, opts = {} ) {
 		const setOpts = assign({ merge: true }, opts)
-		const fieldName = verifyFieldName(name)
+		const fieldName = aliasToRealName(name)
 		let fieldErrors = setOpts.merge ? stateOfErrors[fieldName] || {} : {}
 
 		// Field error values should be an array of messages, even if only one
@@ -206,12 +206,12 @@ function Validation( formManager, components ) {
 		}
 		else if (isArray(name)) {
 			for (const n of name) {
-				const fieldName = verifyFieldName(n)
+				const fieldName = aliasToRealName(n)
 				delete stateOfErrors[fieldName]
 			}
 		}
 		else {
-			const fieldName = verifyFieldName(name)
+			const fieldName = aliasToRealName(name)
 			delete stateOfErrors[fieldName]
 		}
 	}
@@ -225,7 +225,7 @@ function Validation( formManager, components ) {
 	 */
 	function hasErrors( name ) {
 		if (name) {
-			const fieldName = verifyFieldName(name)
+			const fieldName = aliasToRealName(name)
 			const fieldErrors = stateOfErrors[fieldName]
 			return !!fieldErrors && !isEmpty(fieldErrors)
 		}
@@ -248,7 +248,7 @@ function Validation( formManager, components ) {
 		}
 
 		// field MAY have an aliasName
-		const fieldName = verifyFieldName(name)
+		const fieldName = aliasToRealName(name)
 		const fieldConfig = config.getField(fieldName) || {}
 
 		const forceValidation = event === 'validate'
@@ -627,7 +627,7 @@ function Validation( formManager, components ) {
 		const hash = {}
 		for (let value of arr) {
 			// Handle alias fieldNames in array
-			if (isFieldNames) value = verifyFieldName(value)
+			if (isFieldNames) value = aliasToRealName(value)
 			hash[value] = true
 		}
 		return hash

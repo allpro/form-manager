@@ -67,7 +67,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	assign(publicAPI, validation.publicAPI)
 
 	// Extract helper methods from config API for brevity
-	const { verifyFieldName, withFieldDefaults } = config
+	const { aliasToRealName, withFieldDefaults } = config
 
 	let formRevision = 0
 	let formInitialized = false
@@ -126,7 +126,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @returns {*}
 	 */
 	function getDataProps( name, opts = { checkbox: false, radio: false } ) {
-		const fieldName = verifyFieldName(name)
+		const fieldName = aliasToRealName(name)
 
 		const fieldConfig = config.getField(fieldName) || {}
 		const { inputType, displayName, disabled, readOnly } = fieldConfig

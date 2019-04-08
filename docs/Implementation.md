@@ -126,13 +126,14 @@ This example shows a form with a few fields on it. It does not show cosmetic
 props like `classes` or `fullWidth`, which you can add as normal. The FM
 props shown here _only_ handles props like `name`, `value` and event-handlers.
 
-This sample includes the fieldname `user/gender`. This indicates the data has
- gender _nested_ inside a user object. Use slashes or dots, (`user.gender`), to
-  refer to values nested at _any depth_. OR you can set an `aliasName` in the 
-  field-config, (eg: `gender`), and then use this alias-name in your code.
+** References to nested data-fields**
 
-Note that some MUI elements, like `TextField` don't need `FormControl` and 
-`FormTextHelper` components **because it auto-generates these**!
+This sample includes the fieldname `user.gender` to reference the gender value
+_nested_ inside the user object. 
+Use dot-notation in fieldnames, (eg: `user.profile.preferences.nickname`), 
+to reference values nested at _any depth_. 
+OR set an `aliasName` in the field-config, (eg: aliasName: `nickname`),
+and then use this alias-name for any method call, (eg: `getValue('nickname')`).
 
 ```javascript static
 import React, { Fragment } from 'react';
@@ -185,7 +186,7 @@ const MyForm = (props) => {
                     <FormControlLabel value="other" label="Other" control={<Radio/>} />
                 </RadioGroup>
                 <FormHelperText className="hide-when-empty">
-                    {form.errors('user/gender')}
+                    {form.errors('user.gender')}
                 </FormHelperText>
             </FormControl>
 

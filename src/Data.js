@@ -37,7 +37,7 @@ function Data( formManager, components ) {
 
 	// Extract helper methods for brevity
 	const { fireEventCallback, triggerComponentUpdate } = internal
-	const { withFieldDefaults } = config
+	const { withFieldDefaults, aliasToRealName } = config
 	// Create local aliases for config objects
 	const formatters = config.get('formatters')
 	const converters = config.get('converters')
@@ -104,7 +104,7 @@ function Data( formManager, components ) {
 			refresh: false
 		}, opts)
 
-		const fieldName = config.verifyFieldName(name)
+		const fieldName = aliasToRealName(name)
 		const fieldConfig = config.getField(fieldName) || {}
 
 		// NOTE: stateOfForm is ONE LEVEL; no nested fields
@@ -124,38 +124,6 @@ function Data( formManager, components ) {
 	}
 
 	/**
-	 * Helper to parse a field-value from data-value
-	 *
-	 * @param {string} fieldName
-	 * @param {*} [newDataValue]
-	 */
-	function setFormValueFromData( fieldName, newDataValue ) {
-		const fieldConfig = config.getField(fieldName) || {}
-		const { isData, valueFormat, valueType } = fieldConfig
-
-		let value = !isUndefined(newDataValue)
-			? newDataValue
-			: isData
-				? getObjectValue(
-					stateOfData,
-					fieldName,
-					{ clone: true, deep: false }
-				)
-				: state.get(fieldName)
-
-		value = convertDataType(value, valueType)
-		value = formatValue(value, valueFormat)
-		value = undefinedToDefaultValue(value) // , dataType
-
-		// Update stateOfForm cache
-		// NOTE: stateOfForm is ONE LEVEL; no nested fields
-		stateOfForm[fieldName] = clone(value)
-
-		// return value to getFieldValue()
-		return value
-	}
-
-	/**
 	 * PUBLIC SETTER for a specific field value.
 	 *
 	 * @param {string} name        Field-name or alias-name
@@ -169,9 +137,8 @@ function Data( formManager, components ) {
 		const set = ( n, v ) => {
 			let val = v
 
-			const fieldName = config.verifyFieldName(n)
+			const fieldName = aliasToRealName(n)
 			const fieldConfig = config.getField(fieldName)
-			if (!fieldConfig) return // INVALID name PASSED; ABORT
 
 			// Field may NOT have a configuration...
 			if (fieldConfig) {
@@ -247,6 +214,38 @@ function Data( formManager, components ) {
 		return formManager
 	}
 
+	/**
+	 * Helper to parse a field-value from data-value
+	 *
+	 * @param {string} fieldName
+	 * @param {*} [newDataValue]
+	 */
+	function setFormValueFromData( fieldName, newDataValue ) {
+		const fieldConfig = config.getField(fieldName) || {}
+		const { isData, valueFormat, valueType } = fieldConfig
+
+		let value = !isUndefined(newDataValue)
+			? newDataValue
+			: isData
+				? getObjectValue(
+					stateOfData,
+					fieldName,
+					{ clone: true, deep: false }
+				)
+				: state.get(fieldName)
+
+		value = convertDataType(value, valueType)
+		value = formatValue(value, valueFormat)
+		value = undefinedToDefaultValue(value) // , dataType
+
+		// Update stateOfForm cache
+		// NOTE: stateOfForm is ONE LEVEL; no nested fields
+		stateOfForm[fieldName] = clone(value)
+
+		// return value to getFieldValue()
+		return value
+	}
+
 	function cleanValue( value, fldCfg ) {
 		// Only string values are cleaned
 		if (!value || !isString(value)) return value
@@ -267,20 +266,27 @@ function Data( formManager, components ) {
 
 
 	/**
-	 * @param {(string|Object)} [name]    Fieldname
-	 * @returns {(string|Object)}       Data value for one field or all-data
+	 * @param {(string|Object)} [name]  Fieldname
+	 * @param {Object} [opts]           Options
+	 * @returns {(string|Object)}       Data value(s) for one-field or all-data
 	 */
-	function getData( name ) {
-		return isString(name)
-			? getObjectValue(stateOfData, name, { cloneValue: true })
+	function getData( name, opts ) {
+		const namePassed = isString(name)
+		const getOpts = assign(
+			{ cloneValue: true },
+			namePassed ? opts : name
+		)
+		return namePassed
+			? getObjectValue(stateOfData, aliasToRealName(name), getOpts)
 			: cloneDeep(stateOfData)
 	}
 
 	/**
-	 * @param {Object} data         Data to be set
-	 * @returns {Object}            All SETTERS return instance for chaining
+	 * @param {(string|Object)} [nameOrData]  Fieldname OR Data hash
+	 * @param {*} [fieldData]            Data for a single field
+	 * @returns {Object}                All SETTERS return instance for chaining
 	 */
-	function setData( data ) {
+	function setData( nameOrData, fieldData ) {
 		// Subroutine to handle recursively processing nested data paths
 		const processDataBranch = ( parentPath, branch ) => {
 			if (isPlainObject(branch) && !isEmpty(branch)) {
@@ -318,7 +324,19 @@ function Data( formManager, components ) {
 			}
 		}
 
-		processDataBranch('', data)
+
+		if (isString(nameOrData)) {
+			const fieldName = aliasToRealName(nameOrData)
+			processDataBranch('', { [fieldName]: fieldData })
+		}
+		else if (isPlainObject(nameOrData)) {
+			processDataBranch('', nameOrData)
+		}
+		else {
+			// BAD DATA PASSED - ABORT
+			console.warn('Invalid data passed to FormManager.setData()')
+			return
+		}
 
 		triggerComponentUpdate()
 
@@ -380,7 +398,7 @@ function Data( formManager, components ) {
 	 */
 	function isDirty( name ) {
 		if (name) {
-			const fieldName = config.verifyFieldName(name)
+			const fieldName = aliasToRealName(name)
 			return fieldName ? !!dirtyFields.has(fieldName) : false
 		}
 		else {
