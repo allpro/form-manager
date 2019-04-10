@@ -91,6 +91,7 @@ function Data( formManager, components ) {
 	/**
 	 * PUBLIC GETTER for a specific field value.
 	 *
+	 * @public
 	 * @param {string} name         Field-name or alias-name
 	 * @param {Object} [opts]    Options
 	 */
@@ -126,6 +127,7 @@ function Data( formManager, components ) {
 	/**
 	 * PUBLIC SETTER for a specific field value.
 	 *
+	 * @public
 	 * @param {string} name        Field-name or alias-name
 	 * @param {*} [value]        Any value OR opts in multi-field mode
 	 * @param {Object} [opts]    Options

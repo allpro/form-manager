@@ -40,7 +40,7 @@ const boolean = value => {
 
 const date = ( value, format = 'YYYY-MM-DD' ) => formatters.date(value, format)
 
-const dateISO = value => formatters.date(value, 'iso-string')
+const dateISO = value => formatters.date(value, 'iso')
 
 const dateObject = value => {
 	if (!value) return null

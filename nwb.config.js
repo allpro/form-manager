@@ -8,9 +8,9 @@ module.exports = {
 		umd: {
 			global: 'FormManager',
 			externals: {
-				react: 'React',
-			},
-		},
+				react: 'React'
+			}
+		}
 	},
 	karma: {
 		browsers: ['ChromeHeadless'],
@@ -24,10 +24,10 @@ module.exports = {
 						'--disable-gpu',
 						'--no-sandbox',
 						// If no remote debugging port, Chrome exits immediately
-						'--remote-debugging-port=9222',
-					],
-				},
-			},
-		},
-	},
+						'--remote-debugging-port=9222'
+					]
+				}
+			}
+		}
+	}
 }

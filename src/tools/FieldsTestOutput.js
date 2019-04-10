@@ -92,7 +92,7 @@ class FieldsTestOutput extends React.Component {
 					<span className="field-required-mark" />
 				</Typography>
 
-				<Typography variant="body1" className="form-tip">
+				<Typography paragraph className="form-tip">
 					This tool can be used to verify data, field-configuration
 					and validation options.
 				</Typography>
@@ -175,7 +175,7 @@ class FieldsTestOutput extends React.Component {
 				})}
 
 				{props.submitForm && (
-					<Typography variant="body1" className="form-tip">
+					<Typography paragraph className="form-tip">
 						<Button color="primary" onClick={props.submitForm}>
 							Save / Submit
 						</Button>

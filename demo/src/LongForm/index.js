@@ -5,7 +5,7 @@ import CardContent from '@material-ui/core/CardContent'
 // This demo also includes test output using BOTH dev-helper tools
 import FormManager, { FieldsTestOutput } from '../../../src'
 
-import FormSection from './form'
+import FormSection from './Form'
 import formConfig from './formConfig'
 
 

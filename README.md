@@ -5,6 +5,7 @@
 [![install-size][install-size-badge]][install-size]
 [![build][build-badge]][build]
 [![coverage][coveralls-badge]][coveralls]
+[![license][license-badge]][license]
 [![donate][donate-badge]][donate]
 
 ---
@@ -261,11 +262,8 @@ Therefore the next priorities are:
 [coveralls-badge]: https://coveralls.io/repos/github/allpro/form-manager/badge.svg?branch=master
 [coveralls]: https://coveralls.io/github/allpro/form-manager?branch=master
 
+[license-badge]: https://badgen.now.sh/badge/license/MIT/blue
+[license]: https://github.com/allpro/form-manager/blob/master/LICENSE
+
 [donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-round
 [donate]: https://paypal.me/KevinDalman
-
-[dependency-badge]: https://badgen.now.sh/david/dep/styfle/packagephobia
-[dependency]: https://david-dm.org/styfle/packagephobia
-
-[devDependency-badge]: https://badgen.now.sh/david/dev/styfle/packagephobia
-[devDependency]: https://david-dm.org/styfle/packagephobia?type=dev

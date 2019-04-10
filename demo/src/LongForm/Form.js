@@ -69,7 +69,7 @@ class FormSection extends Component {
 					<Typography variant="title">
 						Text & Numbers
 					</Typography>
-					<Typography variant="body1" className="form-tip">
+					<Typography paragraph className="form-tip">
 						Field is required and has a minimum-length.
 					</Typography>
 
@@ -78,8 +78,6 @@ class FormSection extends Component {
 						{...form.allProps('username')}
 						fullWidth={true}
 						margin="dense"
-						multiline
-						rowsMax="8"
 						inputRef={this.messageInput}
 						FormHelperTextProps={{ classes }}
 					/>
@@ -117,7 +115,7 @@ class FormSection extends Component {
 					<Typography variant="title">
 						Date Pickers
 					</Typography>
-					<Typography variant="body1" className="form-tip">
+					<Typography paragraph className="form-tip">
 						Valid dates are between Jan-2000 and Jan-2015.
 					</Typography>
 
@@ -197,7 +195,7 @@ class FormSection extends Component {
 						Radio Buttons
 					</Typography>
 
-					<Typography variant="body1" className="form-tip">
+					<Typography paragraph className="form-tip">
 						Errors display inside a FormHelperText element.
 					</Typography>
 
@@ -251,7 +249,7 @@ class FormSection extends Component {
 						Synced Picklists
 					</Typography>
 
-					<Typography variant="body1" className="form-tip">
+					<Typography paragraph className="form-tip">
 						Both fields are required.
 						Select a category and the subcategories will change.
 					</Typography>

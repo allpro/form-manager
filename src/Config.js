@@ -189,6 +189,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC GETTER for field validation options
 	 *
+	 * @public
 	 * @param {string} name     Fieldname to get
 	 * @returns {Object}        Validation-config in getter mode
 	 */
@@ -199,6 +200,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC SETTER for field validation options
 	 *
+	 * @public
 	 * @param {string} name             Fieldname to get/set
 	 * @param {Object} [settings]       New Validation setting(s)
 	 * @param {Object} [opts]            Option for merging with existing config
@@ -214,6 +216,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC GETTER for 'validation.required' flag.
 	 *
+	 * @public
 	 * @param {(string|Array)} name    Fieldname (or array of), for mass update
 	 * @returns {(boolean|Object)}     Returns true/false OR a hash of values
 	 */
@@ -224,6 +227,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC SETTER for validation 'required' flag.
 	 *
+	 * @public
 	 * @param {(Array|string)} name     Fieldname (or array of), for mass update
 	 * @param {boolean} required        Set this field(s) required?
 	 * @returns {Object}                All SETTERS return instance for chaining
@@ -237,6 +241,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC GETTER for field.disabled flag.
 	 *
+	 * @public
 	 * @param {(string|Array)} name    Fieldname (or array of), for mass update
 	 * @returns {(boolean|Object)}     Returns true/false OR a hash of values
 	 */
@@ -247,6 +252,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC SETTER for field.disabled flag.
 	 *
+	 * @public
 	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
 	 * @param {boolean} disabled       Set this field(s) disabled?
 	 * @returns {Object}                All SETTERS return instance for chaining
@@ -260,6 +266,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC GETTER for field.readOnly flag.
 	 *
+	 * @public
 	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
 	 * @returns {(boolean|Object)}     Returns true/false OR a hash of values
 	 */
@@ -270,6 +277,7 @@ function Config( formManager, components ) {
 	/**
 	 * PUBLIC SETTER for field.readOnly flag.
 	 *
+	 * @public
 	 * @param {(Array|string)} name    Fieldname (or array of), for mass update
 	 * @param {boolean} readOnly    Is this field(s) disabled?
 	 * @returns {Object}            All SETTERS return instance for chaining

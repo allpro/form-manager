@@ -28,6 +28,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 	/**
 	 * PUBLIC API for this instance
 	 * This API is extended by each sub-component's public methods. See below.
+	 *
+	 * @public
 	 */
 	const publicAPI = {
 		getRevision,				// GETTER for formRevision number
@@ -83,6 +85,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * PUBLIC METHOD to reset form data, errors & state.
 	 * Does not reinitialize or reset field configuration.
 	 * Does not remove any handlers or data bound after creation.
+	 *
+	 * @public
 	 */
 	function initForm() {
 		// RE-INIT all state-hashes
@@ -121,6 +125,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	/**
 	 * PUBLIC HELPER for components to integrate with FormManager.
 	 *
+	 * @public
 	 * @param {string} name    Field-name or alias-name
 	 * @param {Object} [opts]    Options, like non-text field details
 	 * @returns {*}
@@ -175,6 +180,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	/**
 	 * PUBLIC HELPER for components to integrate with FormManager.
 	 *
+	 * @public
 	 * @param {string} name    Field-name or alias-name
 	 * @returns {Object}        Props for components like a TextField
 	 */
@@ -192,6 +198,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	/**
 	 * PUBLIC HELPER for components to integrate with FormManager.
 	 *
+	 * @public
 	 * @param {string} name    Field-name or alias-name
 	 * @param {Object} [opts]  Options, like non-text field details
 	 * @returns {*}

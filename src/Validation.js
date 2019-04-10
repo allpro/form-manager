@@ -131,6 +131,7 @@ function Validation( formManager, components ) {
 	 * Errors are stored in a hash, which this converts to a simple array.
 	 * Calling code can output message(s) using join() or iterate array.
 	 *
+	 * @public
 	 * @param {string} name        Field-name or alias-name
 	 * @param {Object} opts        Options for return value
 	 * @returns {(string|Array)}
@@ -168,6 +169,7 @@ function Validation( formManager, components ) {
 	 * Note: Errors can only be set ONE FIELD AT A TIME
 	 * Call this method multiple times to set errors on additional fields.
 	 *
+	 * @public
 	 * @param {string} name                Field-name or alias-name
 	 * @param {string} type                Type, eg: 'required', 'custom'
 	 * @param {(Array|string)} errorMsg    Error-message text for this type
@@ -198,6 +200,7 @@ function Validation( formManager, components ) {
 	 * PUBLIC SETTER for field errors - removes errors only
 	 * Can remove for 1 field (string), multiple fields (Array) or all (blank)
 	 *
+	 * @public
 	 * @param {(Array|string)} [name]        Field-name(s) and/or alias-name(s)
 	 */
 	function clearErrors( name ) {
@@ -220,6 +223,7 @@ function Validation( formManager, components ) {
 	/**
 	 * PUBLIC GETTER to check if a specific field has any errors
 	 *
+	 * @public
 	 * @param {string} name        Field-name or alias-name
 	 * @returns {boolean}
 	 */
@@ -285,7 +289,7 @@ function Validation( formManager, components ) {
 	 */
 	function validateAll( opts = {} ) {
 		const fields = config.getField()
-
+		const noUpdate = { update: false }
 		let only, skip
 
 		if (opts && isPlainObject(opts)) {
@@ -297,6 +301,7 @@ function Validation( formManager, components ) {
 		}
 
 		const fieldValidations = []
+		const wereAllFieldsErrorFree = isEmpty(stateOfErrors)
 
 		forOwn(fields, ( field, fieldName ) => {
 			// Skip fields if specified in opts
@@ -306,15 +311,21 @@ function Validation( formManager, components ) {
 			if (field.isData === false) return
 
 			fieldValidations.push(
-				validateField(fieldName, data.getValue(fieldName))
+				validateField(fieldName, data.getValue(fieldName), noUpdate)
 			)
 		})
 
 		// WAIT for all validations to complete, then resolve
 		return Promise.all(fieldValidations)
 		.then(() => {
-			// Return Promise with true if NO errors; false otherwise
 			const allFieldsErrorFree = isEmpty(stateOfErrors)
+
+			// If error state has changed, then update component
+			if (allFieldsErrorFree !== wereAllFieldsErrorFree) {
+				internal.triggerComponentUpdate()
+			}
+
+			// Return Promise with true if NO errors; false otherwise
 			return Promise.resolve(allFieldsErrorFree)
 		})
 	}
@@ -323,9 +334,10 @@ function Validation( formManager, components ) {
 	/**
 	 * @param {string} fieldName
 	 * @param {*} value
+	 * @param {Object} opts
 	 * @returns {Promise}            Returns validation promise
 	 */
-	function validateField( fieldName, value ) {
+	function validateField( fieldName, value, opts = { update: true } ) {
 		return new Promise(resolve => {
 			let val = value
 
@@ -597,7 +609,9 @@ function Validation( formManager, components ) {
 					}
 
 					// Trigger component reload if something changed
-					if (errorsChanged) internal.triggerComponentUpdate()
+					if (errorsChanged && opts.update !== false) {
+						internal.triggerComponentUpdate()
+					}
 
 					// Resolve promise so calling code knows we are done.
 					resolve(isFieldErrorFree)

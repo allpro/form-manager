@@ -68,6 +68,7 @@ function State( formManager, components ) {
 	/**
 	 * PUBLIC GETTER for values in the ROOT of state
 	 *
+	 * @public
 	 * @param {string} [key]		Path in state to return
 	 * @param {Object} opts        	Clone-value option
 	 * @returns {*}                	All form-state OR just specific key requested
@@ -84,6 +85,7 @@ function State( formManager, components ) {
 	/**
 	 * PUBLIC SETTER for values in the ROOT of state
 	 *
+	 * @public
 	 * @param {(Object|string)} key  	Path OR a hash of data to set
 	 * @param {*} [value]               Value to SET, if key is a string
 	 * @param {Object} [opts]           Options, like { cloneValue: false }
