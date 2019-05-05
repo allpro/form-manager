@@ -46,6 +46,11 @@ function FormManager( componentObject, options = {}, extraData ) {
 		onFieldBlur					// EVENT HANDLER for field.onBlur
 	}
 
+
+	let formRevision = 0
+
+	let formInitialized = false
+
 	// Internal API so sub-components can access internal helper methods
 	const internal = { fireEventCallback, triggerComponentUpdate }
 
@@ -71,11 +76,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 	// Extract helper methods from config API for brevity
 	const { aliasToRealName, withFieldDefaults } = config
 
-	let formRevision = 0
-	let formInitialized = false
-
 	formInitialized = true
-
 
 	// RETURN THE FORM-MANAGER API/OBJECT
 	return publicAPI

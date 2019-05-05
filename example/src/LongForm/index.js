@@ -3,7 +3,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 
 // This demo also includes test output using BOTH dev-helper tools
-import FormManager, { FieldsTestOutput } from '../../../src'
+import FormManager, { FieldsTestOutput } from '@allpro/form-manager'
 
 import FormSection from './Form'
 import formConfig from './formConfig'

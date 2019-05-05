@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 
 // This demo includes field-testing output using a supplied tools
-import FormManager, { FieldsTestOutput } from '../../../src'
+import FormManager, { FieldsTestOutput } from '@allpro/form-manager'
+
 import formConfig from './formConfig'
 
 

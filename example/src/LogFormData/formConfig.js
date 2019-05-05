@@ -1,8 +1,9 @@
 import cloneDeep from 'lodash/cloneDeep'
 
-import sampleData from './data'
 // This demo includes dev-logging output using a supplied tool
-import { logFormData } from '../../../src'
+import { logFormData } from '@allpro/form-manager'
+
+import sampleData from './data'
 
 
 // Demo of category/subcategory synchronization
@@ -15,10 +16,10 @@ function handleCategoryChange( category, field, form ) {
 
 		// Set the correct subcategories list, or a blank list
 		const subcategories = sampleData.subcategories[category] || []
-		form.setState('subcategoryList', subcategories)
+		form.state('subcategoryList', subcategories)
 
 		// Always clear the subcategory value when category changes
-		form.setValue('subcategory', '', { validate: true })
+		form.value('subcategory', '', { validate: true })
 	}
 }
 
@@ -31,7 +32,7 @@ const formConfig = {
 		subcategoryList: sampleData.subcategories[selectedCategory] || []
 	},
 
-	onBlur: ( value, fieldName, form ) => {
+	onBlur: (value, fieldName, form) => {
 		logFormData(form, 'FormManager [any field].onBlur()')
 		// console.log('Fields Configuration', form.getFieldConfig())
 	},
@@ -58,7 +59,7 @@ const formConfig = {
 				required: true,
 				minLength: 8,
 				maxLength: 20,
-				custom: value => /[^0-9a-z-]/gi.test(value)
+				custom: value => value.test(/[^0-9a-z-]/gi)
 					? '{name} can contain only numbers, letters and dashes'
 					: true
 			}
@@ -73,25 +74,18 @@ const formConfig = {
 				password: { lower: 1, upper: 1, number: 1, symbol: 1 }
 			}
 		},
-		'profile.homePhone': {
-			displayName: 'Phone Numbers',
-			aliasName: 'phone',
-			dataFormat: 'numbersOnly',
-			cleaning: {
-				reformat: 'phone',
-			},
-			validation: {
-				phone: true
-			}
+		remember: {
+			displayName: 'Remember Me',
+			dataType: 'boolean',
+			inputType: 'checkbox'
 		},
 		age: {
 			displayName: 'Your Age',
 			dataType: 'integer',
-			dataFormat: num => num || null,
 			inputType: 'number',
 			validation: {
 				minNumber: v => v >= 18 ? true : 'You must be at least 18',
-				maxNumber: v => v <= 100 ? true : 'This is an invalid age'
+				maxNumber: v => v >= 130 ? true : 'This is an invalid age'
 			}
 		},
 		dateJoined: {
@@ -102,35 +96,21 @@ const formConfig = {
 			validateOnChange: true,
 			validation: {
 				date: true,
-				minDate: '2010-01-01',
-				maxDate: new Date()
+				minDate: '2000-01-01',
+				maxDate: '2015-01-01'
 			}
 		},
-		startTime: {
-			displayName: 'Start Time',
-			dataType: 'dateISO',
-			valueType: ['date', 'time-input'],
-			inputType: 'time',
-			validateOnChange: true,
+		'profile.homePhone': {
+			displayName: 'Phone Numbers',
+			aliasName: 'phone',
+			dataFormat: 'numbersOnly',
+			cleaning: {
+				reformat: 'phone',
+			},
 			validation: {
-				timeRange: ['08:30', '17:00']
+				required: true,
+				phone: true
 			}
-		},
-		appointment: {
-			displayName: 'Appointment',
-			dataType: 'dateISO',
-			valueType: ['date', 'datetime-input'],
-			inputType: 'datetime',
-			validateOnChange: true,
-			validation: {
-				dateRange: ['2019-01-01', '2019-12-31'],
-				timeRange: ['08:30', '17:00']
-			}
-		},
-		remember: {
-			displayName: 'Remember Me',
-			dataType: 'boolean',
-			inputType: 'checkbox'
 		},
 		'profile.gender': {
 			displayName: 'Gender',

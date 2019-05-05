@@ -74,4 +74,4 @@ class FormManagerDemos extends Component {
 }
 
 
-render(<FormManagerDemos />, document.querySelector('#demo'))
+render(<FormManagerDemos />, document.getElementById('root'))

@@ -25,17 +25,17 @@ FM's capabilities include:
 
 **Form Integration**
 
+- **Compatible with ANY UI library, including React**
 - Integration with any type of form control, standard or custom
+- Optimizations for use with **Material UI controls**
 - Form-field property-setter helpers to simplify form mark-up
 - Form-field event handling, with customizable validation events
-- Ability to _alias_ fieldnames; to normalize names or to flatten nested data
-- Optimizations for use with **Material UI controls**
-- Development tools make it easy to test and refine form configurations
-- **Is compatible with ANY UI library, including React and React Native**
+- Can _alias_ fieldnames, to normalize names or to flatten nested data
+- Development tools for testing and refining form configurations
 
 **Data Validation & Error Messages**
 
-- Comprehensive validation of data, with the most common validators built-in.
+- Comprehensive validation of data; with most common validators built-in.
 - Configuration options at both the form and field level for maximum control
 - Simple, multiple validation options linked to error-message system
 - Error-message auto-generation, using a templating system

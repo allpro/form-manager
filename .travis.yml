@@ -2,14 +2,16 @@ sudo: false
 
 language: node_js
 node_js:
+  - 9
   - 8
 
-before_install:
-  - npm install codecov.io coveralls
+script: echo "Running tests against $(node -v)..."
 
-after_success:
-  - cat ./coverage/lcov.info | ./node_modules/codecov.io/bin/codecov.io.js
-  - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+jobs:
+  include:
+    - stage: Produce Coverage
+      node_js: node
+      script: react-scripts test --env=jsdom --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
 
 branches:
   only:

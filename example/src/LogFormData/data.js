@@ -28,6 +28,13 @@ const subcategories = {
 }
 
 const formData = {
+	username: '',
+	password: '',
+	remember: false,
+	age: null,
+	dateJoined: '',
+	startTime: '',
+	appointment: '',
 	category: '',
 	subcategory: '', // subcategories[categories[0].value][0].value,
 	message: 'This is a sample message',

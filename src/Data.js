@@ -10,6 +10,7 @@ import isNil from 'lodash/isNil'
 import isString from 'lodash/isString'
 import isPlainObject from 'lodash/isPlainObject'
 import isUndefined from 'lodash/isUndefined'
+
 // Alias validateField because we use an intermediate method with same name
 import utils from './utils'
 // Extract utils for code brevity
@@ -385,8 +386,12 @@ function Data( formManager, components ) {
 	 */
 	function setIsDirty( fieldName, value ) {
 		const originalValue = getObjectValue(stateOfInitialData, fieldName)
+		const isOriginalValue = isUndefined(originalValue)
+			// If no initial value was define, consider the value falsey
+			? value === '' || value === null || value === false
+			: isEqual(value, originalValue)
 
-		if (isEqual(value, originalValue)) {
+		if (isOriginalValue) {
 			dirtyFields.delete(fieldName)
 		}
 		else {

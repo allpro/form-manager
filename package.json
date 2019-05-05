@@ -1,57 +1,89 @@
 {
   "name": "@allpro/form-manager",
-  "version": "0.4.2",
-  "description": "Form/Data Manager for forms, including React and Material UI controls",
-  "license": "MIT",
-  "author": "Kevin Dalman",
+  "version": "0.5.0",
+  "description": "Data Manager for React Forms, or for any form data",
   "repository": {
     "type": "git",
     "url": "https://github.com/allpro/form-manager.git"
   },
-  "homepage": "https://github.com/allpro/form-manager#readme",
-  "main": "lib/index.js",
-  "module": "es/index.js",
-  "jsnext:main": "es/index.js",
-  "react-native": "es/index.js",
-  "umd:main": "umd/@allpro/form-manager.min.js",
+  "homepage": "https://allpro.github.io/form-manager",
+  "author": "allpro",
+  "license": "MIT",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
+  "jsnext:main": "esm/index.js",
+  "react-native": "umd/form-manager.js",
+  "umd:main": "umd/form-manager.js",
   "files": [
-    "css",
-    "es",
-    "lib",
+    "cjs",
+    "esm",
     "umd"
   ],
-  "scripts": {
-    "build": "nwb build-react-component",
-    "clean": "nwb clean-module && nwb clean-demo",
-    "prepublishOnly": "npm run build",
-    "start": "nwb serve-react-demo",
-    "test": "nwb test-react",
-    "test:coverage": "nwb test-react --coverage",
-    "test:watch": "nwb test-react --server"
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=8",
+    "npm": ">=5"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "peerDependencies": {
+    "@material-ui/core": "^3.0.0",
+    "prop-types": ">=15",
+    "react": ">=15",
+    "react-dom": ">=15"
   },
   "dependencies": {
     "lodash": "~4.17.11",
     "moment": "~2.20.1"
   },
   "devDependencies": {
-    "@date-io/date-fns": "^1.1.0",
-    "@material-ui/core": "^3.9.0",
-    "babel-eslint": "^10.0.1",
-    "date-fns": "^2.0.0-alpha.27",
-    "eslint": "^5.15.3",
-    "eslint-plugin-babel": "^5.3.0",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-react": "^7.12.4",
-    "jest": "^24.5.0",
-    "karma-chrome-launcher": "^2.2.0",
-    "material-ui-pickers": "^2.2.4",
-    "nwb": "~0.23.0",
-    "prop-types": "^15.7.2",
-    "puppeteer": "^1.13.0",
+    "@material-ui/core": ">=3.0.0",
+    "@svgr/rollup": "^2.4.1",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.5",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "coveralls": "^3.0.3",
+    "cross-env": "^5.1.4",
+    "eslint": "^4.19.1",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-promise": "^4.0.0",
+    "eslint-plugin-react": "^7.10.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "gh-pages": "^1.2.0",
+    "jest-dom": "^3.1.3",
     "react": "^16.8.5",
-    "react-dom": "^16.8.5"
+    "react-dom": "^16.8.5",
+    "react-router-dom": "^5.0.0",
+    "react-scripts": "^1.1.4",
+    "react-testing-library": "^6.1.2",
+    "rollup": "^1.10.0",
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-commonjs": "^9.3.4",
+    "rollup-plugin-node-resolve": "^4.2.3",
+    "rollup-plugin-peer-deps-external": "^2.2.0",
+    "rollup-plugin-postcss": "^2.0.3",
+    "rollup-plugin-size-snapshot": "^0.8.0",
+    "rollup-plugin-terser": "^4.0.4",
+    "rollup-plugin-url": "^2.2.1"
   },
-  "keywords": [
-    "react-component forms"
-  ]
+  "scripts": {
+    "test": "cross-env CI=1 react-scripts test --env=jsdom",
+    "test:watch": "react-scripts test --env=jsdom",
+    "test:coverage": "react-scripts test --env=jsdom --coverage",
+    "build": "rollup -c",
+    "start": "rollup -c -w",
+    "prepare": "npm run build",
+    "predeploy": "cd example && npm install && npm run build",
+    "deploy": "gh-pages -d example/build"
+  }
 }

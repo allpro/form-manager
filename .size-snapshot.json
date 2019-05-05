@@ -1,0 +1,21 @@
+{
+  "esm/index.js": {
+    "bundled": 398689,
+    "minified": 133823,
+    "gzipped": 40859,
+    "treeshaked": {
+      "rollup": {
+        "code": 74271,
+        "import_statements": 413
+      },
+      "webpack": {
+        "code": 79778
+      }
+    }
+  },
+  "umd/form-manager.min.js": {
+    "bundled": 105902,
+    "minified": 104014,
+    "gzipped": 34389
+  }
+}
