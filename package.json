@@ -1,6 +1,6 @@
 {
   "name": "@allpro/form-manager",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Data Manager for React Forms, or for any form data",
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
     "moment": "~2.20.1"
   },
   "devDependencies": {
+    "@material-ui/core": "^3.0.0",
     "@svgr/rollup": "^2.4.1",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.5",

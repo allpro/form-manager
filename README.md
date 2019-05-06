@@ -116,7 +116,7 @@ Anyone who has created an HTML form already knows how to implement FM.
 ## Implementation Example
 
 **FM uses ordinary properties and events to integrate with form controls.**
-Below are some basic examples of basic form control mark-up.
+Below are examples of basic form control mark-up.
 FM property-setter helpers are used to set many properties at once.
 This example uses React JSX markup, but ordinary HTML could also be used.
 

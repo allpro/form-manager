@@ -1,7 +1,6 @@
 import isFunction from 'lodash/isFunction'
 
 import index from '../'
-// ReactRouterPauseHooks NOT exported by index.js - for testing only!
 import FormManager from '../FormManager'
 
 
