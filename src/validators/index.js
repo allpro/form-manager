@@ -43,6 +43,8 @@ const minLength = ( value, opt ) => gte(trim(value.toString()).length, opt)
 
 const maxLength = ( value, opt ) => lte(trim(value.toString()).length, opt)
 
+const lengthRange = ( value, opt ) => inRange(trim(value.toString()).length, opt[0], opt[1])
+
 const exactLength = ( value, opt ) => trim(value.toString()).length === opt
 
 const minNumber = ( value, opt ) => gte(value, opt)
@@ -167,21 +169,27 @@ export default {
 	email,
 	phone,
 	password,
+
 	boolean,
 	string,
 	number,
 	integer,
+
 	minLength,
 	maxLength,
+	lengthRange,
 	exactLength,
+
 	minNumber,
 	maxNumber,
 	numberRange,
+
 	date,
 	minDate,
 	maxDate,
+	dateRange,
+
 	minTime,
 	maxTime,
-	dateRange,
 	timeRange
 }
