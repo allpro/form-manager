@@ -274,6 +274,32 @@ Just check back regularly for updates.
 - Add and improve documentation.
 
 
+## Built With
+
+- [create-react-library](https://github.com/DimiMikadze/create-react-library) - 
+A React component framework based on
+[create-react-app](https://github.com/facebook/create-react-app)
+
+## Contributing
+
+Please read 
+[CONTRIBUTING.md](https://github.com/allpro/form-manager/blob/master/CONTRIBUTING.md)
+for details on our code of conduct, 
+and the process for submitting pull requests to us.
+
+## Versioning
+
+We use SemVer for versioning. For the versions available, 
+see the tags on this repository.
+
+## License
+
+MIT © [allpro](https://github.com/allpro)
+<br>See
+[LICENSE](https://github.com/allpro/form-manager/blob/master/LICENSE)
+file for details
+
+
 [gzip-size-badge]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js?compression=gzip
 [gzip-size]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js
 
