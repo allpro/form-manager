@@ -33,7 +33,6 @@
     "not op_mini all"
   ],
   "peerDependencies": {
-    "@material-ui/core": "^3.0.0",
     "prop-types": ">=15",
     "react": ">=15",
     "react-dom": ">=15"
@@ -43,7 +42,6 @@
     "moment": "~2.20.1"
   },
   "devDependencies": {
-    "@material-ui/core": ">=3.0.0",
     "@svgr/rollup": "^2.4.1",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.5",
