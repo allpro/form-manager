@@ -6,6 +6,7 @@ import forOwn from 'lodash/forOwn'
 import isArray from 'lodash/isArray'
 import isBoolean from 'lodash/isBoolean'
 import isEmpty from 'lodash/isEmpty'
+import isEqual from 'lodash/isEqual'
 import isFunction from 'lodash/isFunction'
 import isNil from 'lodash/isNil'
 import isString from 'lodash/isString'
@@ -301,7 +302,7 @@ function Validation( formManager, components ) {
 		}
 
 		const fieldValidations = []
-		const wereAllFieldsErrorFree = isEmpty(stateOfErrors)
+		const previousFieldErrors = cloneDeep(stateOfErrors)
 
 		forOwn(fields, ( field, fieldName ) => {
 			// Skip fields if specified in opts
@@ -318,14 +319,13 @@ function Validation( formManager, components ) {
 		// WAIT for all validations to complete, then resolve
 		return Promise.all(fieldValidations)
 		.then(() => {
-			const allFieldsErrorFree = isEmpty(stateOfErrors)
-
-			// If error state has changed, then update component
-			if (allFieldsErrorFree !== wereAllFieldsErrorFree) {
+			// If error state has changed IN ANY WAY, update component
+			if (!isEqual(stateOfErrors, previousFieldErrors)) {
 				internal.triggerComponentUpdate()
 			}
 
 			// Return Promise with true if NO errors; false otherwise
+			const allFieldsErrorFree = isEmpty(stateOfErrors)
 			return Promise.resolve(allFieldsErrorFree)
 		})
 	}
