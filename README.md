@@ -8,15 +8,6 @@
 [![license][license-badge]][license]
 [![donate][donate-badge]][donate]
 
----
-
--   NPM: `npm install @allpro/form-manager`
--   Yarn: `yarn add @allpro/form-manager`
--   CDN: Exposed global is `FormManager`
-    -   Unpkg: `<script src="https://unpkg.com/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
-    -   JSDelivr: `<script src="https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
-
----
 FormManager (**"FM'**) is collection of data-handling tools for form-data, 
 or any data actually.
 The motivation for this helper is to have **a total data solution for forms**,
@@ -51,18 +42,41 @@ FM's capabilities include:
 **FM does NOT do/require:**
  
 - **Does not require any special mark-up or structure**.
-- Does NOT 'render' anything - **it's a _pure_ data and logic handler.**
-- Does NOT 'wrap' your forms; it is _agnostic_ about form mark-up
-- Does NOT fetch or post data, but does provide data ready to post.
-- Does NOT create any global vars (unless imported as a `<script />`)
-- Does NOT use Context in React or any similar trickery
+- Does not 'render' anything - **it's a _pure_ data and logic handler.**
+- Does not 'wrap' your forms; it is _agnostic_ about form mark-up
+- Does not fetch or post data, but does provide data ready to post.
+- Does not create any global vars (unless imported as a `<script />`)
+- Does not use Context in React or any similar trickery
 
 FM is **_pure_ Javascript**. There is no magic behind the curtain!
 
 
+## Live Example
+
+Try the demos at: https://allpro.github.io/form-manager
+
+Play with the demo code at:
+https://codesandbox.io/s/github/allpro/form-manager/tree/master/example
+
+If you pull or fork the repo, you can run the demos like this:
+- In the root folder, run `npm start`
+- In a second terminal, in the `/example` folder, run `npm start`
+- The demo will start at http://localhost:3000
+- Changes to the component _or_ the demo will auto-update the browser
+
+
+## Installation
+
+-   NPM: `npm install @allpro/form-manager`
+-   Yarn: `yarn add @allpro/form-manager`
+-   CDN: Exposed global is `FormManager`
+    -   Unpkg: `<script src="https://unpkg.com/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
+    -   JSDelivr: `<script src="https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js"></script>`
+
+
 ## How Is FormManager Different?
 
-**No helpers I've found matches the range of FM's data handling capabilities.** 
+**No helper I've found matches FM's data handling capabilities.** 
 Many helpers focus on backend communications, with no built-in validation. 
 For me, validation and error message handling is vital for forms,
 whereas communications is NOT something I need a form-helper to do.
@@ -99,7 +113,7 @@ it is extremely easy to learn and to use.
 Anyone who has created an HTML form already knows how to implement FM.
 
 
-## How Is FormManager Implemented?
+## Implementation Example
 
 **FM uses ordinary properties and events to integrate with form controls.**
 Below are some basic examples of basic form control mark-up.
@@ -180,8 +194,14 @@ a popup dialog-box, that's no problem. FM does not 'wrap' your form, so
 you can create any component structure required -
 just pass in `props.form` so you can integrate the data with FM.
 
+See 
+**[Implementing FormManager in Components](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
+for details.
+
 
 ## FormManager Documentation
+
+**Documentation is spread across multiple files...**
 
 ### Data Handling
 
@@ -239,12 +259,19 @@ for details.
 
 ## TODO
 
-FormManager _was_ fully functional and used in a large production app. 
-However it has had a major update since then. 
-Therefore the next priorities are:
+FileManager is fully functional.
+I used it in my last project, _but_ I did a major update last month when I
+decided to put it on Git.
+The tests will find whether the update created any bugs.
+
+The core functionality is working, as can be seen in the demos.
+Therefore you can use this in a project right now.
+Just check back regularly for updates.
+
+**These tasks need to be completed before I set the version to 1.0.0.**
 
 - Add tests for all functionality, for confidence it is production-ready.
-- Add and iImprove documentation.
+- Add and improve documentation.
 
 
 [gzip-size-badge]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js?compression=gzip
