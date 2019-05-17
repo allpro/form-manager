@@ -19,8 +19,8 @@ class LongFormDemo extends Component {
 			<div style={{ maxWidth: '800px', margin: '0 auto' }}>
 				<Typography variant="h6">
 					NOTE: The <code>FieldsTestOutput</code> helper is in a
-					separate dev-helpers package to avoid bloating FormManager:
-					<a
+					separate dev-helpers package to avoid bloating
+					FormManager: <a
 						href="https://www.npmjs.com/package/@allpro/form-manager-devtools"
 						target="_blank"
 						rel="noopener noreferrer"
