@@ -11,13 +11,15 @@
 FormManager (**"FM'**) is collection of data-handling tools for form-data, 
 or any data actually.
 The motivation for this helper is to have **a total data solution for forms**,
-that can almost eliminates the need for custom code. 
-FM's capabilities include:
+that can virtually eliminate the need for custom code.
+
+## FormManager Capabilities
 
 **Form Integration**
 
 - **Compatible with ANY UI library, including React**
 - Integration with any type of form control, standard or custom
+- Manages data internally; does not require a `<form>` element
 - Optimizations for use with **Material UI controls**
 - Form-field property-setter helpers to simplify form mark-up
 - Form-field event handling, with customizable validation events
@@ -51,9 +53,9 @@ FM's capabilities include:
 FM is **_pure_ Javascript**. There is no magic behind the curtain!
 
 
-## Live Example
+## Live Examples
 
-Try the demos at: https://allpro.github.io/form-manager
+**Try the demos at: https://allpro.github.io/form-manager**
 
 Play with the demo code at:
 https://codesandbox.io/s/github/allpro/form-manager/tree/master/example
