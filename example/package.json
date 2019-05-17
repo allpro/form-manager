@@ -1,7 +1,7 @@
 {
   "name": "form-manager-example",
   "homepage": "https://allpro.github.io/form-manager",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "author": "allpro",
   "license": "MIT",
   "browserslist": [
@@ -18,9 +18,9 @@
     "@material-ui/core": "^3.9.0",
     "@material-ui/icons": "^3.0.0",
     "material-ui-pickers": "^2.2.4",
-    "prop-types": ">=15",
-    "react": ">=15",
-    "react-dom": ">=15",
+    "prop-types": "^15.7.2",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
     "react-scripts": "^1.1.4"
   },
