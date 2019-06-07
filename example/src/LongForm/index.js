@@ -29,22 +29,24 @@ class LongFormDemo extends Component {
 	constructor( props ) {
 		super(props)
 
-		this.form = FormManager(this, formConfig)
+		this.form = FormManager(this, formConfig, props.data)
 
 		// Allow form access from console
 		window.form = this.form
 	}
 
 	render() {
+		const { form } = this
+
 		return (
 			<div style={styles.wrapper}>
 				<Card style={styles.card}>
 					<CardContent>
-						<FormSection form={this.form}/>
+						<FormSection form={form}/>
 					</CardContent>
 				</Card>
 
-				<FieldsTestOutput form={this.form} style={styles.card} />
+				<FieldsTestOutput form={form} style={styles.card} />
 			</div>
 		)
 	}

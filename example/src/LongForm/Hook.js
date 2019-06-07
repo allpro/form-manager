@@ -18,11 +18,9 @@ const styles = {
 		justifyContent: 'center',
 		margin: '0 auto'
 	},
-	column: {
+	card: {
 		flex: '300px 1 0',
 		maxWidth: '600px',
-		border: '1px solid rgba(0,0,0,0.14)',
-		// padding: 0,
 		margin: '12px'
 	}
 }
@@ -32,15 +30,18 @@ function LongFormHookDemo(props) {
 	const form = useFormManager(formConfig, props.data)
 	const revision = form.getRevision()
 
+	// Allow form access from console
+	window.form = this.form
+
 	return (
 		<div style={styles.wrapper}>
-			<Card style={styles.column}>
+			<Card style={styles.card}>
 				<CardContent>
 					<FormSection form={form} revision={revision} />
 				</CardContent>
 			</Card>
 
-			<FieldsTestOutput form={form} style={styles.column} />
+			<FieldsTestOutput form={form} style={styles.card} />
 		</div>
 	)
 }
