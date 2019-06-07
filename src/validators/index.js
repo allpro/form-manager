@@ -3,7 +3,9 @@ import lte from 'lodash/lte'
 import inRange from 'lodash/inRange'
 import isBoolean from 'lodash/isBoolean'
 import isEmpty from 'lodash/isEmpty'
+import isNil from 'lodash/isNil'
 import isNumber from 'lodash/isNumber'
+import isRegExp from 'lodash/isRegExp'
 import isSafeInteger from 'lodash/isSafeInteger'
 import isString from 'lodash/isString'
 import trim from 'lodash/trim'
@@ -11,6 +13,20 @@ import uniq from 'lodash/uniq'
 
 import formatters from '../formatters'
 const { toMoment } = formatters
+
+
+/**
+ * RegExp pattern tester; can handle numeric values
+ *
+ * @param {(string|number|null)} value
+ * @param {(RegExp|string)} regex
+ * @returns {boolean}
+ */
+const pattern = (value, regex) => {
+	if (isNil(value)) return false
+	const re = isRegExp(regex) ? regex : new RegExp(regex.toString())
+	return re.test(value.toString())
+}
 
 // eslint-disable-next-line
 const reEmail = /^\s*(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))\s*$/
@@ -29,29 +45,29 @@ const email = value => reEmail.test(value.toLowerCase())
  * @returns {boolean}
  */
 const phone = value => {
-	const nums = value.replace(/[^0-9]/g, '')
+	const nums = formatters.numbersOnly(value || '')
 	return nums.length === 7 || nums.length === 10 || nums.length === 11
 }
 
 const string = value => isString(value)
 
-const number = value => isNumeric(value)
+const number = (value, opts) => isNumeric(value, opts)
 
-const integer = value => isNumeric(value, { integer: true })
+const integer = (value, opts = {}) => isNumeric(value, { ...opts, integer: true })
 
-const minLength = ( value, opt ) => gte(trim(value.toString()).length, opt)
+const minLength = ( value, len ) => gte(trim(value.toString()).length, len)
 
-const maxLength = ( value, opt ) => lte(trim(value.toString()).length, opt)
+const maxLength = ( value, len ) => lte(trim(value.toString()).length, len)
 
-const lengthRange = ( value, opt ) => inRange(trim(value.toString()).length, opt[0], opt[1])
+const lengthRange = ( value, lens ) => inRange(trim(value.toString()).length, lens[0], lens[1])
 
-const exactLength = ( value, opt ) => trim(value.toString()).length === opt
+const exactLength = ( value, len ) => trim(value.toString()).length === len
 
-const minNumber = ( value, opt ) => gte(value, opt)
+const minNumber = ( value, num ) => gte(value, num)
 
-const maxNumber = ( value, opt ) => lte(value, opt)
+const maxNumber = ( value, num ) => lte(value, num)
 
-const numberRange = ( value, opt ) => inRange(value, opt[0], opt[1])
+const numberRange = ( value, nums ) => inRange(value, nums[0], nums[1])
 
 
 const RE_PASSWORD_SYMBOLS = /[ /$^.*+()[\]!"#%&',\-:;<=>?@_`{|}~]/g
@@ -115,14 +131,14 @@ const boolean = value => (
 
 const date = value => toMoment(value).isValid()
 
-const minDate = ( value, opt ) => toMoment(value).isSameOrAfter(opt)
-const maxDate = ( value, opt ) => toMoment(value).isSameOrBefore(opt)
-const dateRange = ( value, opt ) => toMoment(value).isBetween(opt[0], opt[1], null, '[]')
+const minDate = ( value, dt ) => toMoment(value).isSameOrAfter(dt)
+const maxDate = ( value, dt ) => toMoment(value).isSameOrBefore(dt)
+const dateRange = ( value, dts ) => toMoment(value).isBetween(dts[0], dts[1], null, '[]')
 
-const minTime = ( value, opt ) => toTime(value).isSameOrAfter(toTime(opt))
-const maxTime = ( value, opt ) => toTime(value).isSameOrBefore(toTime(opt))
-const timeRange = ( value, opt ) => (
-	toTime(value).isBetween(toTime(opt[0]), toTime(opt[1]), null, '[]')
+const minTime = ( value, tm ) => toTime(value).isSameOrAfter(toTime(tm))
+const maxTime = ( value, tm ) => toTime(value).isSameOrBefore(toTime(tm))
+const timeRange = ( value, tms ) => (
+	toTime(value).isBetween(toTime(tms[0]), toTime(tms[1]), null, '[]')
 )
 
 
@@ -137,7 +153,7 @@ function isNumeric( value, opts = { integer: false, allowNegative: false } ) {
 
 	if (isString(value)) {
 		const num = Number(value) // Note: NaN == false
-		return num ? testNumber(num) : false
+		return num || num === 0 ? testNumber(num) : false
 	}
 
 	// Only numbers and strings are acceptable values
@@ -169,6 +185,7 @@ export default {
 	email,
 	phone,
 	password,
+	pattern,
 
 	boolean,
 	string,

@@ -81,32 +81,33 @@ fields: {
     }
 ```
 
-| Type         | Values           | Applies To        |
-| -----------: | :--------------- | :-----------------|
-| required:    | (true|false)     | Any type of value |
-| boolean:     | (true|false)     | Type-validator    |
-| integer:     | (true|false)     | Type-validator    |
-| number:      | (true|false)     | Type-validator    |
-| string:      | (true|false)     | Type-validator    |
-| address:     | (true|false)     | Text - Address    |
-| phone:       | (true|false)     | Text - Phone      |
-| email:       | (true|false)     | Text - Email      |
-| password:    | (true|{required})| Text - Password   |
-| minLength:   | number           | Text values       |
-| maxLength:   | number           | Text values       |
-| exactLength: | number           | Text values       |
-| lengthRange: | [number, number] | Text values       |
-| minNumber:   | number           | Numeric values    |
-| maxNumber:   | number           | Numeric values    |
-| numberRange: | [number, number] | Numeric values    |
-| date:        | (str|num|Date)   | Date values       |
-| minDate:     | (str|num|Date)   | Date values       |
-| maxDate:     | (str|num|Date)   | Date values       |
-| dateRange:   | [value, value]   | Date values       |
-| minTime:     | (str|num|Date)   | Time values       |
-| maxTime:     | (str|num|Date)   | Time values       |
-| timeRange:   | [value, value]   | Time values       |
-| custom:      | function         | Anything else     |
+| Type         | Values           | Applies To          |
+| -----------: | :--------------- | :-------------------|
+| required:    | (true|false)     | Any type of value   |
+| boolean:     | (true|false)     | Type-validator      |
+| integer:     | (true|false)     | Type-validator      |
+| number:      | (true|false)     | Type-validator      |
+| string:      | (true|false)     | Type-validator      |
+| address:     | (true|false)     | Text - Address      |
+| phone:       | (true|false)     | Text - Phone        |
+| email:       | (true|false)     | Text - Email        |
+| password:    | (true|{required})| Text - Password     |
+| pattern:     | (true|false)     | Text/Numeric values |
+| minLength:   | number           | Text values         |
+| maxLength:   | number           | Text values         |
+| exactLength: | number           | Text values         |
+| lengthRange: | [number, number] | Text values         |
+| minNumber:   | number           | Numeric values      |
+| maxNumber:   | number           | Numeric values      |
+| numberRange: | [number, number] | Numeric values      |
+| date:        | (str|num|Date)   | Date values         |
+| minDate:     | (str|num|Date)   | Date values         |
+| maxDate:     | (str|num|Date)   | Date values         |
+| dateRange:   | [value, value]   | Date values         |
+| minTime:     | (str|num|Date)   | Time values         |
+| maxTime:     | (str|num|Date)   | Time values         |
+| timeRange:   | [value, value]   | Time values         |
+| custom:      | function         | Anything else       |
 
 
 ## Custom Validators

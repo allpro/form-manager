@@ -66,7 +66,7 @@ class FormSection extends Component {
 				<FormButtonsBar form={form} />
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Text & Numbers
 					</Typography>
 					<Typography paragraph className="form-tip">
@@ -112,7 +112,7 @@ class FormSection extends Component {
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Date Pickers
 					</Typography>
 					<Typography paragraph className="form-tip">
@@ -166,7 +166,7 @@ class FormSection extends Component {
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Selection Controls
 					</Typography>
 
@@ -191,7 +191,7 @@ class FormSection extends Component {
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Radio Buttons
 					</Typography>
 
@@ -205,7 +205,7 @@ class FormSection extends Component {
 						margin="dense" // [none|normal|dense] Vertical spacing
 						fullWidth={false}
 					>
-						<FormLabel variant="title" component="legend">
+						<FormLabel variant="h6" component="legend">
 							Select your gender
 						</FormLabel>
 
@@ -245,7 +245,7 @@ class FormSection extends Component {
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Synced Picklists
 					</Typography>
 

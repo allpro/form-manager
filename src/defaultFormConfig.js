@@ -23,9 +23,6 @@ const formConfig = {
 	fieldAliasMap: {},
 
 	fieldDefaults: {
-		// Are fields MaterialUI controls? true = Use MUI-specific props
-		isMUIControl: false,
-
 		/*
 		 * Form validation options can be overridden per-field
 		 * Validation can be triggered manually for a single field, or all fields
@@ -50,7 +47,6 @@ const formConfig = {
 			cleanOnBlur: true, // Clean field-text onBlur
 			trim: true, // Trim leading-/trailing--spaces
 			trimInner: false, // Replace multi-spaces/tabs with single space
-			monoCaseToProper: false, // UPPER-CASE or lower-case to Proper-Case
 			reformat: '' // {(string|Function)} Apply a formatter to value
 		}
 	},

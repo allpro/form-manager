@@ -1,9 +1,11 @@
+import numbersOnly from './numbersOnly'
+
 const reDissectParts = /([01]+)?([0-9]{0,3})([0-9]{3})([0-9]{4})(.+)?/
 
-const formatPhone = (value, template) => {
+const formatPhone = value => {
 	if (!value) return ''
 
-	const numbers = value.replace( /[^0-9]/g, '' )
+	const numbers = numbersOnly(value || '')
 	const parts = numbers.match( reDissectParts )
 
 	if (parts) {

@@ -113,8 +113,8 @@ const trimFormFields = obj => {
  * @param {string} path
  */
 function pathToKeysArray( path ) {
-	// Dots in fieldName indicate a 'path' - data is nested
-	return path.split( '.' )
+	// Dots delimit an 'object path'
+	return isArray(path) ? path : path.split( '.' )
 }
 
 /**
@@ -175,26 +175,29 @@ function setObjectValue( hash, path, value, opts ) {
 		// Recurse into data hash for name-paths like 'who/location/address1'
 		for (let idx = 0; idx < lastIdx; idx++) {
 			const key = keys[idx]
+			const branchValue = branch[key]
 
-			// If this is not the last key in path, recurse into branch
-			if (idx < lastIdx) {
-				const branchValue = branch[key]
-
-				// Create a branch (hash) here if it doesn't exist yet
-				// OVERWRITE any non-object value because path specifies it!
-				if (!isPlainObject( branchValue )) {
-					branch[key] = {}
-				}
-
-				// Update branch for next loop
-				branch = branch[key]
+			// Create a branch (hash) here if it doesn't exist yet
+			// OVERWRITE any non-object value because path specifies it!
+			if (!isPlainObject( branchValue )) {
+				branch[key] = {}
 			}
+
+			// Update branch for next loop
+			branch = branch[key]
 		}
 
-		// Check whether value has changed - ignore objects, assume changed
 		const oldValue = branch[lastKey]
+
+		// Check whether value has changed - ignore objects, assume changed
 		if (!isObjectLike(value) && value === oldValue) {
 			return false // Value was NOT updated
+		}
+
+		// If passed value is undefined, then DELETE the specified path
+		if (value === undefined) {
+			delete branch[lastKey] // OK if key does not exist
+			return !isUndefined(oldValue) // True IF a value existed before
 		}
 
 		// Write the passed value at end of the path (last branch)
@@ -202,6 +205,7 @@ function setObjectValue( hash, path, value, opts ) {
 		if (setOpts.merge && isPlainObject(branch[lastKey]) && isPlainObject(value)) {
 			merge(branch[lastKey], setOpts.cloneValue ? clone( value ) : value)
 		}
+		// Set value at path specified; clone value to break byRef
 		else {
 			branch[lastKey] = setOpts.cloneValue ? clone( value ) : value
 		}
@@ -214,7 +218,7 @@ function setObjectValue( hash, path, value, opts ) {
 		return true // Values were updated
 	}
 	else {
-		console.warn('FormManager: No path specified to set value: "${value}"')
+		console.warn(`FormManager: No path specified to set value: "${value}"`)
 		return false // Value was NOT updated
 	}
 }

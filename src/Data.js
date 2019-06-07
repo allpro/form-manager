@@ -11,7 +11,6 @@ import isString from 'lodash/isString'
 import isPlainObject from 'lodash/isPlainObject'
 import isUndefined from 'lodash/isUndefined'
 
-// Alias validateField because we use an intermediate method with same name
 import utils from './utils'
 // Extract utils for code brevity
 const { getObjectValue, setObjectValue } = utils
@@ -43,6 +42,7 @@ function Data( formManager, components ) {
 	const formatters = config.get('formatters')
 	const converters = config.get('converters')
 
+	// DATA CACHES - both server and form versions of data
 	let stateOfForm = {}
 	let stateOfData = {}
 
@@ -68,8 +68,12 @@ function Data( formManager, components ) {
 			setData,			// SETTER for stateOfData
 			getValue, 			// GETTER for one or more field-values
 			setValue, 			// SETTER for one or more field-values
+			cleanField,			// SETTER for one field
 			// ALIASES
+			data: getData,
 			value: getValue,
+			values: getValue,
+			changes: getChanges,
 			getValues: getValue,
 			setValues: setValue
 		}
@@ -136,6 +140,7 @@ function Data( formManager, components ) {
 	 */
 	function setValue( name, value, opts = {} ) {
 		const { update, event, validate, isInitialValue } = opts
+		const validationPromises = []
 
 		const set = ( n, v ) => {
 			let val = v
@@ -168,30 +173,37 @@ function Data( formManager, components ) {
 				setFormValueFromData(n, value)
 			}
 
-			// If called from a field-event, potentially validate and fire
-			// callbacks
+			// If triggered by a field-event, validate BEFORE firing callbacks
 			if (event || validate) {
 				const validationEvent = validate ? 'validate' : event
 				const onChangeForm = config.get('onChange')
 				const onChangeField = (config.getField(name) || {}).onChange
 
 				if (fieldConfig) {
-					// A validation event MAY trigger validation & callback.
-					// Validation may or may not run, depending on event-type.
-					// Validation CAN BE async, so method always returns a
-					// promise.
-					formManager.validate(name, val, validationEvent)
-					.then(() => {
-						// If field value was changed, then fire events
-						if (event === 'change') {
-							fireEventCallback(onChangeField, value, name)
-							fireEventCallback(onChangeForm, value, name)
-						}
-					})
+					const opts2 = { update: false }
+
+					// Track promises so can wait until ALL done before 'update'
+					validationPromises.push(
+						// A validation event MAY trigger validation & callback.
+						// Validation MAY run, depending on event-type.
+						// Validation is async so always returns a promise.
+						formManager.validate(name, val, validationEvent, opts2)
+						.then(() => {
+							// If field value was changed, then fire events
+							// noinspection JSIncompatibleTypesComparison
+							if (event === 'change') {
+								fireEventCallback(onChangeField, value, name)
+								fireEventCallback(onChangeForm, value, name)
+							}
+						})
+					)
 				}
-				else if (event === 'change') {
-					// Just fire form-level onChange, if one exists
-					fireEventCallback(onChangeForm, value, name)
+				else {
+					// noinspection JSIncompatibleTypesComparison
+					if (event === 'change') {
+						// Just fire form-level onChange, if one exists
+						fireEventCallback(onChangeForm, value, name)
+					}
 				}
 			}
 		}
@@ -211,7 +223,13 @@ function Data( formManager, components ) {
 
 		// Note: opts.update default is true; must pass false to prevent update
 		if (update !== false) {
-			triggerComponentUpdate()
+			// If field(s) is validating, wait for that to complete
+			if (validationPromises.length) {
+				Promise.all(validationPromises).then(triggerComponentUpdate)
+			}
+			else {
+				triggerComponentUpdate()
+			}
 		}
 
 		return formManager
@@ -250,21 +268,40 @@ function Data( formManager, components ) {
 	}
 
 	function cleanValue( value, fldCfg ) {
-		// Only string values are cleaned
-		if (!value || !isString(value)) return value
-
-		const trimOuter = withFieldDefaults(fldCfg, 'cleaning.trim')
-		const trimInner = withFieldDefaults(fldCfg, 'cleaning.trimInner')
-		const toProper = withFieldDefaults(fldCfg, 'cleaning.monoCaseToProper')
-		const reformat = withFieldDefaults(fldCfg, 'cleaning.reformat')
-
+		if (!value) return value
 		let val = value
-		if (trimOuter) val = val.trim()
-		if (trimInner) val = val.replace(/\s+/g, ' ')
-		if (toProper) val = formatValue(val, toProper)
+
+		// The formatter may change the data-type, like number -> string
+		const reformat = withFieldDefaults(fldCfg, 'cleaning.reformat')
 		if (reformat) val = formatValue(val, reformat)
 
+		// Only string values can be trimmed
+		if (isString(value)) {
+			const trimOuter = withFieldDefaults(fldCfg, 'cleaning.trim')
+			const trimInner = withFieldDefaults(fldCfg, 'cleaning.trimInner')
+			if (trimOuter) val = val.trim()
+			if (trimInner) val = val.replace(/\s+/g, ' ')
+		}
+
 		return val
+	}
+
+	function cleanField( name ) {
+		const fieldName = aliasToRealName(name)
+		const fieldConfig = config.getField(fieldName)
+
+		// Field may NOT have a configuration, or could be a 'state' value
+		if (fieldConfig && fieldConfig.isData) {
+			const curValue = getValue(fieldName)
+			const newValue = cleanValue(curValue, fieldConfig)
+
+			if (newValue !== curValue) {
+				// Pass 'change' event so will fire event with new value
+				setValue(fieldName, newValue, { event: 'change' })
+			}
+		}
+
+		return formManager
 	}
 
 

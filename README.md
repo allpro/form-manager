@@ -32,7 +32,7 @@ that can virtually eliminate the need for custom code.
 - Configuration options at both the form and field level for maximum control
 - Simple, multiple validation options linked to error-message system
 - Error-message auto-generation, using a templating system
-- Automatic error output with Material UI; easy output without
+- _Automatic_ error output with Material UI; or simple output without
 
 **Data Handling**
 
@@ -50,7 +50,7 @@ that can virtually eliminate the need for custom code.
 - Does not create any global vars (unless imported as a `<script />`)
 - Does not use Context in React or any similar trickery
 
-FM is **_pure_ Javascript**. There is no magic behind the curtain!
+FM is **pure Javascript**. There is no magic behind the curtain!
 
 
 ## Live Examples
@@ -86,20 +86,20 @@ whereas communications is NOT something I need a form-helper to do.
 Most form helpers requires special mark-up, which adds significant complexity 
 and limits the use of custom controls.
 It also means that _dumb_ presentation components must contain form logic. 
-This is against my preference for **_total_ separation of concerns**.
+This is against my preference for **total separation of concerns**.
 
 Most helpers don't provide any formatting or data-conversion capabilities.
 This means you must write your own code, often repetitively.
 FM is a TOTAL data handler, so all such features are integrated and easy to use.
 
-When using FormManager, **_ALL_ data handling and logic is in one place**, 
+When using FormManager, **ALL data handling and logic is in one place**, 
 and this configuration is **completely separate from the mark-up**. 
 If you have a complex form configuration, 
 it's can even go its own file, like `formConfig.js`.
 
 If you are already use some helpers, like a validation system, 
 it can be easily integrate with FM events and configuration. 
-**_Every_ feature in FM is designed to be easily extended and/or overridden.**
+**Every feature in FM is designed to be easily extended or overridden.**
 
 I created FM when using Material UI components in a large React app. 
 However, **FM is not reliant on React or any other library**. 
@@ -115,7 +115,7 @@ it is extremely easy to learn and to use.
 Anyone who has created an HTML form already knows how to implement FM.
 
 
-## Implementation Example
+## Implementation Overview
 
 **FM uses ordinary properties and events to integrate with form controls.**
 Below are examples of basic form control mark-up.
@@ -136,18 +136,21 @@ This example uses React JSX markup, but ordinary HTML could also be used.
 <DatePicker {...form.allProps('birthdate')} />
 ```
 
-Below is a sample React component, using **Material UI TextFields**. 
-The FM instance is created in the parent/container component, 
-and passed in as **`props.form`**. 
-The `form.allProps('fieldname')` helper addes 8 to 12 individual properties,
-including event handlers, giving FM full control of each input.
-This includes output of error-messages as needed.
+## Material-UI Form Example
 
-**NOTE that the `form.submit` method is NOT part of FM!**
-It's actually a container method that was _attached_ to the FM object rather 
-than passing a separate prop. 
-If necessary, that submit method can _call_ FM to get the form data,
-perform validation, or _clean/transform_ the data in preparation for posting.
+The sample form below uses **Material UI TextFields**. 
+A `formManager` instance is created in the parent, container component, 
+then passed down as **`props.form`**.
+
+The `form.allProps('fieldname')` helper adds **12 properties and
+event handlers**, giving FM full control of all the fields.
+This includes output of error-messages when applicable.
+
+**NOTES**
+- There is no `<form>` element &mdash; it's not necessary.
+- The `form.submit` method shown is NOT part of FM.
+  It's a container method that was _attached_ to the FM object for convenience.
+
 ```javascript static
 const MyForm = (props) => {
     const { form } = props;
@@ -176,25 +179,18 @@ const MyForm = (props) => {
 }
 ```
 
-**What you _don't see_ above is the logic behind this form; that's the point!**
-This form _could_ have validation for every field, with auto-generated error 
-messages. Field-level validation can occur onChange, onBlur or onSubmit, and 
-this may change depending whether a field is already in-error. The values can 
-be automatically trimmed and reformatted for display (eg: "(604) 555-1212"), 
-and can be auto-transformed for posting (eg: "6045551212"). Fields can even 
-be disabled in response to data-entry. 
-**All things are possible, and this mark-up never needs to change!**
+**ALL form options and logic is set in the form-configuration.** 
+<br>Validation, data-transformations, and other features are all specified in 
+the container component &mdash; _not_ in presentation component(s). 
 
-**ALL data handling and logic is set in the form-configuration.** 
-If you want to adjust validation requirements, you do it there; _not_ inside the 
-presentation components. 
-You can add cosmetic properties to the form-fields 
-in your presentation component as normal; FM does not know or care about this.
+Cosmetic properties can be added to the form-fields in the presentation 
+component as normal. Field 'labels' are considered 'cosmetic' because they are
+a presentation choice, and do not affect the 'data'.
 
-If you have a rich form that spans multiple screens, with some controls inside
-a popup dialog-box, that's no problem. FM does not 'wrap' your form, so 
-you can create any component structure required -
-just pass in `props.form` so you can integrate the data with FM.
+**FM easily handles very complex custom forms.** For example:
+A form that spans multiple screens, with some controls inside modal popups. 
+FM does not 'wrap' markup so page structure doesn't matter. 
+Just pass `props.form` to integrate any control with FM.
 
 See 
 **[Implementing FormManager in Components](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 

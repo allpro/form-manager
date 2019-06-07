@@ -57,7 +57,7 @@ const formats = {
  * @param {string} [timeFmt]
  * @returns {string}
  */
-function formatDate( date, dateFmt, timeFmt ) {
+function formatDate(date, dateFmt, timeFmt ) {
 	if (!date) return ''
 
 	const mDate = toMoment(date)

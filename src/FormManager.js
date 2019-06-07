@@ -2,6 +2,7 @@ import assign from 'lodash/assign'
 import isFunction from 'lodash/isFunction'
 import isObject from 'lodash/isObject'
 import isString from 'lodash/isString'
+import isUndefined from 'lodash/isUndefined'
 
 import Data from './Data'
 import State from './State'
@@ -34,6 +35,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 	const publicAPI = {
 		getRevision,				// GETTER for formRevision number
 		reset: initForm, 			// ACTION: Reset form data, errors & state.
+		render: triggerComponentUpdate,
+		update: triggerComponentUpdate,
 
 		// FORM-ELEMENT PROPERTY SETTERS (HELPERS)
 		dataProps: getDataProps,	// HELPER for writing component props
@@ -95,6 +98,9 @@ function FormManager( componentObject, options = {}, extraData ) {
 		state.init(options.initialState)
 		data.init(options.initialData, extraData)
 		validation.clearErrors()
+
+		// Can be called as reset(), so return API
+		return publicAPI
 	}
 
 	function getRevision() {
@@ -120,6 +126,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 				componentObject(formRevision)
 			}
 		}
+
+		return publicAPI
 	}
 
 
@@ -134,7 +142,8 @@ function FormManager( componentObject, options = {}, extraData ) {
 	function getDataProps( name, opts = { checkbox: false, radio: false } ) {
 		const fieldName = aliasToRealName(name)
 
-		const fieldConfig = config.getField(fieldName) || {}
+		const defaults = config.get('fieldDefaults')
+		const fieldConfig = assign({}, defaults, config.getField(fieldName))
 		const { inputType, displayName, disabled, readOnly } = fieldConfig
 
 		const fieldValidations = config.getValidation(fieldName) || {}
@@ -146,9 +155,9 @@ function FormManager( componentObject, options = {}, extraData ) {
 			name: fieldName,
 			value,
 			'aria-label': displayName || fieldName, // can override in view
-			onChange: partiallyApplyEventHandler(onFieldChange, fieldConfig),
-			onFocus: partiallyApplyEventHandler(onFieldFocus, fieldConfig),
-			onBlur: partiallyApplyEventHandler(onFieldBlur, fieldConfig)
+			onChange: onFieldChange,
+			onFocus: onFieldFocus,
+			onBlur: onFieldBlur
 		}
 
 		if (inputType) {
@@ -166,14 +175,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 		if (required) props.required = true
 		if (disabled) props.disabled = true
-		if (readOnly) {
-			if (fieldConfig.isMUIControl) {
-				props.InputProps = { readOnly: true }
-			}
-			else {
-				props.readOnly = true
-			}
-		}
+		if (readOnly) props.readOnly = true
 
 		return props
 	}
@@ -213,34 +215,49 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 
 	/**
-	 * @param {string} name        FieldName or alias
-	 * @param {*} value         Field Value
-	 */
-	function onFieldChange( name, value ) {
-		// We will fire onChange callbacks AFTER updating field-value
-		data.setValue(name, value, { event: 'change' })
-	}
-
-	/**
+	 * Field.onChange event-handler
 	 * CURRENTLY the onFocus event is not used , but is included in API
 	 *    because may want to add onFocus options in the future.
 	 *
-	 * @param {string} name        FieldName or alias
-	 * @param {*} value         Field Value
+	 * @param {(Object|string)} event_name	Event object OR fieldName
+	 * @param {*} [value]					Field value
+	 * @returns {Promise}					Validation promise
 	 */
-	function onFieldFocus( name, value ) {
-		const fieldConfig = config.getField(name)
-		if (!fieldConfig) return // INVALID name PASSED; ABORT
-
-		fireEventCallback(fieldConfig.onFocus, value, fieldConfig.name)
-		fireEventCallback(config.get('onFocus'), value, fieldConfig.name)
+	function onFieldChange( event_name, value ) {
+		const [ name, val ] = parseEvent(event_name, value)
+		// Will fire onChange callbacks AFTER updating field-value
+		return data.setValue(name, val, { event: 'change' })
 	}
 
 	/**
-	 * @param {string} name        FieldName or alias
-	 * @param {*} value         Field Value
+	 * Field.onFocus event-handler
+	 * CURRENTLY the onFocus event is not used , but is included in API
+	 *	because may want to add onFocus options in the future.
+	 *
+	 * @param {(Object|string)} event_name	Event object OR fieldName
+	 * @param {*} [value]					Field value
+	 * @returns {Promise}					Dummy promise for consistency
 	 */
-	function onFieldBlur( name, value ) {
+	function onFieldFocus( event_name, value ) {
+		const [ name, val ] = parseEvent(event_name, value)
+		const fieldConfig = config.getField(name)
+		if (!fieldConfig) return // INVALID name PASSED; ABORT
+
+		fireEventCallback(fieldConfig.onFocus, val, fieldConfig.name)
+		fireEventCallback(config.get('onFocus'), val, fieldConfig.name)
+
+		return Promise.resolve(true) // Return value true means isValid
+	}
+
+	/**
+	 * Field.onBlur event-handler
+	 *
+	 * @param {(Object|string)} event_name	Event object OR fieldName
+	 * @param {*} [value]					Field value
+	 * @returns {Promise}					Validation promise
+	 */
+	function onFieldBlur( event_name, value ) {
+		const [ name, val ] = parseEvent(event_name, value)
 		const fieldConfig = config.getField(name)
 		if (!fieldConfig) return // INVALID name PASSED; ABORT
 
@@ -252,18 +269,18 @@ function FormManager( componentObject, options = {}, extraData ) {
 			'cleaning.cleanOnBlur'
 		)
 		if (cleanOnBlur) {
-			const newValue = data.cleanValue(value, fieldConfig)
-			if (newValue !== value) {
+			const newValue = data.cleanValue(val, fieldConfig)
+			if (newValue !== val) {
 				// Pass 'change' event so will fire event with new value
 				data.setValue(fieldName, newValue, { event: 'change' })
 			}
 		}
 
-		validation.validate(name, value, 'blur')
+		return validation.validate(name, val, 'blur')
 		.then(() => {
 			// Note: This will run even if validation did not run
-			fireEventCallback(fieldConfig.onBlur, value, fieldName)
-			fireEventCallback(config.get('onBlur'), value, fieldName)
+			fireEventCallback(fieldConfig.onBlur, val, fieldName)
+			fireEventCallback(config.get('onBlur'), val, fieldName)
 		})
 	}
 
@@ -273,26 +290,38 @@ function FormManager( componentObject, options = {}, extraData ) {
 		}
 	}
 
-	function partiallyApplyEventHandler( fn, fieldConfig ) {
-		const fieldName = fieldConfig.name
+	/**
+	 * Helper for field event handlers.
+	 * Can be a normal event handler OR be called manually with (name, value).
+	 *
+	 * @param {(Object|string)} event	Event object OR fieldName
+	 * @param {*} [value]				Field value
+	 * @returns {[string, *]}			Array of [name, value]
+	 */
+	function parseEvent( event, value ) {
+		let fieldName = ''
+		let val = value
 
-		return function ( e, val ) {
-			let value = val
-
-			// NORMAL fields return an event object
-			// noinspection JSUnresolvedVariable
-			if (isObject(e) && isObject(e.target)) {
-				const field = e.target
-				value = /checkbox/.test(field.type || '')
-					? field.checked
-					: field.value
+		if (isString(event)) {
+			// A fieldName was passed - method was called manually.
+			fieldName = aliasToRealName(event)
+			// If value was NOT also passed, then use current value.
+			if (isUndefined(val)) {
+				val = data.getValue(fieldName)
 			}
-			else {
-				value = e
-			}
-
-			return fn(fieldName, value)
 		}
+		// NORMAL fields return an event object
+		// noinspection JSUnresolvedVariable
+		if (isObject(event) && isObject(event.target)) {
+			// noinspection JSUnresolvedVariable
+			const field = event.target
+			fieldName = aliasToRealName(field.name || '')
+			val = /checkbox/.test(field.type || '')
+				? field.checked
+				: field.value
+		}
+
+		return [ fieldName, val ]
 	}
 }
 

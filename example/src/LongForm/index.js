@@ -17,11 +17,9 @@ const styles = {
 		justifyContent: 'center',
 		margin: '0 auto'
 	},
-	column: {
+	card: {
 		flex: '300px 1 0',
-		maxWidth: '500px',
-		border: '1px solid rgba(0,0,0,0.14)',
-		// padding: 0,
+		maxWidth: '600px',
 		margin: '12px'
 	}
 }
@@ -32,18 +30,21 @@ class LongFormDemo extends Component {
 		super(props)
 
 		this.form = FormManager(this, formConfig)
+
+		// Allow form access from console
+		window.form = this.form
 	}
 
 	render() {
 		return (
 			<div style={styles.wrapper}>
-				<Card style={styles.column}>
+				<Card style={styles.card}>
 					<CardContent>
 						<FormSection form={this.form}/>
 					</CardContent>
 				</Card>
 
-				<FieldsTestOutput form={this.form} style={styles.column} />
+				<FieldsTestOutput form={this.form} style={styles.card} />
 			</div>
 		)
 	}

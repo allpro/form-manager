@@ -57,7 +57,6 @@ const formConfig = {
             cleanOnBlur: true, // Clean field-text onBlur
             trim: true, // Trim leading-/trailing--spaces
             trimInner: false, // Replace multi-spaces/tabs with single space
-			monoCaseToProper: false, // UPPER-CASE or lower-case to Proper-Case
 			reformat: '' // {(string|Function)} Apply a formatter to value
         }
     },

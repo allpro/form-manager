@@ -33,13 +33,11 @@ const formConfig = {
 	},
 
 	onBlur: ( value, fieldName, form ) => {
-		logFormData(form, 'FormManager [any field].onBlur()')
+		logFormData(form, `FormManager [${fieldName}].onBlur()`)
 		// console.log('Fields Configuration', form.getFieldConfig())
 	},
 
 	fieldDefaults: {
-		isMUIControl: true, // These demos are using Material UI controls
-
 		validateOnBlur: true,
 		revalidateOnChange: true,
 
@@ -47,8 +45,7 @@ const formConfig = {
 		cleaning: {
 			cleanOnBlur: true, // Clean field-text onBlur
 			trim: true, // Trim leading-/trailing--spaces
-			trimInner: true, // Replace multi-spaces/tabs with single space
-			monoCaseToProper: false // Change UPPER- or lower-case to Proper-Case
+			trimInner: true // Replace multi-spaces/tabs with single space
 		}
 	},
 
@@ -74,9 +71,29 @@ const formConfig = {
 				password: { lower: 1, upper: 1, number: 1, symbol: 1 }
 			}
 		},
+		'profile.tagline': {
+			aliasName: 'tagline',
+			displayName: 'Profile Tagline',
+			cleaning: {
+				reformat: 'properCase'
+			},
+			validateOnChange: true,
+			validation: {
+				minLength: 2,
+				maxLength: 64
+			}
+		},
+		'profile.gender': {
+			aliasName: 'gender',
+			displayName: 'Gender',
+			validateOnChange: true,
+			validation: {
+				required: true
+			}
+		},
 		'profile.homePhone': {
-			displayName: 'Phone Numbers',
 			aliasName: 'phone',
+			displayName: 'Phone Numbers',
 			dataFormat: 'numbersOnly',
 			cleaning: {
 				reformat: 'phone',
@@ -88,9 +105,10 @@ const formConfig = {
 		age: {
 			displayName: 'Your Age',
 			dataType: 'integer',
-			dataFormat: num => num || null,
+			dataFormat: num => num > 0 ? num : null,
 			inputType: 'number',
 			validation: {
+				integer: true,
 				minNumber: v => v >= 18 ? true : 'You must be at least 18',
 				maxNumber: v => v <= 100 ? true : 'This is an invalid age'
 			}
@@ -132,14 +150,6 @@ const formConfig = {
 			displayName: 'Remember Me',
 			dataType: 'boolean',
 			inputType: 'checkbox'
-		},
-		'profile.gender': {
-			displayName: 'Gender',
-			aliasName: 'gender',
-			validateOnChange: true,
-			validation: {
-				required: true
-			}
 		},
 		category: {
 			displayName: 'Category',

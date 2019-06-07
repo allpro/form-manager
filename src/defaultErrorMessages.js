@@ -31,27 +31,30 @@ const defaultErrorMessages = {
 	},
 
 	// Generic, preset validators - require value(s) to be set
-	minLength: '{name} must be at least {value} characters',
-	maxLength: '{name} must be less than {value} characters.',
+	minLength: '{name} cannot be less than {value} characters',
+	maxLength: '{name} cannot be more than {value} characters.',
 	exactLength: '{name} must be exactly {value} characters.',
-	minNumber: '{name} must be at least {value}',
-	maxNumber: '{name} must be less than or equal to {value}',
+
+	minNumber: '{name} cannot be less than {value}',
+	maxNumber: '{name} cannot be more than {value}',
 	numberRange: '{name} must be between {value1} and {value2}',
+
 	minDate: (name, value) => (
-		`${name || 'Date'} must be on or after ${date(value, 'medium-date')}`
+		`${name || 'Date'} cannot be before ${date(value, 'medium-date')}`
 	),
 	maxDate: (name, value) => (
-		`${name || 'Date'} must be on or before ${date(value, 'medium-date')}`
+		`${name || 'Date'} cannot be after ${date(value, 'medium-date')}`
 	),
 	dateRange: (name, value) => (
 		`${name || 'Date'} must be between ` +
 		`${date(value[0], 'medium-date')} and ${date(value[1], 'medium-date')}`
 	),
+
 	minTime: (name, value) => (
-		`${name || 'Time'} must be at or after ${date(value, 'medium-time')}`
+		`${name || 'Time'} cannot be before ${date(value, 'medium-time')}`
 	),
 	maxTime: (name, value) => (
-		`${name || 'Time'} must be at or before ${date(value, 'medium-time')}`
+		`${name || 'Time'} cannot be after ${date(value, 'medium-time')}`
 	),
 	timeRange: (name, value) => (
 		`${name || 'Time'} must be between ` +

@@ -21,7 +21,6 @@ const defaultFieldConfig = {
  * Values in config.fieldDefaults will be inherited if not specified per-field
  */
 const inheritedFieldDefaults = [
-	'isMUIControl',
 	'validateOnChange',
 	'validateOnBlur',
 	'revalidateOnChange',
@@ -34,7 +33,6 @@ const inheritedFieldDefaults = [
 	'cleaning.cleanOnValidation',
 	'cleaning.trim',
 	'cleaning.trimInner',
-	'cleaning.monoCaseToProper',
 	'cleaning.reformat'
 ]
 

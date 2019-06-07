@@ -1,12 +1,16 @@
-import properCase from './formatProperCase'
-import date, { toMoment } from './formatDate'
-import phone from './formatPhone'
-import numbersOnly from './formatNumbersOnly'
+import date, { toMoment } from './date'
+import lowerCase from './lowerCase'
+import properCase from './properCase'
+import upperCase from './upperCase'
+import numbersOnly from './numbersOnly'
+import phone from './phone'
 
 export default {
 	date,
-	phone,
+	toMoment,
+	lowerCase,
 	properCase,
+	upperCase,
 	numbersOnly,
-	toMoment
+	phone
 }

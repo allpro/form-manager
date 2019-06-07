@@ -175,7 +175,7 @@ const MyForm = (props) => {
                 component="fieldset"
                 error={form.hasErrors('user/gender')}
             >
-                <FormLabel type="title" component="legend">
+                <FormLabel type="h6" component="legend">
                     Select your gender
                 </FormLabel>
                 <RadioGroup

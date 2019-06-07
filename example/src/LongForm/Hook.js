@@ -20,7 +20,7 @@ const styles = {
 	},
 	column: {
 		flex: '300px 1 0',
-		maxWidth: '500px',
+		maxWidth: '600px',
 		border: '1px solid rgba(0,0,0,0.14)',
 		// padding: 0,
 		margin: '12px'

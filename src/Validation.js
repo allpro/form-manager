@@ -9,13 +9,13 @@ import isEmpty from 'lodash/isEmpty'
 import isEqual from 'lodash/isEqual'
 import isFunction from 'lodash/isFunction'
 import isNil from 'lodash/isNil'
+import isUndefined from 'lodash/isUndefined'
 import isString from 'lodash/isString'
 import isPlainObject from 'lodash/isPlainObject'
 import map from 'lodash/map'
 import trim from 'lodash/trim'
 
 import utils from './utils'
-
 // Extract utils for code brevity
 const { itemToArray } = utils
 
@@ -44,7 +44,7 @@ function Validation( formManager, components ) {
 	let stateOfErrors = {}
 
 	/**
-	 * CONFIG API - provides simplified method names for internal functions
+	 * VALIDATION API - provides simplified method names for internal functions
 	 */
 	return {
 		// Methods used internally by FormManager components
@@ -194,6 +194,8 @@ function Validation( formManager, components ) {
 		else {
 			fieldErrors[type] = [errorMsg]
 		}
+
+		return formManager
 	}
 
 
@@ -218,6 +220,8 @@ function Validation( formManager, components ) {
 			const fieldName = aliasToRealName(name)
 			delete stateOfErrors[fieldName]
 		}
+
+		return internal.triggerComponentUpdate()
 	}
 
 
@@ -241,16 +245,19 @@ function Validation( formManager, components ) {
 
 
 	/**
-	 * @param {string} name            Field-name or alias-name
-	 * @param {*} value                Field value to validate
-	 * @param {string} [event]        Event that triggered this, eg: 'change'
-	 * @returns {Promise<boolean>}    Validation can be async so returns a
-	 *     promise
+	 * @param {string} name         Field-name or alias-name
+	 * @param {*} val             	Field value to validate
+	 * @param {string} [event]      Event that triggered this, eg: 'change'
+	 * @param {boolean} [update]    Event that triggered this, eg: 'change'
+	 * @returns {Promise<boolean>}  Validation can be async so returns a promise
 	 */
-	function validate( name, value, event ) {
+	function validate( name, val, event, update = true ) {
 		if (!name || isPlainObject(name)) {
 			return validateAll(name)
 		}
+
+		// This CAN also be called directly to validate the 'current value'
+		const value = !isUndefined(val) ? val : formManager.value(name)
 
 		// field MAY have an aliasName
 		const fieldName = aliasToRealName(name)
@@ -280,7 +287,7 @@ function Validation( formManager, components ) {
 		}
 
 		// Return the validation promise - will return true if is-valid value
-		return validateField(fieldName, value)
+		return validateField(fieldName, value, { update })
 	}
 
 
@@ -589,8 +596,7 @@ function Validation( formManager, components ) {
 			 * Subroutine to set the errors in stateOfErrors
 			 */
 			function finalizeValidation() {
-				// WAIT for all validation tests to complete, then process and
-				// exit
+				// WAIT for validation tests to complete, then process and exit
 				Promise.all(testPromises)
 				.then(() => {
 					const isFieldErrorFree = isEmpty(fieldErrors)

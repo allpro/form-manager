@@ -16,10 +16,10 @@ function handleCategoryChange( category, field, form ) {
 
 		// Set the correct subcategories list, or a blank list
 		const subcategories = sampleData.subcategories[category] || []
-		form.state('subcategoryList', subcategories)
+		form.setState('subcategoryList', subcategories)
 
 		// Always clear the subcategory value when category changes
-		form.value('subcategory', '', { validate: true })
+		form.setValue('subcategory', '', { validate: true })
 	}
 }
 
@@ -32,14 +32,12 @@ const formConfig = {
 		subcategoryList: sampleData.subcategories[selectedCategory] || []
 	},
 
-	onBlur: (value, fieldName, form) => {
-		logFormData(form, 'FormManager [any field].onBlur()')
+	onBlur: ( value, fieldName, form ) => {
+		logFormData(form, `FormManager [${fieldName}].onBlur()`)
 		// console.log('Fields Configuration', form.getFieldConfig())
 	},
 
 	fieldDefaults: {
-		isMUIControl: true, // These demos are using Material UI controls
-
 		validateOnBlur: true,
 		revalidateOnChange: true,
 
@@ -47,8 +45,7 @@ const formConfig = {
 		cleaning: {
 			cleanOnBlur: true, // Clean field-text onBlur
 			trim: true, // Trim leading-/trailing--spaces
-			trimInner: true, // Replace multi-spaces/tabs with single space
-			monoCaseToProper: false // Change UPPER- or lower-case to Proper-Case
+			trimInner: true // Replace multi-spaces/tabs with single space
 		}
 	},
 
@@ -59,7 +56,7 @@ const formConfig = {
 				required: true,
 				minLength: 8,
 				maxLength: 20,
-				custom: value => value.test(/[^0-9a-z-]/gi)
+				custom: value => /[^0-9a-z-]/gi.test(value)
 					? '{name} can contain only numbers, letters and dashes'
 					: true
 			}
@@ -74,18 +71,46 @@ const formConfig = {
 				password: { lower: 1, upper: 1, number: 1, symbol: 1 }
 			}
 		},
-		remember: {
-			displayName: 'Remember Me',
-			dataType: 'boolean',
-			inputType: 'checkbox'
+		'profile.tagline': {
+			aliasName: 'tagline',
+			displayName: 'Profile Tagline',
+			cleaning: {
+				reformat: 'properCase'
+			},
+			validateOnChange: true,
+			validation: {
+				minLength: 2,
+				maxLength: 64
+			}
+		},
+		'profile.gender': {
+			aliasName: 'gender',
+			displayName: 'Gender',
+			validateOnChange: true,
+			validation: {
+				required: true
+			}
+		},
+		'profile.homePhone': {
+			aliasName: 'phone',
+			displayName: 'Phone Numbers',
+			dataFormat: 'numbersOnly',
+			cleaning: {
+				reformat: 'phone',
+			},
+			validation: {
+				phone: true
+			}
 		},
 		age: {
 			displayName: 'Your Age',
 			dataType: 'integer',
+			dataFormat: num => num >= 0 ? num : null,
 			inputType: 'number',
 			validation: {
+				integer: true,
 				minNumber: v => v >= 18 ? true : 'You must be at least 18',
-				maxNumber: v => v >= 130 ? true : 'This is an invalid age'
+				maxNumber: v => v <= 100 ? true : 'This is an invalid age'
 			}
 		},
 		dateJoined: {
@@ -96,29 +121,35 @@ const formConfig = {
 			validateOnChange: true,
 			validation: {
 				date: true,
-				minDate: '2000-01-01',
-				maxDate: '2015-01-01'
+				minDate: '2010-01-01',
+				maxDate: new Date()
 			}
 		},
-		'profile.homePhone': {
-			displayName: 'Phone Numbers',
-			aliasName: 'phone',
-			dataFormat: 'numbersOnly',
-			cleaning: {
-				reformat: 'phone',
-			},
-			validation: {
-				required: true,
-				phone: true
-			}
-		},
-		'profile.gender': {
-			displayName: 'Gender',
-			aliasName: 'gender',
+		startTime: {
+			displayName: 'Start Time',
+			dataType: 'dateISO',
+			valueType: ['date', 'time-input'],
+			inputType: 'time',
 			validateOnChange: true,
 			validation: {
-				required: true
+				timeRange: ['08:30', '17:00']
 			}
+		},
+		appointment: {
+			displayName: 'Appointment',
+			dataType: 'dateISO',
+			valueType: ['date', 'datetime-input'],
+			inputType: 'datetime',
+			validateOnChange: true,
+			validation: {
+				dateRange: ['2019-01-01', '2019-12-31'],
+				timeRange: ['08:30', '17:00']
+			}
+		},
+		remember: {
+			displayName: 'Remember Me',
+			dataType: 'boolean',
+			inputType: 'checkbox'
 		},
 		category: {
 			displayName: 'Category',

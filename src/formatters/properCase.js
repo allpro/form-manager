@@ -1,8 +1,8 @@
 /**
- * Helpers to reformat data
+ * Helper to reformat text as Proper Case
  */
 
-const allCapsToProperCase = (text, force) => {
+const formatProperCase = (text, force) => {
 	// handle incorrect data-type, like Null
 	if (!text) return ''
 
@@ -15,4 +15,4 @@ const allCapsToProperCase = (text, force) => {
 	return text.toLowerCase().replace(/^(.)|[\s/-](.)/g, $1 => $1.toUpperCase())
 }
 
-export default allCapsToProperCase
+export default formatProperCase

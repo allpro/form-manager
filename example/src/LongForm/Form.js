@@ -49,73 +49,76 @@ class FormSection extends Component {
 
 		this.form = props.form
 
+		this.form.setFieldConfig('password', {
+			onChange: (val, name) => console.log(name, '=', val)
+		})
+
 		this.messageInput = React.createRef()
 	}
 
 	componentDidMount() {
-		const elem = this.messageInput.current
-		if (elem) elem.focus()
+		// Auto-focus Username field on-load
+		// const elem = this.messageInput.current
+		// if (elem) elem.focus()
 	}
 
 	render() {
 		const { form, props } = this
 		const { classes } = props
 
+		const textFieldProps = {
+			fullWidth: true,
+			margin: 'dense',
+			FormHelperTextProps: { classes }
+		}
+
 		return (
 			<Fragment>
 				<FormButtonsBar form={form} />
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Text & Numbers
-					</Typography>
-					<Typography paragraph className="form-tip">
-						Field is required and has a minimum-length.
 					</Typography>
 
 					<TextField
 						label="Username"
 						{...form.allProps('username')}
-						fullWidth={true}
-						margin="dense"
+						{...textFieldProps}
 						inputRef={this.messageInput}
-						FormHelperTextProps={{ classes }}
 					/>
 
 					<TextField
 						label="Password"
 						{...form.allProps('password')}
-						fullWidth={true}
-						margin="dense"
-						FormHelperTextProps={{ classes }}
+						{...textFieldProps}
 					/>
-				</section>
 
-
-				<section style={styles.formSection}>
 					<TextField
 						label="Phone"
 						{...form.allProps('phone')}
-						margin="dense"
-						fullWidth={true}
-						FormHelperTextProps={{ classes }}
+						{...textFieldProps}
+					/>
+
+					<TextField
+						label="Profile Tagline"
+						{...form.allProps('tagline')}
+						{...textFieldProps}
 					/>
 
 					<TextField
 						label="Age"
 						{...form.allProps('age')}
-						margin="dense"
-						fullWidth={true}
-						FormHelperTextProps={{ classes }}
+						{...textFieldProps}
 					/>
 				</section>
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Date Pickers
 					</Typography>
-					<Typography paragraph className="form-tip">
+					<Typography paragraph>
 						Valid dates are between Jan-2000 and Jan-2015.
 					</Typography>
 
@@ -127,10 +130,12 @@ class FormSection extends Component {
 							type="text"
 							// DatePicker requires the ISO date value
 							value={form.getData('dateJoined')}
+							// DatePicker does not return a normal event
+							onChange={moment => form.onFieldChange('dateJoined', moment.toISOString())}
 							fullWidth={true}
 							margin="normal"
 							// DatePicker options
-							format="MMM d, YYYY"
+							format="MMM D, YYYY"
 							autoOk
 							clearable
 						/>
@@ -139,34 +144,28 @@ class FormSection extends Component {
 					<TextField
 						label="Date Joined (native date)"
 						{...form.allProps('dateJoined')}
-						fullWidth={true}
-						margin="normal"
-						FormHelperTextProps={{ classes }}
+						{...textFieldProps}
 						InputLabelProps={{ shrink: true }}
 					/>
 
 					<TextField
 						label="Start Time (native time)"
 						{...form.allProps('startTime')}
-						fullWidth={true}
-						margin="normal"
-						FormHelperTextProps={{ classes }}
+						{...textFieldProps}
 						InputLabelProps={{ shrink: true }}
 					/>
 
 					<TextField
 						label="Appointment (native datetime)"
 						{...form.allProps('appointment')}
-						fullWidth={true}
-						margin="normal"
-						FormHelperTextProps={{ classes }}
+						{...textFieldProps}
 						InputLabelProps={{ shrink: true }}
 					/>
 				</section>
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Selection Controls
 					</Typography>
 
@@ -191,11 +190,10 @@ class FormSection extends Component {
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Radio Buttons
 					</Typography>
-
-					<Typography paragraph className="form-tip">
+					<Typography paragraph>
 						Errors display inside a FormHelperText element.
 					</Typography>
 
@@ -205,7 +203,7 @@ class FormSection extends Component {
 						margin="dense" // [none|normal|dense] Vertical spacing
 						fullWidth={false}
 					>
-						<FormLabel variant="title" component="legend">
+						<FormLabel variant="h6" component="legend">
 							Select your gender
 						</FormLabel>
 
@@ -218,16 +216,19 @@ class FormSection extends Component {
 								value="male"
 								label="Male"
 								control={<Radio color="primary" />}
+								disabled={form.isDisabled('gender')}
 							/>
 							<FormControlLabel
 								value="female"
 								label="Female"
 								control={<Radio color="secondary" />}
+								disabled={form.isDisabled('gender')}
 							/>
 							<FormControlLabel
 								value="other"
 								label="Other"
 								control={<Radio color="default" />}
+								disabled={form.isDisabled('gender')}
 							/>
 							<FormControlLabel
 								value="disabled"
@@ -238,18 +239,17 @@ class FormSection extends Component {
 						</RadioGroup>
 
 						<FormHelperText classes={classes}>
-							{form.errors('who/gender')}
+							{form.errors('gender')}
 						</FormHelperText>
 					</FormControl>
 				</section>
 
 
 				<section style={styles.formSection}>
-					<Typography variant="title">
+					<Typography variant="h6">
 						Synced Picklists
 					</Typography>
-
-					<Typography paragraph className="form-tip">
+					<Typography paragraph>
 						Both fields are required.
 						Select a category and the subcategories will change.
 					</Typography>
