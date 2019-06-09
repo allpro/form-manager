@@ -1,48 +1,28 @@
-// TEMPORARY IMPORTS
-import moment from 'moment'
-import isArray from 'lodash/isArray'
-import isString from 'lodash/isString'
+import format from 'date-fns/format'
+import isValid from 'date-fns/isValid'
+
+import { isArray, isString, parseDate } from '../utils'
 
 
-// Match timestamps  with no date portion, like: "08:30" or "14:00:00"
-const reTimeOnly = /^[\d]{2}:[\d]{2}[\d:]*$/
-const fixTimestamp = date => (
-	isString(date) && reTimeOnly.test(date)
-		? `1970-01-01T${date}`
-		: date
-)
+const dateFormats = {
+	'short-date': 'MMM d/yy', // Feb 23/18 - when space is tight!
+	'medium-date': 'MMM d, yyyy', // Feb 23, 2018
+	'long-date': 'MMMM d, yyyy', // February 23, 2018
 
-/**
- * PUBLIC UTILITY to create moment object, AND handle time-only strings
- *
- * @public
- * @param {(string|Object)} date
- * @returns {moment.Moment|*}
- */
-function toMoment( date ) {
-	if (!date) return date
-	return moment(fixTimestamp(date))
-}
+	'short-day-date': 'E..EEE, MMM d', // Tue, Jan 30
+	'medium-day-date': 'EEEE, MMM d, yyyy', // Friday, Feb 23, 2018
+	'long-day-date': 'EEEE, MMMM d, yyyy', // Friday, February 23, 2018
 
-
-const formats = {
-	'short-date': 'MMM D/YY', // Feb 23/18 - when space is tight!
-	'medium-date': 'MMM D, YYYY', // Feb 23, 2018
-	'long-date': 'MMMM D, YYYY', // February 23, 2018
-
-	'short-day-date': 'ddd, MMM D', // Tue, Jan 30
-	'medium-day-date': 'dddd, MMM D, YYYY', // Friday, Feb 23, 2018
-	'long-day-date': 'dddd, MMMM D, YYYY', // Friday, February 23, 2018
-
-	'short-time': 'h A', // 10 AM
-	'medium-time': 'h:mm A', // 10:22 AM
-	'long-time': 'h:mm:ss A', // 10:22:35 AM
+	'short-time': 'h a..aaa', // 10 AM
+	'medium-time': 'h:mm a..aaa', // 10:22 AM
+	'long-time': 'h:mm:ss a..aaa', // 10:22:35 AM
 
 	// SPECIAL DATA FORMATS
-	'date-input': 'YYYY-MM-DD', 			// For input.type="date"
+	'date-input': 'yyyy-MM-dd', 			// For input.type="date"
 	'time-input': 'HH:mm',					// For input.type="time"
-	'datetime-input': 'YYYY-MM-DDTHH:mm',	// For input.type="datetime-local"
-	'iso': '' // NOTE: empty format string means iso-8601 standard format
+	'datetime-input': "yyyy-MM-dd'T'HH:mm",	// For input.type="datetime-local"
+	'isoTimezone': "yyyy-MM-dd'T'HH:mm:ssx", 	// ISO-8601 WITH timezone offset
+	'iso': '' // Default format - means Date().toISOString (ISO-8601)
 }
 
 
@@ -52,46 +32,51 @@ const formats = {
  * Can pass a keyword for a standard date/time format, or a custom format.
  *
  * @public
- * @param {(string|Date)} date
+ * @param {(string|Date)} dateVal
  * @param {string} [dateFmt]
  * @param {string} [timeFmt]
  * @returns {string}
  */
-function formatDate(date, dateFmt, timeFmt ) {
-	if (!date) return ''
+function formatDate(dateVal, dateFmt, timeFmt ) {
+	if (!dateVal) return ''
 
-	const mDate = toMoment(date)
+	const date = parseDate(dateVal)
 
 	// If the date is missing or invalid, log it and return 'Invalid Date'.
 	// The return value will help developers instantly spot format errors.
-	if (!date || !mDate.isValid()) {
-		console.log(`The date provided to formatters.date is invalid: ${date}`)
+	// noinspection JSCheckFunctionSignatures
+	if (!isValid(date)) {
+		console.log(
+			`The date provided to formatters.date is invalid: ${dateVal}`
+		)
 		return 'Invalid Date'
 	}
 
-	// If a time-format is passed, then DO NOT assume the default date-format
-	//  because use may want ONLY time
-	let dt = timeFmt ? '' : formats['medium-date']
-	let tm = ''
+	let dt = dateFmt || ''
+	let tm = timeFmt || ''
 
-	if (dateFmt) {
-		dt = dateFmt
-		// See if this is a keyword, like "iso"
-		if (isString(formats[dateFmt])) { //
-			dt = formats[dateFmt]
-		}
-		// Accept an array like [ dateFormat, timeFormat ]
-		else if (isArray(dt)) {
-			dt = dt[0]
-			tm = dt[1]
-		}
-	}
-	if (!tm && timeFmt) {
-		tm = dateFmt[timeFmt] || timeFmt
+	// Accept an array like [ dateFmt, timeFmt ]
+	if (dt && isArray(dt)) {
+		dt = dateFmt[0]
+		tm = dateFmt[1]
 	}
 
-	return mDate.format(tm ? `${dt} ${tm}` : dt)
+	// See if this is a keyword like "iso" or "short-date"
+	if (isString(dateFormats[dt])) { //
+		dt = dateFormats[dt] // NOTE: 'iso' -> ''
+	}
+	if (isString(dateFormats[tm])) {
+		tm = dateFormats[tm]
+	}
+
+	return !dt && !tm
+		? date.toISOString()
+		: !dt
+			? format(date, tm)
+		: !tm
+			? format(date, dt)
+			: format(date, `${dt} ${tm}`)
 }
 
 export default formatDate
-export { toMoment }
+export { dateFormats }

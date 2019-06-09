@@ -1,8 +1,9 @@
-import assign from 'lodash/assign'
-import isFunction from 'lodash/isFunction'
-import isObject from 'lodash/isObject'
-import isString from 'lodash/isString'
-import isUndefined from 'lodash/isUndefined'
+import {
+	isFunction,
+	isObject,
+	isString,
+	isUndefined
+} from './utils'
 
 import Data from './Data'
 import State from './State'
@@ -60,21 +61,21 @@ function FormManager( componentObject, options = {}, extraData ) {
 	// Config sub-component, internal API
 	const config = Config(publicAPI, { internal })
 	config.init(options)
-	assign(publicAPI, config.publicAPI)
+	Object.assign(publicAPI, config.publicAPI)
 
 	// State sub-component, internal API
 	const state = State(publicAPI, { internal })
 	state.init(options.initialState)
-	assign(publicAPI, state.publicAPI)
+	Object.assign(publicAPI, state.publicAPI)
 
 	// Data sub-component, internal API
 	const data = Data(publicAPI, { config, state, internal })
 	data.init(options.initialData, extraData)
-	assign(publicAPI, data.publicAPI)
+	Object.assign(publicAPI, data.publicAPI)
 
 	// Validation sub-component, internal API
 	const validation = Validation(publicAPI, { config, data, internal })
-	assign(publicAPI, validation.publicAPI)
+	Object.assign(publicAPI, validation.publicAPI)
 
 	// Extract helper methods from config API for brevity
 	const { aliasToRealName, withFieldDefaults } = config
@@ -143,7 +144,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 		const fieldName = aliasToRealName(name)
 
 		const defaults = config.get('fieldDefaults')
-		const fieldConfig = assign({}, defaults, config.getField(fieldName))
+		const fieldConfig = Object.assign({}, defaults, config.getField(fieldName))
 		const { inputType, displayName, disabled, readOnly } = fieldConfig
 
 		const fieldValidations = config.getValidation(fieldName) || {}

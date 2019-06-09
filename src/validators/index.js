@@ -1,18 +1,27 @@
-import gte from 'lodash/gte'
-import lte from 'lodash/lte'
-import inRange from 'lodash/inRange'
-import isBoolean from 'lodash/isBoolean'
-import isEmpty from 'lodash/isEmpty'
-import isNil from 'lodash/isNil'
-import isNumber from 'lodash/isNumber'
-import isRegExp from 'lodash/isRegExp'
-import isSafeInteger from 'lodash/isSafeInteger'
-import isString from 'lodash/isString'
-import trim from 'lodash/trim'
-import uniq from 'lodash/uniq'
+import isValid from 'date-fns/isValid'
+import isEqual from 'date-fns/isEqual'
+import isSameDay from 'date-fns/isSameDay'
+import isAfter from 'date-fns/isAfter'
+import isBefore from 'date-fns/isBefore'
+import isWithinInterval from 'date-fns/isWithinInterval'
+import setDayOfYear from 'date-fns/setDayOfYear'
+import setYear from 'date-fns/setYear'
+
+import {
+	inRange,
+	isBoolean,
+	isEmpty,
+	isNil,
+	isNumber,
+	isInteger,
+	isRegExp,
+	isString,
+	parseDate,
+	trim,
+	uniq
+} from '../utils'
 
 import formatters from '../formatters'
-const { toMoment } = formatters
 
 
 /**
@@ -55,17 +64,17 @@ const number = (value, opts) => isNumeric(value, opts)
 
 const integer = (value, opts = {}) => isNumeric(value, { ...opts, integer: true })
 
-const minLength = ( value, len ) => gte(trim(value.toString()).length, len)
+const minLength = ( value, len ) => trim(value.toString()).length >= len
 
-const maxLength = ( value, len ) => lte(trim(value.toString()).length, len)
+const maxLength = ( value, len ) => trim(value.toString()).length <= len
 
 const lengthRange = ( value, lens ) => inRange(trim(value.toString()).length, lens[0], lens[1])
 
 const exactLength = ( value, len ) => trim(value.toString()).length === len
 
-const minNumber = ( value, num ) => gte(value, num)
+const minNumber = ( value, num ) => +value >= num
 
-const maxNumber = ( value, num ) => lte(value, num)
+const maxNumber = ( value, num ) => +value < num
 
 const numberRange = ( value, nums ) => inRange(value, nums[0], nums[1])
 
@@ -129,22 +138,58 @@ const boolean = value => (
 )
 
 
-const date = value => toMoment(value).isValid()
+const date = value => !isNaN(parseDate(value))
 
-const minDate = ( value, dt ) => toMoment(value).isSameOrAfter(dt)
-const maxDate = ( value, dt ) => toMoment(value).isSameOrBefore(dt)
-const dateRange = ( value, dts ) => toMoment(value).isBetween(dts[0], dts[1], null, '[]')
+const minDate = ( value, dt ) => {
+	const val = parseDate(value)
+	const cmp = parseDate(dt)
+	return isSameDay(val, cmp) || isAfter(val, cmp)
+}
 
-const minTime = ( value, tm ) => toTime(value).isSameOrAfter(toTime(tm))
-const maxTime = ( value, tm ) => toTime(value).isSameOrBefore(toTime(tm))
+const maxDate = ( value, dt ) => {
+	const val = parseDate(value)
+	const cmp = parseDate(dt)
+	return isSameDay(val, cmp) || isBefore(val, cmp)
+}
+
+// NOTE: dateRange ERROR if 1st comparison date is AFTER 2nd comparison
+const dateRange = ( value, dts ) => {
+	const dt = parseDate(value)
+	const range = {
+		start: parseDate(dts[0]),
+		end: parseDate(dts[1])
+	}
+	if (isValid(dt) && isValid(range.start) && isValid(range.end)) {
+		return isWithinInterval(dt, range)
+	}
+
+	return false // BAD DATA!
+}
+
+
+const minTime = ( value, tm ) => {
+	const val = toTime(value)
+	const cmp = toTime(tm)
+	return isEqual(val, cmp) || isAfter(val, cmp)
+}
+
+const maxTime = ( value, tm ) => {
+	const val = toTime(value)
+	const cmp = toTime(tm)
+	return isEqual(val, cmp) || isBefore(val, cmp)
+}
+
 const timeRange = ( value, tms ) => (
-	toTime(value).isBetween(toTime(tms[0]), toTime(tms[1]), null, '[]')
+	dateRange(toTime(value), [ toTime(tms[0]), toTime(tms[1]) ])
 )
 
-
 function toTime( value ) {
-	return toMoment(value).year(1970).dayOfYear(1)
+	let dt = parseDate(value)
+	dt = setYear(dt, 1970)
+	dt = setDayOfYear(dt, 1)
+	return dt
 }
+
 
 function isNumeric( value, opts = { integer: false, allowNegative: false } ) {
 	if (isNumber(value)) {
@@ -160,7 +205,7 @@ function isNumeric( value, opts = { integer: false, allowNegative: false } ) {
 	return false
 
 	function testNumber( num ) {
-		if (opts.integer && !isSafeInteger(num)) return false
+		if (opts.integer && !isInteger(num)) return false
 		return opts.allowNegative ? true : num >= 0
 	}
 }

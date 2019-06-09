@@ -1,23 +1,20 @@
-import assign from 'lodash/assign'
-import clone from 'lodash/clone'
-import cloneDeep from 'lodash/cloneDeep'
-import defaultsDeep from 'lodash/defaultsDeep'
-import forOwn from 'lodash/forOwn'
-import isArray from 'lodash/isArray'
-import isBoolean from 'lodash/isBoolean'
-import isEmpty from 'lodash/isEmpty'
-import isEqual from 'lodash/isEqual'
-import isFunction from 'lodash/isFunction'
-import isNil from 'lodash/isNil'
-import isUndefined from 'lodash/isUndefined'
-import isString from 'lodash/isString'
-import isPlainObject from 'lodash/isPlainObject'
-import map from 'lodash/map'
-import trim from 'lodash/trim'
-
-import utils from './utils'
-// Extract utils for code brevity
-const { itemToArray } = utils
+import {
+	clone,
+	cloneDeep,
+	defaultsDeep,
+	forOwn,
+	isArray,
+	isBoolean,
+	isEmpty,
+	isEqual,
+	isFunction,
+	isNil,
+	isPlainObject,
+	isString,
+	isUndefined,
+	itemToArray,
+	trim
+} from './utils'
 
 
 /**
@@ -177,7 +174,7 @@ function Validation( formManager, components ) {
 	 * @param {Object} opts                Merge options
 	 */
 	function setErrors( name, type, errorMsg, opts = {} ) {
-		const setOpts = assign({ merge: true }, opts)
+		const setOpts = Object.assign({ merge: true }, opts)
 		const fieldName = aliasToRealName(name)
 		let fieldErrors = setOpts.merge ? stateOfErrors[fieldName] || {} : {}
 
@@ -186,7 +183,7 @@ function Validation( formManager, components ) {
 
 		// Multiple error-types as hash keyed by type
 		if (isPlainObject(errorMsg)) {
-			assign(fieldErrors, cloneDeep(errorMsg))
+			Object.assign(fieldErrors, cloneDeep(errorMsg))
 		}
 		else if (isArray(errorMsg)) {
 			fieldErrors[type] = clone(errorMsg)
@@ -512,11 +509,10 @@ function Validation( formManager, components ) {
 					// MAY be an array of errors passed; handle that
 					if (isArray(errorMessage)) {
 						// noinspection JSValidateTypes
-						typeError = []
-						map(errorMessage, msg => {
+						typeError = errorMessage.reduce((arr, msg) => {
 							// Ignore blank items in errorMessage array
 							if (msg) {
-								typeError.push(
+								arr.push(
 									createErrorFromTemplate(
 										type,
 										ruleValue,
@@ -524,7 +520,8 @@ function Validation( formManager, components ) {
 									)
 								)
 							}
-						})
+							return arr
+						}, [])
 					}
 					else {
 						typeError = createErrorFromTemplate(

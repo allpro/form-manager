@@ -1,7 +1,5 @@
-import cloneDeep from 'lodash/cloneDeep'
-
 // This demo includes dev-logging output using a supplied tool
-import { logFormData } from '@allpro/form-manager'
+import { logFormData, cloneDeep } from '@allpro/form-manager'
 
 import sampleData from './data'
 

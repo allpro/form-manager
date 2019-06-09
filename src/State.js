@@ -1,10 +1,9 @@
-import assign from 'lodash/assign'
-import cloneDeep from 'lodash/cloneDeep'
-import merge from 'lodash/merge'
-
-import utils from './utils'
-// Extract utils for code brevity
-const { getObjectValue, setObjectValue } = utils
+import {
+	cloneDeep,
+	merge,
+	getObjectValue,
+	setObjectValue
+} from './utils'
 
 
 const defaultFormState = {
@@ -74,7 +73,7 @@ function State( formManager, components ) {
 	 * @returns {*}                	All form-state OR just specific key requested
 	 */
 	function getState( key, opts = {} ) {
-		const getOpts = assign({ cloneValue: true }, opts)
+		const getOpts = Object.assign({ cloneValue: true }, opts)
 		// If a key is passed, then return value for just that, if exists
 		if (key) return getObjectValue(stateOfForm, key, getOpts)
 
@@ -91,7 +90,7 @@ function State( formManager, components ) {
 	 * @param {Object} [opts]           Options, like { cloneValue: false }
 	 */
 	function setState( key, value, opts = {} ) {
-		const setOpts = assign({ cloneValue: true, update: true }, opts)
+		const setOpts = Object.assign({ cloneValue: true, update: true }, opts)
 		setObjectValue(stateOfForm, key, value, setOpts)
 
 		if (setOpts.update) triggerComponentUpdate()

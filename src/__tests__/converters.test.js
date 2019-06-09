@@ -1,9 +1,6 @@
-import moment from 'moment'
-import isBoolean from 'lodash/isBoolean'
-
 import FormManager from '../FormManager'
-// import formatters from '../src/formatters'
-// import convertTo from '../src/converters'
+import formatDate from '../formatters/date'
+import { isBoolean, parseDate } from '../utils'
 
 
 const data = {
@@ -47,30 +44,31 @@ const str = v => isBoolean(v) ? (v ? '1' : '0') : v + ''
 
 const form = FormManager(mockClass, formConfig, data)
 
-test('correctly converts initial values', () => {
+test('correctly converts integer to strings', () => {
 	expect(form.getData('uid')).toEqual(expect.any(Number))
 	expect(form.getValue('uid')).toEqual(expect.any(String))
 	expect(form.getValue('uid')).toBe(str(data.uid))
+})
 
+test('correctly converts strings to integer', () => {
 	expect(form.getData('age')).toEqual(expect.any(String))
 	expect(form.getValue('age')).toEqual(expect.any(Number))
 	expect(form.getValue('age')).toBe(int(data.age))
 
-	expect(form.getData('isGood')).toEqual(expect.any(String))
-	expect(form.getValue('isGood')).toEqual(expect.any(Boolean))
-	expect(form.getValue('isGood')).toBe(false) // TODO
-
-	const mBirthdate = moment(form.getData('birthdate'))
-	expect(form.getData('birthdate')).toEqual(expect.any(String))
-	expect(form.getData('birthdate')).toBe(mBirthdate.format())
-	expect(form.getValue('birthdate')).toEqual(expect.any(String))
-	expect(form.getValue('birthdate')).toBe(mBirthdate.format('YYYY-MM-DD'))
 })
 
-// test('converts the dataType of new values', () => {
-// 	form.setData(data)
-// 	expect(form.value('uid')).toEqual(expect.any(String))
-// 	expect(form.value('age')).toEqual(expect.any(Integer))
-// 	expect(form.value('isGood')).toEqual(expect.any(Boolean))
-// 	expect(form.value('birthdate')).toBe(true)
-// })
+test('correctly converts string to boolean', () => {
+	expect(form.getData('isGood')).toEqual(expect.any(String))
+	expect(form.getValue('isGood')).toEqual(expect.any(Boolean))
+	expect(form.getValue('isGood')).toBe(false)
+})
+
+test('correctly converts between date strings and objects', () => {
+	const dtBirthdate = parseDate(form.getData('birthdate'))
+
+	expect(form.getData('birthdate')).toEqual(expect.any(String))
+	expect(form.getData('birthdate')).toBe(formatDate(dtBirthdate, 'iso'))
+
+	expect(form.getValue('birthdate')).toEqual(expect.any(String))
+	expect(form.getValue('birthdate')).toBe(formatDate(dtBirthdate, 'date-input'))
+})

@@ -75,11 +75,10 @@ export default [
 			exports: 'named',
 			esModule: true
 		},
-		plugins: basePlugins
-		// plugins: [sizeSnapshot()].concat(basePlugins)
+		// plugins: basePlugins
+		plugins: [sizeSnapshot()].concat(basePlugins)
 	},
 
-	/*
 	{
 		input: 'src/index.js',
 		output: {
@@ -107,8 +106,7 @@ export default [
 			esModule: false,
 			sourcemap: true
 		},
-		plugins: [terser()].concat(basePlugins)
-		// plugins: [terser(), sizeSnapshot()].concat(basePlugins)
+		// plugins: [terser()].concat(basePlugins)
+		plugins: [terser(), sizeSnapshot()].concat(basePlugins)
 	}
-	*/
 ]

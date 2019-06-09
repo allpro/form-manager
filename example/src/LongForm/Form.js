@@ -17,7 +17,7 @@ import FormControl from '@material-ui/core/FormControl'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormHelperText from '@material-ui/core/FormHelperText'
 
-import MomentUtils from '@date-io/moment';
+import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, DatePicker } from 'material-ui-pickers'
 
 import FormButtonsBar from '../FormButtonsBar'
@@ -119,10 +119,11 @@ class FormSection extends Component {
 						Date Pickers
 					</Typography>
 					<Typography paragraph>
-						Valid dates are between Jan-2000 and Jan-2015.
+						The Date Joined cannot be before&nbsp;
+						{form.getFieldValidation('dateJoined').minDate}
 					</Typography>
 
-					<MuiPickersUtilsProvider utils={MomentUtils}>
+					<MuiPickersUtilsProvider utils={DateFnsUtils}>
 						<DatePicker
 							label="Date Joined (DatePicker)"
 							{...form.allProps('dateJoined')}
@@ -135,7 +136,7 @@ class FormSection extends Component {
 							fullWidth={true}
 							margin="normal"
 							// DatePicker options
-							format="MMM D, YYYY"
+							format="MMM d, yyyy"
 							autoOk
 							clearable
 						/>

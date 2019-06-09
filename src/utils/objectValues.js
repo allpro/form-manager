@@ -1,19 +1,17 @@
 /**
  * Helper methods used by FormManager; exported as an object of methods
  */
-import assign from 'lodash/assign'
-import forOwn from 'lodash/forOwn'
-import isArray from 'lodash/isArray'
-import isNil from 'lodash/isNil'
-import isObjectLike from 'lodash/isObjectLike'
-import isPlainObject from 'lodash/isPlainObject'
-import isString from 'lodash/isString'
-import isUndefined from 'lodash/isUndefined'
-import clone from 'lodash/clone'
-import cloneDeep from 'lodash/cloneDeep'
-import merge from 'lodash/merge'
-import set from 'lodash/set'
-import transform from 'lodash/transform'
+import {
+	clone,
+	cloneDeep,
+	forOwn,
+	isArray,
+	isObject,
+	isPlainObject,
+	isUndefined,
+	merge
+} from './nodash'
+
 
 function itemToArray( item ) {
 	// Avoid creating an array with just an empty string or other falsey value
@@ -58,53 +56,6 @@ const emptyValuesToNull = data => {
 	} )
 }
 
-const getChangedFields = ( src, cmp ) => {
-	const simpleValue = val => {
-		// Stringify Array and Hash values for simple comparison; rarely needed.
-		if (isPlainObject( val )) return JSON.stringify( val )
-
-		// Undefined and Null (aka Nil) are equal to "" for data comparison.
-		if (isNil( val )) return ''
-
-		return val
-	}
-	const equal = ( val1, val2 ) => simpleValue( val1 ) === simpleValue( val2 )
-
-	// _.transform is a reduce over an object's key-value pairs
-	return transform(
-		cmp,
-		( acc, val, key ) => (equal( src[key], val ) ? acc : set(
-			acc,
-			key,
-			val,
-		)),
-		{},
-	)
-}
-
-const trimFormFields = obj => {
-	if (!isPlainObject( obj )) {
-		return obj
-	}
-
-	// _.transform is a reduce over an object's key-value pairs
-	return transform(
-		obj,
-		( acc, value, key ) => {
-			if (isString( value )) {
-				return set( acc, key, value.trim() )
-			}
-			else if (isPlainObject( value )) {
-				return set( acc, key, trimFormFields( value ) )
-			}
-			else {
-				return set( acc, key, value )
-			}
-		},
-		{},
-	)
-}
-
 
 /**
  * Convert a fieldName into an array of keys - may only be one key.
@@ -127,7 +78,7 @@ function pathToKeysArray( path ) {
 function getObjectValue( hash, path, opts ) {
 	if (!hash || !isPlainObject(hash)) return undefined
 
-	const getOpts = assign({ cloneValue: false, deepClone: true }, opts)
+	const getOpts = Object.assign({ cloneValue: false, deepClone: true }, opts)
 	let branch = hash
 
 	// If a path was passed, trace the path inside state.form
@@ -163,7 +114,7 @@ function getObjectValue( hash, path, opts ) {
 function setObjectValue( hash, path, value, opts ) {
 	if (!hash || !isPlainObject(hash)) return undefined
 
-	const setOpts = assign({ cloneValue: false, merge: false }, opts)
+	const setOpts = Object.assign({ cloneValue: false, merge: false }, opts)
 
 	// If a path was passed, recurse into the object
 	if (path && path !== '/') {
@@ -190,7 +141,7 @@ function setObjectValue( hash, path, value, opts ) {
 		const oldValue = branch[lastKey]
 
 		// Check whether value has changed - ignore objects, assume changed
-		if (!isObjectLike(value) && value === oldValue) {
+		if (!isObject(value) && value === oldValue) {
 			return false // Value was NOT updated
 		}
 
@@ -226,11 +177,9 @@ function setObjectValue( hash, path, value, opts ) {
 
 // Export as object with methods
 // noinspection JSUnusedGlobalSymbols
-export default {
+export {
 	emptyValuesToNull,
 	itemToArray,
-	getChangedFields,
-	trimFormFields,
 	getObjectValue,
 	setObjectValue
 }

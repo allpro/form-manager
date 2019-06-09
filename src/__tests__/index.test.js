@@ -1,7 +1,6 @@
-import isFunction from 'lodash/isFunction'
-
 import index from '../'
 import FormManager from '../FormManager'
+import { isFunction } from '../utils'
 
 
 test('FormManager exports correctly', () => {

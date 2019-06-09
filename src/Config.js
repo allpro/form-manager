@@ -1,14 +1,17 @@
-import cloneDeep from 'lodash/cloneDeep'
-import defaults from 'lodash/defaults'
-import defaultsDeep from 'lodash/defaultsDeep'
-import forOwn from 'lodash/forEach'
-import isArray from 'lodash/isArray'
-import isNil from 'lodash/isNil'
-import isPlainObject from 'lodash/isPlainObject'
-import isString from 'lodash/isString'
-import merge from 'lodash/merge'
-import omit from 'lodash/omit'
-import reduce from 'lodash/reduce'
+import {
+	cloneDeep,
+	forOwn,
+	isArray,
+	isNil,
+	isPlainObject,
+	isString,
+	merge,
+	omit,
+	defaults,
+	defaultsDeep,
+	getObjectValue,
+	setObjectValue
+} from './utils'
 
 // Alias validateField because we use an intermediate method with same name
 import defaultValidators from './validators'
@@ -17,10 +20,6 @@ import defaultConverters from './converters'
 import defaultFormConfig from './defaultFormConfig'
 import defaultFieldConfig from './defaultFieldConfig'
 import defaultErrorMessages from './defaultErrorMessages'
-import utils from './utils'
-
-// Extract utils for code brevity
-const { getObjectValue, setObjectValue } = utils
 
 
 /**
@@ -365,9 +364,9 @@ function Config( formManager, components ) {
 	/**
 	 * Helper for getting field config values
 	 *
-	 * @param {string} name        Fieldname - may be an alias
-	 * @param {string} branch    Path inside field-config to return
-	 * @returns {string}        Complete
+	 * @param {string} name        	Fieldname - may be an alias
+	 * @param {string} branch    	Path inside field-config to return
+	 * @returns {(Object|*)} 		ONE Field-config-value for a field(s)
 	 */
 	function getField( name, branch ) {
 		const get = n => {
@@ -377,7 +376,8 @@ function Config( formManager, components ) {
 		}
 
 		return isArray(name)
-			? reduce(name, ( obj, n ) => { obj[n] = get(n) })
+			// Return an object with passed names as the keys
+			? name.reduce(( obj, n ) => { obj[n] = get(n); return obj }, {})
 			: get(name)
 	}
 

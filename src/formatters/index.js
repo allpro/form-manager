@@ -1,4 +1,4 @@
-import date, { toMoment } from './date'
+import date, { dateFormats } from './date'
 import lowerCase from './lowerCase'
 import properCase from './properCase'
 import upperCase from './upperCase'
@@ -7,7 +7,7 @@ import phone from './phone'
 
 export default {
 	date,
-	toMoment,
+	dateFormats,
 	lowerCase,
 	properCase,
 	upperCase,

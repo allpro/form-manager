@@ -1,15 +1,18 @@
-import isBoolean from 'lodash/isBoolean'
-import isDateObject from 'lodash/isDate'
-import isNil from 'lodash/isNil'
-import isNumber from 'lodash/isNumber'
-import isString from 'lodash/isString'
-import toInteger from 'lodash/toInteger'
-import toNumber from 'lodash/toNumber'
-import toString from 'lodash/toString'
-import trim from 'lodash/trim'
+import isDate from 'date-fns/isDate'
 
-import formatters from '../formatters'
-const { toMoment } = formatters
+import {
+	isBoolean,
+	isNil,
+	isNumber,
+	isString,
+	toInteger,
+	toNumber,
+	toString,
+	parseDate,
+	trim
+} from '../utils'
+
+import formatDate from '../formatters/date'
 
 
 const string = value => toString(value)
@@ -38,17 +41,17 @@ const boolean = value => {
 }
 
 
-const date = ( value, format = 'YYYY-MM-DD' ) => formatters.date(value, format)
-
-const dateISO = value => formatters.date(value, 'iso')
+const date = ( value, format = 'YYYY-MM-DD' ) => formatDate(value, format)
+const dateISO = value => formatDate(value, 'iso')
+const dateISOTimezone = value => formatDate(value, 'isoTimezone')
 
 const dateObject = value => {
 	if (!value) return null
-	if (isDateObject(value)) return value
+	if (isDate(value)) return value
 	// Avoid arrays and objects that will result in a Now date
 	if (!isString(value) && !isNumber(value)) return null
 
-	return toMoment(value).valueOf()
+	return parseDate(value)
 }
 
 
@@ -59,5 +62,6 @@ export default {
 	number,
 	date,
 	dateISO,
+	dateISOTimezone,
 	dateObject
 }

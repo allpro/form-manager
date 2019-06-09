@@ -1,20 +1,18 @@
-import assign from 'lodash/assign'
-import clone from 'lodash/clone'
-import cloneDeep from 'lodash/cloneDeep'
-import forOwn from 'lodash/forOwn'
-import isArray from 'lodash/isArray'
-import isEmpty from 'lodash/isEmpty'
-import isEqual from 'lodash/isEqual'
-import isFunction from 'lodash/isFunction'
-import isNil from 'lodash/isNil'
-import isString from 'lodash/isString'
-import isPlainObject from 'lodash/isPlainObject'
-import isUndefined from 'lodash/isUndefined'
-
-import utils from './utils'
-// Extract utils for code brevity
-const { getObjectValue, setObjectValue } = utils
-
+import {
+	clone,
+	cloneDeep,
+	forOwn,
+	isArray,
+	isEmpty,
+	isEqual,
+	isFunction,
+	isNil,
+	isPlainObject,
+	isString,
+	isUndefined,
+	getObjectValue,
+	setObjectValue
+} from './utils'
 
 /**
  * FormManager sub-component to handle form-field data
@@ -75,7 +73,8 @@ function Data( formManager, components ) {
 			values: getValue,
 			changes: getChanges,
 			getValues: getValue,
-			setValues: setValue
+			setValues: setValue,
+			cleanFieldValue: cleanField
 		}
 	}
 
@@ -105,7 +104,7 @@ function Data( formManager, components ) {
 			return cloneDeep(stateOfForm)
 		}
 
-		const getOpts = assign({
+		const getOpts = Object.assign({
 			cleanValue: false,
 			refresh: false
 		}, opts)
@@ -312,7 +311,7 @@ function Data( formManager, components ) {
 	 */
 	function getData( name, opts ) {
 		const namePassed = isString(name)
-		const getOpts = assign(
+		const getOpts = Object.assign(
 			{ cloneValue: true },
 			namePassed ? opts : name
 		)

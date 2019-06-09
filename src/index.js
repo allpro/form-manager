@@ -5,14 +5,15 @@ import useFormManager from './useFormManager'
 // Development utilities
 import logFormData from './tools/logFormData'
 
-// Date utilities; may be useful externally
+// Date formatter may be useful externally
 import formatters from './formatters'
-const { date: formatDate, toMoment } = formatters
+const { date: formatDate } = formatters
 
 export default FormManager
 export {
 	useFormManager,
 	logFormData,
 	formatDate,
-	toMoment
 }
+// Export ALL utilities; useful in tests
+export * from './utils'
