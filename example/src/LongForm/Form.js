@@ -49,10 +49,6 @@ class FormSection extends Component {
 
 		this.form = props.form
 
-		this.form.setFieldConfig('password', {
-			onChange: (val, name) => console.log(name, '=', val)
-		})
-
 		this.messageInput = React.createRef()
 	}
 
