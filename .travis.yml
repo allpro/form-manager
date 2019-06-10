@@ -3,9 +3,13 @@ sudo: false
 language: node_js
 node_js:
   - 9
-  - 8
 
 script: echo "Running tests against $(node -v)..."
+
+before_install:
+  - npm install react
+  - npm install react-dom
+  - npm install prop-types
 
 jobs:
   include:
