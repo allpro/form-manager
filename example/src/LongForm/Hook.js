@@ -31,7 +31,7 @@ function LongFormHookDemo(props) {
 	const revision = form.getRevision()
 
 	// Allow form access from console
-	window.form = this.form
+	window.form = form
 
 	return (
 		<div style={styles.wrapper}>
