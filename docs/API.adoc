@@ -17,6 +17,12 @@ endif::[]
 
 WARNING: THIS IS A JUST AN OUTLINE -- A WORK IN PROGRESS
 
+toc::[]
+
+
+== API Overview & Conventions
+
+
 *FM exposes _only_ 'methods' - no 'properties'.* +
 All of FM's data caches are _private_ so they cannot
 be accidentally mutated.
@@ -26,10 +32,6 @@ Most methods also _clone_ data in both directions to maintain immutability.
 *FM's' extensive API provides control of _everything_ FM handles.* +
 Anything a user can do can also be done programmatically.
 You have full control of the data, as well as every _field_ FM manages.
-
-toc::[]
-
-== API Conventions
 
 
 === Method Name Variations
@@ -45,7 +47,7 @@ like `getValue()`/`getValues()`.
 The `getValue()` method can return a single value _or_ all values,
 so you can choose the most semantic _alias_ for your use, like:
 
-.Singular vs Plural Method Names
+====== _Singular vs Plural Method Names_
 [source,javascript,linenums,hightlight=2..3]
 ----
 const username = form.getValue('username')  // One value
@@ -66,7 +68,7 @@ like `getValue()`/`value()` and `getDataProps()`/`dataProps()`.
 This can provide even more brevity, like when using these methods repeatedly:
 
 .Short Method Names Sample
-[source,js+html]
+[source,html]
 ----
 <TextField label="First Name"  {...form.allProps("firstName")} />
 <TextField label="Middle Name" {...form.allProps("middleName")} />
@@ -77,12 +79,13 @@ This can provide even more brevity, like when using these methods repeatedly:
 
 All _setter_ methods return the FormManager object,
 which allow multiple form commands to be chained, like:
-```jsx harmony
+[source]
+----
 form.setFieldRequired('phone')
 form.validate('phone')
 // Is the same as...
 form.setFieldRequired('phone').validate('phone')
-```
+----
 
 === Using Fieldname Aliases
 
@@ -90,7 +93,8 @@ If an `aliasName` is set for a field, it can be used with _any_ FM method.
 In the example below, each pair of commands shown are equivalent,
 and both variations are valid.
 
-```jsx harmony
+[source,javascipt+html]
+----
 const formConfig = {
   fields: {
     'profile.contacts.primaryPhone': {
@@ -107,8 +111,9 @@ form.setFieldDisabled('phone')
 
 <TextField {...form.allProps('profile.contacts.primaryPhone')}
 <TextField {...form.allProps('phone')}
-```
+----
 
+'''
 
 == Form Rendering Methods
 
