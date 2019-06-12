@@ -67,7 +67,13 @@ Some _getter_ methods have even shorter names,
 like `getValue()`/`value()` and `getDataProps()`/`dataProps()`.
 This can provide even more brevity, like when using these methods repeatedly:
 
-.Short Method Names Sample
+[source,javascript]
+----
+<TextField label="First Name"  {...form.allProps("firstName")} />
+<TextField label="Middle Name" {...form.allProps("middleName")} />
+<TextField label="Last Name"   {...form.allProps("lastName")} />
+----
+
 [source,html]
 ----
 <TextField label="First Name"  {...form.allProps("firstName")} />
@@ -93,7 +99,7 @@ If an `aliasName` is set for a field, it can be used with _any_ FM method.
 In the example below, each pair of commands shown are equivalent,
 and both variations are valid.
 
-[source,javascipt+html]
+[source,javascript+html]
 ----
 const formConfig = {
   fields: {
