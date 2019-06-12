@@ -1,12 +1,12 @@
 # FormManager Data Handler
 
-[![npm package][npm-badge]][npm]
-[![gzip-size][gzip-size-badge]][gzip-size]
-[![install-size][install-size-badge]][install-size]
-[![build][build-badge]][build]
-[![coverage][coveralls-badge]][coveralls]
-[![license][license-badge]][license]
-[![donate][donate-badge]][donate]
+[![npm package][npm-badge]][npm-link]
+[![min-size][min-size-badge]][min-size-link]
+[![gzip-size][gzip-size-badge]][gzip-size-link]
+[![build][build-badge]][build-link]
+[![coverage][coveralls-badge]][coveralls-link]
+[![license][license-badge]][license-link]
+[![donate][donate-badge]][donate-link]
 
 FormManager (**"FM'**) is collection of data-handling tools for form-data, 
 or any data actually.
@@ -255,6 +255,21 @@ See
 for details.
 
 
+### FormManager Utilities & Helpers
+
+## Utilities and Helpers
+
+FM exposes many of the utility methods it uses internally.
+These helpers can be imported and used separately from FM 
+if you find any useful.
+For example, it exposes `parseDate` and `formatDate()` helpers
+that might serve all your date handling needs.
+
+See 
+**[Exported Helpers](https://github.com/allpro/form-manager/blob/master/docs/Exports.md)** 
+for details.
+
+
 ## TODO
 
 FileManager is fully functional.
@@ -298,23 +313,23 @@ MIT © [allpro](https://github.com/allpro)
 file for details
 
 
-[gzip-size-badge]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js?compression=gzip
-[gzip-size]: http://img.badgesize.io/https://cdn.jsdelivr.net/npm/@allpro/form-manager/umd/@allpro/form-manager.min.js
+[npm-badge]: http://img.shields.io/npm/v/@allpro/form-manager.svg
+[npm-link]: https://www.npmjs.com/package/@allpro/form-manager
 
-[install-size-badge]: https://packagephobia.now.sh/badge?p=@allpro/form-manager
-[install-size]: https://packagephobia.now.sh/result?p=@allpro/form-manager
+[min-size-badge]: https://img.shields.io/bundlephobia/min/@allpro/form-manager.svg?label=minified
+[min-size-link]: https://bundlephobia.com/result?p=@allpro/form-manager
 
-[npm-badge]: http://img.shields.io/npm/v/@allpro/form-manager.svg?style=flat-round
-[npm]: https://www.npmjs.com/package/@allpro/form-manager
+[gzip-size-badge]: https://img.shields.io/bundlephobia/minzip/@allpro/form-manager.svg?label=min%2Bgzip
+[gzip-size-link]: https://bundlephobia.com/result?p=@allpro/form-manager
 
-[build-badge]: https://travis-ci.org/allpro/form-manager.svg?branch=master
-[build]: https://travis-ci.org/allpro/form-manager
+[build-badge]: https://img.shields.io/travis/allpro/form-manager/master.svg
+[build-link]: https://travis-ci.org/allpro/form-manager
 
-[coveralls-badge]: https://coveralls.io/repos/github/allpro/form-manager/badge.svg?branch=master
-[coveralls]: https://coveralls.io/github/allpro/form-manager?branch=master
+[coveralls-badge]: https://img.shields.io/coveralls/github/allpro/form-manager.svg
+[coveralls-link]: https://coveralls.io/github/allpro/form-manager?branch=master
 
-[license-badge]: https://badgen.now.sh/badge/license/MIT/blue
-[license]: https://github.com/allpro/form-manager/blob/master/LICENSE
+[license-badge]: https://img.shields.io/github/license/allpro/form-manager.svg
+[license-link]: https://github.com/allpro/form-manager/blob/master/LICENSE
 
-[donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat-round
-[donate]: https://paypal.me/KevinDalman
+[donate-badge]: https://img.shields.io/badge/Donate-PayPal-green.svg
+[donate-link]: https://paypal.me/KevinDalman
