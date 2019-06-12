@@ -1,13 +1,21 @@
 = FormManager API Reference
-:toc: right
 :source-highlighter: pygments
 :pygments-style: manni
 :source-language: javascript
 :icons: font
+:toc:
+:toc-placement!:
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
 
 [.small]#Last update: {localdate}#
 
-*_THIS IS A JUST AN OUTLINE - WORK IN PROGRESS_*
+WARNING: THIS IS A JUST AN OUTLINE -- A WORK IN PROGRESS
 
 *FM exposes _only_ 'methods' - no 'properties'.* +
 All of FM's data caches are _private_ so they cannot
@@ -19,6 +27,7 @@ Most methods also _clone_ data in both directions to maintain immutability.
 Anything a user can do can also be done programmatically.
 You have full control of the data, as well as every _field_ FM manages.
 
+toc::[]
 
 == API Conventions
 
