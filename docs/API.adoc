@@ -1,17 +1,9 @@
 = FormManager API Reference
-:source-highlighter: pygments
-:pygments-style: manni
+:source-highlighter: highlightjs
 :source-language: javascript
 :icons: font
 :toc:
 :toc-placement!:
-ifdef::env-github[]
-:tip-caption: :bulb:
-:note-caption: :information_source:
-:important-caption: :heavy_exclamation_mark:
-:caution-caption: :fire:
-:warning-caption: :warning:
-endif::[]
 
 [.small]#Last update: {localdate}#
 
@@ -34,45 +26,43 @@ Anything a user can do can also be done programmatically.
 You have full control of the data, as well as every _field_ FM manages.
 
 
-=== Method Name Variations
+==== Singular vs Plural Method-names
 
-Some API methods have 2 or more name variations.
-These are just _aliases_ for the same method.
-The API descriptions list all variations for each method.
+Many methods have both a *singular* [`getValue()`] and
+a *plural* [`getValues()`] variation. +
+*These are different methods with different signatures.*
 
-==== Singular & Plural Aliases
+- Methods with a singular name apply to _one specific field_.
+  The first argument for these methods is a fieldname.
 
-Many setter & getter methods have both singular and plural names,
-like `getValue()`/`getValues()`.
-The `getValue()` method can return a single value _or_ all values,
-so you can choose the most semantic _alias_ for your use, like:
+- Methods with a plural name apply to either _all fields_ or _multiple fields_.
 
-====== _Singular vs Plural Method Names_
-[source,javascript,linenums,hightlight=2..3]
+[source]
 ----
 const username = form.getValue('username')  // One value
-const username = form.getValues('username') // One value
-const fieldValues = form.getValue()  // All values (object)
-const fieldValues = form.getValues() // All values (object)
+const fieldValues = form.getValues()        // All form values
 ----
 
-==== Verbose & Abbreviated Aliases
+Methods with names that do not have a simple plural form [`getData()`] can
+apply to a specific field _or_ all fields,
+depending whether a fieldname is passed.
 
-Many methods have both verbose and abbreviated variations,
-like `isFieldDisabled()` and `isDisabled()`.
-The short variations aids code brevity and
-the long variations provide more clarity.
-
-Some _getter_ methods have even shorter names,
-like `getValue()`/`value()` and `getDataProps()`/`dataProps()`.
-This can provide even more brevity, like when using these methods repeatedly:
-
-[source,javascript]
+[source]
 ----
-<TextField label="First Name"  {...form.allProps("firstName")} />
-<TextField label="Middle Name" {...form.allProps("middleName")} />
-<TextField label="Last Name"   {...form.allProps("lastName")} />
+const username = form.getData('username')  // One value
+const fieldValues = form.getData()         // All form data
 ----
+
+==== Alias Method-names
+
+Some methods also have shorter alias names to aid code brevity;
+particularly ones often used repeatedly in markup,
+like:
+
+- `isFieldDisabled()` -> `isDisabled()`
+- `getAllProps()` -> `allProps()`
+- `getValue()` -> `value()`
+- `getError()` -> `error()`
 
 [source,html]
 ----
@@ -83,24 +73,33 @@ This can provide even more brevity, like when using these methods repeatedly:
 
 === Chaining Commands
 
-All _setter_ methods return the FormManager object,
-which allow multiple form commands to be chained, like:
+All *_setter_* methods return the FormManager [.small]#{object}#,
+to allow multiple commands to be chained.
+
 [source]
 ----
 form.setFieldRequired('phone')
 form.validate('phone')
+
 // Is the same as...
-form.setFieldRequired('phone').validate('phone')
+form.setFieldRequired('phone')
+    .validate('phone')
 ----
 
-=== Using Fieldname Aliases
+=== Fieldname Aliases
 
-If an `aliasName` is set for a field, it can be used with _any_ FM method.
-In the example below, each pair of commands shown are equivalent,
-and both variations are valid.
+An `aliasName` can be set for any field.
+This can normalize fieldnames across different datasets,
+and simplify the concatenated names of nested fields.
 
-[source,javascript+html]
+If an alias is set, it can be passed to _any_ FM method
+instead of the actual fieldname.
+In the example below, each pair of commands shown are valid and equivalent.
+Note how the alias versions are much easier to write read.
+
+[source]
 ----
+// Set an aliasName for a deeply nested field
 const formConfig = {
   fields: {
     'profile.contacts.primaryPhone': {
@@ -119,53 +118,49 @@ form.setFieldDisabled('phone')
 <TextField {...form.allProps('phone')}
 ----
 
-'''
+''''
 
 == Form Rendering Methods
 
 
-update | render ::
-
-Force a re-render of the component FM is inside
+update / render ::
 +
-FM _automatically_ triggers renders when necessary.
+--
+Force a re-render of the component FM is inside.
+
+[.small]#FM _automatically_ triggers renders when necessary.
 However if you programically change form configuration,
 you need to trigger a re-render for the changes to take effect.
-This method provides that, and also increments the form revision value.
+This method provides that, and also increments the form revision value.#
 
-@params (0) :::
-@returns FormManager :::
-//
+*@params* (0) +
+*@returns* FormManager [.small]#{object}#
+--
 
 ''''
 
-revision | getRevision ::
-  Force a re-render of the component FM is inside
+revision / getRevision ::
++
+--
+Unique number for logic in `shouldComponentUpdate()`
 
-@params (2) :::
+[.small]#When using `React.PureComponent`, some props must _change_ to
+trigger a component render. Since the form-manager object/prop
+never changes, you need another prop to _force_ component updates.
+The form revision number provides this prop.
+It increments each time data in FM changes -- on every keystroke!#
 
-  - `component` {nbsp} [.small]#{Component|string} `["div"]`# +
-  The wrapper-element generated by FluidGrid.
+*@params* (0) +
+*@returns* Revision Number {integer}
 
-  - `columnSpacing` {nbsp} [.small]#{integer|string} `[0]`# +
-  Horizontal spacing between items +
-  Value must be a valid CSS measurement, like "4px" or "1em" +
-  See [Spacing and Divider Logic](#spacing-and-divider-logic)
-
-@returns FormManager :::
-//
+*@example*
+[source]
+----
+<FormFields form={this.form} rev={this.form.revision()} />
+----
+--
 
 '''
-
-
-==== update | render ()
-
-FM _automatically_ triggers renders when necessary.
-However if you programically change form configuration,
-you need to trigger a re-render for the changes to take effect.
-This method provides that, and also increments the form revision value.
-
-==== getRevision ()
 
 
 == Configuration Methods
@@ -179,25 +174,277 @@ For example, changing field validation rules, disabling one or all fields,
 changing the error-messages (eg: a different languange), etc.
 
 
-==== setConfig | setFieldConfig (name, data)
+setConfig | setFieldConfig ::
++
+--
+Foobar
 
-==== setFieldDefaults (settings)
+[.small]#Foobar#
+
+*@params* (2)
+
+. `fieldname` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+form.setFieldConfig(
+    'password',
+    { disabled: true }
+)
+----
+--
+''''
 
 
-==== isDisabled | isFieldDisabled (name)
+setFieldDefaults ::
++
+--
+Foobar
 
-==== setDisabled | setFieldDisabled (name)
+[.small]#Foobar#
 
-==== setDefaultDisabled ([disable] = true)
+*@params* (2)
+
+. `fieldname`* {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+form.setFieldDefaults({
+    validateOnChange: true,
+    disabled: false
+})
+----
+--
+''''
+
+
+isDisabled | isFieldDisabled ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (1)
+
+. `fieldname`* {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+*@returns* (true|false)
+
+*@example*
+[source]
+----
+if (form.isDisabled('email') {
+    form.setDisabled('email', false)
+}
+----
+--
+''''
+
+
+setDisabled | setFieldDisabled ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `fieldname` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `disable` {nbsp} [.small]#{boolean} `[true]`# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+if (form.isDisabled('email') {
+    form.setDisabled('email', false)
+}
+----
+--
+''''
+
+
+setDefaultDisabled ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (1)
+
+. `disable` {nbsp} [.small]#{string} `[true]`# +
+  Foobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+handleSubmit() {
+    const { form } = this
+    // Disable all form fields, by default
+    form.setDefaultDisabled(true)
+
+    form.validateAll().then(isValid => {
+        if (isValid) {
+            // post the data...
+        } else {
+            // Re-enable all form fields, by default
+            form.setDefaultDisabled(false)
+        }
+    }
+}
+----
+--
+''''
+
 
 
 ==== isFieldReadOnly (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+.@params
+[%autowidth, cols="1m,^1e,9"]
+|===
+| param | type | details
+
+| fieldname *
+| string
+| A fieldname or alias-name
+|===
+
+|===
+| param       | type   | details
+
+| fieldname * | string | A fieldname or alias-name
+|===
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== setReadOnly | setFieldReadOnly (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== isReadOnly (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== setDefaultReadOnly ([readOnly] = true)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 
 == Validation & Error Methods
@@ -209,25 +456,275 @@ rules programatically, so there is a rich API devoted to validation rules.
 
 
 ==== validate (name, value, [eventName])
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== validateAll ()
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 
 ==== getFieldValidation (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== setFieldValidation (name, settings)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== getFieldConfig (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== isRequired | isFieldRequired (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== setRequired | setFieldRequired (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== errors | getError | getErrors (name)
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== setError | setErrors (name, type, [errorMessage])
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 ==== clearError | clearErrors ([name])
+ ::
++
+--
+Foobar
+
+[.small]#Foobar#
+
+*@params* (2)
+
+. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
+  Foobar
+
+. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
+  Fobar
+
+*@returns* FormManager [.small]#{object}#
+
+*@example*
+[source]
+----
+
+----
+--
+''''
+
 
 
 == Data & Value Methods
@@ -338,7 +835,9 @@ which _combine_ all the individual props into a single setter.
 
 ==== cleanField | cleanFieldValue (name)
 
-==== hasError | hasErrors (name)
+==== hasError (name)
+
+==== hasErrors ()
 
 ==== onFieldBlur (event_or_name, [value])
 
