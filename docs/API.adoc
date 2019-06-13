@@ -1,9 +1,18 @@
 = FormManager API Reference
-:source-highlighter: highlightjs
+:source-highlighter: pygments
+:pygments-style: manni
 :source-language: javascript
 :icons: font
+:table-stripes: even
 :toc:
 :toc-placement!:
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
 
 [.small]#Last update: {localdate}#
 
@@ -330,14 +339,13 @@ Foobar
 
 [.small]#Foobar#
 
-.@params
-[%autowidth, cols="1m,^1e,9"]
+[%autowidth, cols="<.<1m,^.<1e,<.<9"]
 |===
 | param | type | details
 
-| fieldname *
-| string
-| A fieldname or alias-name
+a| `fieldname`*
+a| _string_
+a| A fieldname or alias-name
 |===
 
 |===
