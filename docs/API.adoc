@@ -4,6 +4,7 @@
 :source-language: javascript
 :icons: font
 :table-stripes: even
+:prewrap!:
 :toc:
 :toc-placement!:
 ifdef::env-github[]
@@ -343,9 +344,9 @@ Foobar
 |===
 | param | type | details
 
-a| `fieldname`*
-a| _string_
-a| A fieldname or alias-name
+| fieldname*
+| +++string+++
+| +++A fieldname or alias-name+++
 |===
 
 |===
