@@ -7,6 +7,7 @@
 :prewrap!:
 :toc:
 :toc-placement!:
+:toclevels: 3
 ifdef::env-github[]
 :tip-caption: :bulb:
 :note-caption: :information_source:
@@ -17,62 +18,94 @@ endif::[]
 
 [.small]#Last update: {localdate}#
 
-WARNING: THIS IS A JUST AN OUTLINE -- A WORK IN PROGRESS
+NOTE: THIS IS A WORK IN PROGRESS
+
+[WARNING]
+====
+*BREAKING CHANGES* in the v7.x API: +
+
+- `getErrors(fieldname)` => `getError(fieldname)`
+- `setErrors(fieldname, errors)` => `setError(fieldname, errors)`
+====
 
 toc::[]
 
 
 == API Overview & Conventions
 
+FormManager ("*FM*") has an extensive API.
+_Everything_ can be done programmatically so
+you have total control of data, state, events,
+and even the form fields FM manages.
 
-*FM exposes _only_ 'methods' - no 'properties'.* +
-All of FM's data caches are _private_ so they cannot
-be accidentally mutated.
-Data interactions are performed with getter and setter methods.
-Most methods also _clone_ data in both directions to maintain immutability.
-
-*FM's' extensive API provides control of _everything_ FM handles.* +
-Anything a user can do can also be done programmatically.
-You have full control of the data, as well as every _field_ FM manages.
+#FM exposes only 'methods' -- there are no 'properties'.# +
+All data, state and configuration caches are _private_ so they cannot
+be directly mutated.
+Interactions must be performed using API _getter_ and _setter_ methods.
+This allows FM to keep everything perfectly synchronized.
 
 
-==== Singular vs Plural Method-names
+=== Dynamic Configuration
 
-Many methods have both a *singular* [`getValue()`] and
-a *plural* [`getValues()`] variation. +
-*These are different methods with different signatures.*
+FM followed the configuration rules it is provided,
+and this can be updated _on-the-fly_ using the configuration API.
+FM can seamlessly integrate with any custom logic.
 
-- Methods with a singular name apply to _one specific field_.
-  The first argument for these methods is a fieldname.
 
-- Methods with a plural name apply to either _all fields_ or _multiple fields_.
+=== Singular vs Plural Method-names
+
+Many getter & setter methods have _similar_ names, except that
+one is '*singular*' (eg: `getValue`) and
+one is '*plural*' (eg: `getValues`).
+#These are different methods with different argument signatures.#
+
+- *Singular method-names* usually apply to _one specific field_,
+  so the first argument is always a fieldname.
+
+- *Plural method-names* usually apply to _all fields_ -or- _multiple fields_,
+  so the first argument is an object, an array, or nothing!
 
 [source]
 ----
-const username = form.getValue('username')  // One value
-const fieldValues = form.getValues()        // All form values
+// GETTERS
+const username = form.getValue('username') // One value
+// OR
+const fieldValues = form.getValues()  // All field values
+const username = fieldValues.username
+
+// SETTERS
+form.setValue('username', 'john-smith')
+form.setValue('email', 'john-smith@gmail.com')
+// OR
+form.setValues({
+    username: 'john-smith',
+    email: 'john-smith@gmail.com'
+})
 ----
 
-Methods with names that do not have a simple plural form [`getData()`] can
+Methods with names that do not have a plural form (eg: `getData`) can
 apply to a specific field _or_ all fields,
 depending whether a fieldname is passed.
+Therefore these methods accept more than one argument signature.
 
 [source]
 ----
-const username = form.getData('username')  // One value
-const fieldValues = form.getData()         // All form data
+const username = form.getData('profile.username') // One value
+// OR
+const formData = form.getData() // All form data
+const username = formData.profile.username
 ----
 
-==== Alias Method-names
+=== Abbreviated Method-names
 
-Some methods also have shorter alias names to aid code brevity;
-particularly ones often used repeatedly in markup,
-like:
+Some methods have alternate, shorter alias names to aid code brevity, like:
 
-- `isFieldDisabled()` -> `isDisabled()`
-- `getAllProps()` -> `allProps()`
-- `getValue()` -> `value()`
-- `getError()` -> `error()`
+- `isFieldDisabled` -> `isDisabled`
+- `getAllProps` -> `allProps`
+- `getValue` -> `value`
+- `getError` -> `error`
+
+These are especially useful when used _repeatedly_ in markup, like:
 
 [source,html]
 ----
@@ -81,10 +114,12 @@ like:
 <TextField label="Last Name"   {...form.allProps("lastName")} />
 ----
 
+
 === Chaining Commands
 
-All *_setter_* methods return the FormManager [.small]#{object}#,
-to allow multiple commands to be chained.
+All *_setter_* methods return the FormManager object so
+multiple commands can be chained.
+This is just a convenience -- it does _not_ change how the methods work.
 
 [source]
 ----
@@ -98,14 +133,14 @@ form.setFieldRequired('phone')
 
 === Fieldname Aliases
 
-An `aliasName` can be set for any field.
-This can normalize fieldnames across different datasets,
-and simplify the concatenated names of nested fields.
+*An alias-name can be specified for any field.*
+This can be used to normalize fieldnames across different datasets,
+or to simplify the concatenated names of nested fields.
 
-If an alias is set, it can be passed to _any_ FM method
-instead of the actual fieldname.
-In the example below, each pair of commands shown are valid and equivalent.
-Note how the alias versions are much easier to write read.
+An alias can be passed to _any_ FM method.
+The examples below show equivalent commands, one using the alias
+and the other the actual, concatenated fieldname.
+Note how the alias makes the code easier to write and read.
 
 [source]
 ----
@@ -128,7 +163,6 @@ form.setFieldDisabled('phone')
 <TextField {...form.allProps('phone')}
 ----
 
-''''
 
 == Form Rendering Methods
 
@@ -138,13 +172,78 @@ update / render ::
 --
 Force a re-render of the component FM is inside.
 
-[.small]#FM _automatically_ triggers renders when necessary.
-However if you programically change form configuration,
-you need to trigger a re-render for the changes to take effect.
+.Test
+====
+hello *world* 1
+====
+
+.Test
+****
+hello *world* 2
+****
+
+.Test
+[NOTE]
+====
+hello *world* 6
+====
+
+[, John Doe]
+____
+hello *world* 7
+____
+
+.Test
+----
+hello *world* 4
+----
+
+++++
+<details>
+    <summary>Summary</summary>
+++++
+
+.Test
+[NOTE]
+====
+hello *world* 6
+====
+++++
+</details>
+++++
+
+.Test
+[quote]
+--
+hello *world* 8
+--
+
+.Test
+....
+hello *world* 5
+....
+
+
+.@params (0)
+[literal]
+--
+#boo#
+--
+
+.@returns
+FormManager [.small]#{object}#
+
+.@details
+[.small]#A render is _automatically_ triggered when necessary.
+However, if you programmatically change form configuration,
+you need to manually trigger an update for the changes to take effect.
 This method provides that, and also increments the form revision value.#
 
-*@params* (0) +
-*@returns* FormManager [.small]#{object}#
+.@example
+[source]
+----
+form.update()
+----
 --
 
 ''''
@@ -176,12 +275,12 @@ It increments each time data in FM changes -- on every keystroke!#
 == Configuration Methods
 
 Every aspect of FM is controlled by the form-configuration.
-Normally you provide a set of confuration options when you create a FM
+Normally you provide a set of configuration options when you create a FM
 instance for a form.
 However all configuration is dynamic, and can be changed at any time.
 The most common configuration changes have special methods to simplify things.
 For example, changing field validation rules, disabling one or all fields,
-changing the error-messages (eg: a different languange), etc.
+changing the error-messages (eg: a different language), etc.
 
 
 setConfig | setFieldConfig ::
@@ -197,7 +296,7 @@ Foobar
   Foobar
 
 . `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -226,7 +325,7 @@ Foobar
   Foobar
 
 . `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -280,7 +379,7 @@ Foobar
   Foobar
 
 . `disable` {nbsp} [.small]#{boolean} `[true]`# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -332,7 +431,7 @@ handleSubmit() {
 
 
 
-==== isFieldReadOnly (name)
+=== isFieldReadOnly (name)
  ::
 +
 --
@@ -361,7 +460,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -374,7 +473,7 @@ Foobar
 ''''
 
 
-==== setReadOnly | setFieldReadOnly (name)
+=== setReadOnly | setFieldReadOnly (name)
  ::
 +
 --
@@ -388,7 +487,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -401,7 +500,7 @@ Foobar
 ''''
 
 
-==== isReadOnly (name)
+=== isReadOnly (name)
  ::
 +
 --
@@ -415,7 +514,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -428,7 +527,7 @@ Foobar
 ''''
 
 
-==== setDefaultReadOnly ([readOnly] = true)
+=== setDefaultReadOnly ([readOnly] = true)
  ::
 +
 --
@@ -442,7 +541,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -464,7 +563,7 @@ However there are cases when its useful to read, perform, or change validation
 rules programatically, so there is a rich API devoted to validation rules.
 
 
-==== validate (name, value, [eventName])
+=== validate (name, value, [eventName])
  ::
 +
 --
@@ -478,7 +577,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -491,7 +590,7 @@ Foobar
 ''''
 
 
-==== validateAll ()
+=== validateAll ()
  ::
 +
 --
@@ -505,7 +604,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -519,7 +618,7 @@ Foobar
 
 
 
-==== getFieldValidation (name)
+=== getFieldValidation (name)
  ::
 +
 --
@@ -533,7 +632,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -546,7 +645,7 @@ Foobar
 ''''
 
 
-==== setFieldValidation (name, settings)
+=== setFieldValidation (name, settings)
  ::
 +
 --
@@ -560,7 +659,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -573,7 +672,7 @@ Foobar
 ''''
 
 
-==== getFieldConfig (name)
+=== getFieldConfig (name)
  ::
 +
 --
@@ -587,7 +686,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -600,7 +699,7 @@ Foobar
 ''''
 
 
-==== isRequired | isFieldRequired (name)
+=== isRequired | isFieldRequired (name)
  ::
 +
 --
@@ -614,7 +713,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -627,7 +726,7 @@ Foobar
 ''''
 
 
-==== setRequired | setFieldRequired (name)
+=== setRequired | setFieldRequired (name)
  ::
 +
 --
@@ -641,7 +740,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -654,7 +753,7 @@ Foobar
 ''''
 
 
-==== errors | getError | getErrors (name)
+=== errors | getError | getErrors (name)
  ::
 +
 --
@@ -668,7 +767,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -681,7 +780,7 @@ Foobar
 ''''
 
 
-==== setError | setErrors (name, type, [errorMessage])
+=== setError | setErrors (name, type, [errorMessage])
  ::
 +
 --
@@ -695,7 +794,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -708,7 +807,7 @@ Foobar
 ''''
 
 
-==== clearError | clearErrors ([name])
+=== clearError | clearErrors ([name])
  ::
 +
 --
@@ -722,7 +821,7 @@ Foobar
   Foobar
 
 . `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Fobar
+  Foobar
 
 *@returns* FormManager [.small]#{object}#
 
@@ -735,92 +834,32 @@ Foobar
 ''''
 
 
+=== isClean ([name])
 
-== Data & Value Methods
+=== isDirty ([name])
 
-FM _caches_ and _synchronizes_ two separate sets of data.
-It is important to understand the difference when deciding which
-API methods to use.
-
-Methods containing the word "data" target the Data cache,
-while those containing "value" target the Values cache.
-However changes to either cache are immediately _synced_ to the other.
-When you want to programically set data in a form-field,
-a Value method should be used.
-If you need to update the _source_ data, use a Data method.
-
-Any change to _either_ cache will immediately update the Data cache.
-If a data transformation is required, it is done on the fly.
-
-=== 'Data' Cache
-
-The 'Data' cache starts as a _copy_ of the data originally supplied to FM,
-if any was. This cache has the same structure and fieldnames as the source.
-When any 'data getter' (eg: `getData()`) is called,
-the data will be returned in the source structure, ready to be posted.
-
-FM tracks the _original_ data, so knows precisely which data has
-changed since the form was initialized.
-This is useful if you want to do a PATCH update.
-
-Data tracking also allows FM to know whether the form is 'clean' or 'dirty'.
-If a user changes a value, then later changes it _back_ to the original value,
-FM knows that this data value is _no longer_ 'changed'.
+=== reset ()
 
 
-=== 'Values' Cache
+=== changes | getChanges ()
 
-The 'Values' cache contains the values supplied to the form fields via props.
-These values may be a different data-type of format than the source data,
-to suit the requirements of each field-type.
+=== data | getData ([name], [options])
 
-*The Values cache is a single level deep.* There has no _nested keys_.
-Nested structures from the 'Data' cache are flattened to become 'paths',
-like `"user.profile.address.street"`.
-These paths are the keys used in the Values object,
-and are used as the *fieldnames* in the form...
-
-=== Field aliasName
-
-Instead of using long 'path-names' (eg: "user.profile.address.street"),
-an '*aliasName*' can is set in a field's configuration,
-like `"addressStreet"`.
-All code can then _optionally_ use this alias instead of the path-name.
-Using aliases is recommended to make form markup simpler.
-
-Aliases can also be used to _normalize_ fieldnames from different datasets.
-For example, if you have multiple sets of data than contain an address,
-and these don't all have identical fieldnames,
-then aliases can normalize them so they can use the same `<AddressForm>`
-component, without needing any extra logic.
-
-
-==== isClean ([name])
-
-==== isDirty ([name])
-
-==== reset ()
-
-
-==== changes | getChanges ()
-
-==== data | getData ([name], [options])
-
-==== setData (nameOrData, [fieldData])
+=== setData (nameOrData, [fieldData])
 
 
 
-==== value | values | getValue | getValues ([name])
+=== value | values | getValue | getValues ([name])
 
-==== setValue | setValues (name, value)
+=== setValue | setValues (name, value)
 
 
 == Form 'State' Methods
 
 
-==== state | getState ([key])
+=== state | getState ([key])
 
-==== setState (key, value)
+=== setState (key, value)
 
 
 == Form and Field Methods
@@ -836,21 +875,21 @@ but usually you'll use the `allProps()` or `dataProps()` helpers instead,
 which _combine_ all the individual props into a single setter.
 
 
-==== allProps (name)
+=== allProps (name)
 
-==== dataProps (name)
+=== dataProps (name)
 
-==== errorProps (name)
+=== errorProps (name)
 
-==== cleanField | cleanFieldValue (name)
+=== cleanField | cleanFieldValue (name)
 
-==== hasError (name)
+=== hasError (name)
 
-==== hasErrors ()
+=== hasErrors ()
 
-==== onFieldBlur (event_or_name, [value])
+=== onFieldBlur (event_or_name, [value])
 
-==== onFieldChange (event_or_name, [value])
+=== onFieldChange (event_or_name, [value])
 
-==== onFieldFocus (event_or_name, [value])
+=== onFieldFocus (event_or_name, [value])
 
