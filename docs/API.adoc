@@ -172,63 +172,8 @@ update / render ::
 --
 Force a re-render of the component FM is inside.
 
-.Test
-====
-hello *world* 1
-====
-
-.Test
-****
-hello *world* 2
-****
-
-.Test
-[NOTE]
-====
-hello *world* 6
-====
-
-[, John Doe]
-____
-hello *world* 7
-____
-
-.Test
-----
-hello *world* 4
-----
-
-++++
-<details>
-    <summary>Summary</summary>
-++++
-
-.Test
-[NOTE]
-====
-hello *world* 6
-====
-++++
-</details>
-++++
-
-.Test
-[quote]
---
-hello *world* 8
---
-
-.Test
-....
-hello *world* 5
-....
-
-
 .@params (0)
-[literal]
---
-#boo#
---
+++ ++
 
 .@returns
 FormManager [.small]#{object}#
@@ -259,10 +204,13 @@ never changes, you need another prop to _force_ component updates.
 The form revision number provides this prop.
 It increments each time data in FM changes -- on every keystroke!#
 
-*@params* (0) +
-*@returns* Revision Number {integer}
+.@params (0)
+++ ++
 
-*@example*
+.@returns
+Revision Number {integer}
+
+.@example
 [source]
 ----
 <FormFields form={this.form} rev={this.form.revision()} />
@@ -283,24 +231,27 @@ For example, changing field validation rules, disabling one or all fields,
 changing the error-messages (eg: a different language), etc.
 
 
+++<details><summary>++
 setConfig | setFieldConfig ::
-+
+++</summary>++
+
 --
-Foobar
+Foobar is baz
 
-[.small]#Foobar#
-
-*@params* (2)
+.@params (2)
+--
 
 . `fieldname` {nbsp} [.small]#{string} {nbsp} [`""`]# +
   Foobar
 
 . `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
   Foobar
+--
 
-*@returns* FormManager [.small]#{object}#
+.@returns
+FormManager [.small]#{object}#
 
-*@example*
+.@example
 [source]
 ----
 form.setFieldConfig(
@@ -310,6 +261,7 @@ form.setFieldConfig(
 ----
 --
 ''''
+++</details>++
 
 
 setFieldDefaults ::
