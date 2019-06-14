@@ -18,11 +18,14 @@ endif::[]
 
 [.small]#Last update: {localdate}#
 
+
 NOTE: THIS IS A WORK IN PROGRESS
 
+.Breaking Changes
 [WARNING]
 ====
-*BREAKING CHANGES* in the v7.x API: +
+Some method names were changed in v7.0.
+The ones most likely to affect existing code are: +
 
 - `getErrors(fieldname)` => `getError(fieldname)`
 - `setErrors(fieldname, errors)` => `setError(fieldname, errors)`
@@ -235,6 +238,7 @@ changing the error-messages (eg: a different language), etc.
 +++<summary>+++
 *setConfig | setFieldConfig*
 +++</summary><div>+++
+[sidebar]
 ****
 Foobar
 
@@ -261,12 +265,10 @@ form.setFieldConfig(
     { disabled: true }
 )
 ----
-****
-++++
-</div></details>
-++++
-
 ''''
+****
++++</div></details>+++
+
 
 setFieldDefaults ::
 +
