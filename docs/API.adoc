@@ -231,10 +231,11 @@ For example, changing field validation rules, disabling one or all fields,
 changing the error-messages (eg: a different language), etc.
 
 
-+++<details><summary>+++
-setConfig | setFieldConfig ::
-+++</summary>+++
-+
+++++
+<details>
+++++
++++<summary>+++*setConfig | setFieldConfig*+++</summary>+++
+
 --
 Foobar is baz
 
@@ -261,8 +262,11 @@ form.setFieldConfig(
 ----
 --
 ''''
-+++</details>+++
 
+++++
+</details>
+++++
+{nbsp}
 
 setFieldDefaults ::
 +
