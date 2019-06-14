@@ -234,10 +234,8 @@ changing the error-messages (eg: a different language), etc.
 +++<details open>+++
 +++<summary>+++
 *setConfig | setFieldConfig*
-+++
-</summary><div>
-+++
---
++++</summary><div>+++
+====
 Foobar
 
 [.small]#Foobar#
@@ -263,11 +261,7 @@ form.setFieldConfig(
     { disabled: true }
 )
 ----
---
-
-''''
-
-setFieldDefaults ::
+====
 ++++
 </div></details>
 ++++
