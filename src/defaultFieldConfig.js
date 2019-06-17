@@ -8,7 +8,7 @@ const defaultFieldConfig = {
 	dataFormat: '', 		// Format to use for input/control DATA OBJECT
 	valueType: '',			// Convert value to this type for FIELD VALUE
 	valueFormat: '', 		// Format to use for input/control FIELD VALUE
-	inputType: '',			// If set, dataProps() includes: `type={inputType}`
+	inputType: '',			// If set, fieldProps() includes: `type={inputType}`
 	onChange: undefined, 	// Callback after FM done processing event
 	onBlur: undefined, 		// Callback after FM done processing event
 	onFocus: undefined, 	// Callback after FM done processing event

@@ -49,13 +49,12 @@ const reEmail = /^\s*(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+")
  */
 const email = value => reEmail.test(value.toLowerCase())
 
-/**
- * @param {string} value
- * @returns {boolean}
- */
-const phone = value => {
+const phone = (value, len) => {
 	const nums = formatters.numbersOnly(value || '')
-	return nums.length === 7 || nums.length === 10 || nums.length === 11
+	const c = nums.length
+	return isInteger(len) && c !== len
+		? false
+		: c === 7 || c === 10 || c === 11
 }
 
 const string = value => isString(value)

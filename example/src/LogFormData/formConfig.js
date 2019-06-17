@@ -32,7 +32,7 @@ const formConfig = {
 
 	onBlur: ( value, fieldName, form ) => {
 		logFormData(form, `FormManager [${fieldName}].onBlur()`)
-		// console.log('Fields Configuration', form.getFieldConfig())
+		// console.log('Fields Configuration', form.getFieldsConfig())
 	},
 
 	fieldDefaults: {

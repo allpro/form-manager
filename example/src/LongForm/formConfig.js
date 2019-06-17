@@ -1,5 +1,5 @@
 // This demo includes dev-logging output using a supplied tool
-import { logFormData, cloneDeep } from '@allpro/form-manager'
+import { logFormData } from '@allpro/form-manager'
 
 import sampleData from './data'
 
@@ -23,8 +23,8 @@ function handleCategoryChange( category, field, form ) {
 
 
 const formConfig = {
-	initialData: cloneDeep(sampleData.formData),
-	initialErrors: cloneDeep(sampleData.formErrors),
+	initialData: sampleData.formData,
+	initialErrors: sampleData.formErrors,
 	initialState: {
 		categoryList: sampleData.categories,
 		subcategoryList: sampleData.subcategories[selectedCategory] || []
@@ -32,7 +32,7 @@ const formConfig = {
 
 	onBlur: ( value, fieldName, form ) => {
 		logFormData(form, `FormManager [${fieldName}].onBlur()`)
-		// console.log('Fields Configuration', form.getFieldConfig())
+		// console.log('Fields Configuration', form.getFieldsConfig())
 	},
 
 	fieldDefaults: {
@@ -41,9 +41,9 @@ const formConfig = {
 
 		// TEXT-FIELD CLEANING/FORMATTING OPTIONS
 		cleaning: {
-			cleanOnBlur: true, // Clean field-text onBlur
-			trim: true, // Trim leading-/trailing--spaces
-			trimInner: true // Replace multi-spaces/tabs with single space
+			cleanOnBlur: true,	// Clean field-text onBlur
+			trim: true,			// Trim leading & trailing spaces
+			trimInner: true		// Replace multi-spaces/tabs with a single space
 		}
 	},
 
@@ -55,8 +55,8 @@ const formConfig = {
 				minLength: 8,
 				maxLength: 20,
 				custom: value => /[^0-9a-z-]/gi.test(value)
-					? '{name} can contain only numbers, letters and dashes'
-					: true
+						? '{name} can contain only numbers, letters and dashes'
+						: true
 			}
 		},
 		password: {
@@ -75,7 +75,6 @@ const formConfig = {
 			cleaning: {
 				reformat: 'properCase'
 			},
-			validateOnChange: true,
 			validation: {
 				minLength: 2,
 				maxLength: 64
@@ -97,7 +96,7 @@ const formConfig = {
 				reformat: 'phone',
 			},
 			validation: {
-				phone: true
+				phone: true // Length -or- true == 7, 10, 11 numbers
 			}
 		},
 		age: {

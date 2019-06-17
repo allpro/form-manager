@@ -70,15 +70,14 @@ function pathToKeysArray( path ) {
 
 /**
  *
- * @param {Object} hash		Object to modify
- * @param {string} path		String-path like 'data/who/gender'
- * @param {Object} [opts]   Configuration options
- * @returns {*}				Value at specified path, or undefined if not found
+ * @param {Object} hash				Object to modify
+ * @param {(string|Array)} path		String-path like 'data/who/gender'
+ * @param {Object} [opts]   		Configuration options
+ * @returns {*}						Value at path or undefined if not found
  */
-function getObjectValue( hash, path, opts ) {
+function getObjectValue( hash, path, opts = {} ) {
 	if (!hash || !isPlainObject(hash)) return undefined
 
-	const getOpts = Object.assign({ cloneValue: false, deepClone: true }, opts)
 	let branch = hash
 
 	// If a path was passed, trace the path inside state.form
@@ -96,25 +95,29 @@ function getObjectValue( hash, path, opts ) {
 		}
 	}
 
-	return !getOpts.cloneValue
-		? branch
-		: getOpts.deepClone
-			? cloneDeep( branch )
-			: clone( branch )
+	return opts.cloneDeep || opts.deep
+		? cloneDeep( branch )
+		: opts.cloneValue || opts.clone
+			? clone( branch )
+			: branch
 }
 
 /**
  *
- * @param {Object} hash		Object to modify
- * @param {string} path		String-path like 'data/who/gender'
- * @param {*} value			Value - could be anything!
- * @param {Object} [opts]   Configuration
- * @returns {boolean}		True if value set; false if value is unchanged
+ * @param {Object} hash				Object to modify
+ * @param {(string|Array)} path		String-path like 'data/who/gender'
+ * @param {*} value					Value - could be anything!
+ * @param {Object} [opts]   		Configuration
+ * @returns {boolean}				True if value set; false if value unchanged
  */
-function setObjectValue( hash, path, value, opts ) {
+function setObjectValue( hash, path, value, opts = {} ) {
 	if (!hash || !isPlainObject(hash)) return undefined
 
-	const setOpts = Object.assign({ cloneValue: false, merge: false }, opts)
+	const getValue = (val) => opts.cloneDeep || opts.deep
+		? cloneDeep( val )
+		: opts.cloneValue || opts.clone
+			? clone( val )
+			: val
 
 	// If a path was passed, recurse into the object
 	if (path && path !== '/') {
@@ -153,19 +156,19 @@ function setObjectValue( hash, path, value, opts ) {
 
 		// Write the passed value at end of the path (last branch)
 		// Ignore any existing value - we do not merge data here.
-		if (setOpts.merge && isPlainObject(branch[lastKey]) && isPlainObject(value)) {
-			merge(branch[lastKey], setOpts.cloneValue ? clone( value ) : value)
+		if (opts.merge && isPlainObject(branch[lastKey]) && isPlainObject(value)) {
+			merge(branch[lastKey], getValue(value))
 		}
 		// Set value at path specified; clone value to break byRef
 		else {
-			branch[lastKey] = setOpts.cloneValue ? clone( value ) : value
+			branch[lastKey] = getValue(value)
 		}
 
 		return true // Value was updated
 	}
 	else if (isPlainObject( path )) {
 		// The path is an object (key/value pairs) to merge into hash-root
-		merge( hash, setOpts.cloneValue ? cloneDeep( path ) : path )
+		merge( hash, getValue(path) )
 		return true // Values were updated
 	}
 	else {

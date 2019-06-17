@@ -1,0 +1,70 @@
+= FormManager Data Handling
+:source-highlighter: pygments
+:pygments-style: manni
+:source-language: javascript
+:icons: font
+:table-stripes: even
+:prewrap!:
+:toc:
+:toc-placement!:
+:toclevels: 3
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+[.small]#Last update: {localdate}#
+
+NOTE: THIS IS A WORK IN PROGRESS
+
+
+toc::[]
+
+
+== Data & Value Methods
+
+FM _caches_ and _synchronizes_ two separate sets of data.
+It is important to understand the difference when deciding which
+API methods to use.
+
+Methods containing the word "data" target the Data cache,
+while those containing "value" target the Values cache.
+However changes to either cache are immediately _synced_ to the other.
+When you want to programatically set data in a form-field,
+a Value method should be used.
+If you need to update the _source_ data, use a Data method.
+
+Any change to _either_ cache will immediately update the Data cache.
+If a data transformation is required, it is done on the fly.
+
+=== Form 'Data
+
+The 'Data' cache starts as a _copy_ of the data originally supplied to FM,
+if any was. This cache has the same structure and fieldnames as the source.
+When any 'data getter' (eg: `getData()`) is called,
+the data will be returned in the source structure, ready to be posted.
+
+FM tracks the _original_ data, so knows precisely which data has
+changed since the form was initialized.
+This is useful if you want to do a PATCH update.
+
+Data tracking also allows FM to know whether the form is 'clean' or 'dirty'.
+If a user changes a value, then later changes it _back_ to the original value,
+FM knows that this data value is _no longer_ 'changed'.
+
+
+=== Field 'Values'
+
+The 'Values' cache contains the values supplied to the form fields via props.
+These values may be a different data-type of format than the source data,
+to suit the requirements of each field-type.
+
+*The Values cache is a single level deep.* There has no _nested keys_.
+Nested structures from the 'Data' cache are flattened to become 'paths',
+like `"user.profile.address.street"`.
+These paths are the keys used in the Values object,
+and are used as the *fieldnames* in the form...
+

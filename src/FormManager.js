@@ -34,15 +34,20 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @public
 	 */
 	const publicAPI = {
-		getRevision,				// GETTER for formRevision number
 		reset: initForm, 			// ACTION: Reset form data, errors & state.
 		render: triggerComponentUpdate,
 		update: triggerComponentUpdate,
+		revision: getRevision,		// GETTER for formRevision number
+		getRevision,				// GETTER for formRevision number
 
 		// FORM-ELEMENT PROPERTY SETTERS (HELPERS)
-		dataProps: getDataProps,	// HELPER for writing component props
-		errorProps: getErrorProps,	// HELPER for writing component props
-		allProps: getAllProps,		// HELPER for writing component props
+		getFieldProps,				// HELPER for writing component props
+		getMuiErrorProps,			// HELPER for writing component props
+		getMuiFieldProps,			// HELPER for writing component props
+		// Aliases
+		fieldProps: getFieldProps,
+		muiErrorProps: getMuiErrorProps,
+		allMuiProps: getMuiFieldProps,
 
 		// FORM-ELEMENT EVENT-HANDLERS
 		onFieldChange,				// EVENT HANDLER for field.onChange
@@ -72,10 +77,14 @@ function FormManager( componentObject, options = {}, extraData ) {
 	const data = Data(publicAPI, { config, state, internal })
 	data.init(options.initialData, extraData)
 	Object.assign(publicAPI, data.publicAPI)
+	// Add internal.getValue because Validation cannot import it; circular!
+	internal.getValue = data.getValue
 
 	// Validation sub-component, internal API
 	const validation = Validation(publicAPI, { config, data, internal })
 	Object.assign(publicAPI, validation.publicAPI)
+	// Add internal validate method to internals because not exposed publicly
+	internal.validate = validation.validate
 
 	// Extract helper methods from config API for brevity
 	const { aliasToRealName, withFieldDefaults } = config
@@ -140,22 +149,25 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @param {Object} [opts]    Options, like non-text field details
 	 * @returns {*}
 	 */
-	function getDataProps( name, opts = { checkbox: false, radio: false } ) {
+	function getFieldProps( name, opts = { inputType: null } ) {
 		const fieldName = aliasToRealName(name)
 
 		const defaults = config.get('fieldDefaults')
 		const fieldConfig = Object.assign({}, defaults, config.getField(fieldName))
-		const { inputType, displayName, disabled, readOnly } = fieldConfig
+		const { displayName, disabled, readOnly } = fieldConfig
+		const inputType = opts.inputType || fieldConfig.inputType
 
 		const fieldValidations = config.getValidation(fieldName) || {}
 		const { required } = fieldValidations
 
 		const value = data.getValue(fieldName)
+		const { hasError } = validation
 
 		const props = {
 			name: fieldName,
 			value,
 			'aria-label': displayName || fieldName, // can override in view
+			'aria-invalid': hasError(fieldName),
 			onChange: onFieldChange,
 			onFocus: onFieldFocus,
 			onBlur: onFieldBlur
@@ -167,7 +179,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 			props.type = type
 		}
 
-		if (opts.checkbox || inputType === 'checkbox') {
+		if (inputType === 'checkbox') {
 			// Checkboxes can only be true or false
 			props.checked = config.get('converters').boolean(value)
 			// Checkbox values MUST be a string - use default value if not
@@ -188,10 +200,10 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @param {string} name    Field-name or alias-name
 	 * @returns {Object}        Props for components like a TextField
 	 */
-	function getErrorProps( name ) {
+	function getMuiErrorProps( name ) {
 		return {
-			error: validation.hasErrors(name),
-			helperText: validation.getErrors(name)
+			error: validation.hasError(name),
+			helperText: validation.getError(name)
 			// FormHelperTextProps: {
 			// 	className: 'hide-when-empty'
 			// }
@@ -207,10 +219,10 @@ function FormManager( componentObject, options = {}, extraData ) {
 	 * @param {Object} [opts]  Options, like non-text field details
 	 * @returns {*}
 	 */
-	function getAllProps( name, opts = {} ) {
+	function getMuiFieldProps( name, opts = {} ) {
 		return {
-			...getDataProps(name, opts),
-			...getErrorProps(name)
+			...getFieldProps(name, opts),
+			...getMuiErrorProps(name)
 		}
 	}
 
@@ -263,7 +275,7 @@ function FormManager( componentObject, options = {}, extraData ) {
 		if (!fieldConfig) return // INVALID name PASSED; ABORT
 
 		const fieldName = fieldConfig.name
-		// const hasErrors = validation.hasErrors(fieldName)
+		// const hasError = validation.hasError(fieldName)
 
 		const cleanOnBlur = withFieldDefaults(
 			fieldConfig,

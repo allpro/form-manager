@@ -3,7 +3,6 @@ import {
 	cloneDeep,
 	forOwn,
 	isArray,
-	isEmpty,
 	isEqual,
 	isFunction,
 	isNil,
@@ -41,7 +40,7 @@ function Data( formManager, components ) {
 	const converters = config.get('converters')
 
 	// DATA CACHES - both server and form versions of data
-	let stateOfForm = {}
+	let stateOfValues = {}
 	let stateOfData = {}
 
 	let stateOfInitialData = {}
@@ -53,8 +52,10 @@ function Data( formManager, components ) {
 		init,
 		get: getData,			// GETTER for stateOfData
 		set: setData,			// SETTER for stateOfData
-		getValue, 				// GETTER for one or more field-values
-		setValue, 				// SETTER for one or more field-values
+		getValue, 				// GETTER for one field-value
+		getValues, 				// GETTER for all field-values
+		setValue, 				// SETTER for one field-value
+		setValues, 				// SETTER for multiple field-values
 		cleanValue,				// GETTER/PROCESSOR for one field
 
 		// Methods exposed in FormManager API
@@ -63,17 +64,19 @@ function Data( formManager, components ) {
 			isClean,			// Has NO values in data changed?
 			getChanges,			// Return hash containing only changed data
 			getData,			// GETTER for stateOfData
+			getFieldData,		// GETTER for one field-data
 			setData,			// SETTER for stateOfData
-			getValue, 			// GETTER for one or more field-values
-			setValue, 			// SETTER for one or more field-values
+			setFieldData,		// SETTER for one field-data
+			getValue, 			// GETTER for one field-value
+			getValues, 			// GETTER for all field-values
+			setValue, 			// SETTER for one field-value
+			setValues, 			// SETTER for multiple field-values
 			cleanField,			// SETTER for one field
 			// ALIASES
 			data: getData,
 			value: getValue,
 			values: getValue,
 			changes: getChanges,
-			getValues: getValue,
-			setValues: setValue,
 			cleanFieldValue: cleanField
 		}
 	}
@@ -86,7 +89,7 @@ function Data( formManager, components ) {
 	 * @param {(undefined|Object)} [data]
 	 */
 	function init( initialData, data ) {
-		stateOfData = {} // In case called for a RESET
+		stateOfData = {} // In case called by form.reset()
 		if (initialData) setData(initialData)
 		if (data) setData(data)
 	}
@@ -96,14 +99,10 @@ function Data( formManager, components ) {
 	 * PUBLIC GETTER for a specific field value.
 	 *
 	 * @public
-	 * @param {string} name         Field-name or alias-name
-	 * @param {Object} [opts]    Options
+	 * @param {string} name    	Field-name or alias-name
+	 * @param {Object} [opts]   Options
 	 */
 	function getValue( name, opts = {} ) {
-		if (!name) {
-			return cloneDeep(stateOfForm)
-		}
-
 		const getOpts = Object.assign({
 			cleanValue: false,
 			refresh: false
@@ -112,10 +111,10 @@ function Data( formManager, components ) {
 		const fieldName = aliasToRealName(name)
 		const fieldConfig = config.getField(fieldName) || {}
 
-		// NOTE: stateOfForm is ONE LEVEL; no nested fields
-		let value = stateOfForm[fieldName]
+		// NOTE: stateOfValues is ONE LEVEL; no nested fields
+		let value = stateOfValues[fieldName]
 
-		// Init or refresh the cached field-value in stateOfForm
+		// Init or refresh the cached field-value in stateOfValues
 		if (opts.refresh || isUndefined(value)) {
 			value = setFormValueFromData(fieldName)
 		}
@@ -129,6 +128,16 @@ function Data( formManager, components ) {
 	}
 
 	/**
+	 * PUBLIC GETTER for ALL field values.
+	 *
+	 * @public
+	 */
+	function getValues() {
+		return cloneDeep(stateOfValues)
+	}
+
+
+	/**
 	 * PUBLIC SETTER for a specific field value.
 	 *
 	 * @public
@@ -139,103 +148,115 @@ function Data( formManager, components ) {
 	 */
 	function setValue( name, value, opts = {} ) {
 		const { update, event, validate, isInitialValue } = opts
-		const validationPromises = []
 
-		const set = ( n, v ) => {
-			let val = v
+		const fieldName = aliasToRealName(name)
+		const fieldConfig = config.getField(fieldName)
+		let val = value
+		let validationPromise = null
 
-			const fieldName = aliasToRealName(n)
-			const fieldConfig = config.getField(fieldName)
-
-			// Field may NOT have a configuration...
-			if (fieldConfig) {
-				if (fieldConfig.isData) {
-					// Clean when re/initializing a value from raw data
-					// Option passed by setData() IF field.cleanOnBlur = true
-					if (opts.cleanValue) {
-						val = cleanValue(val, fieldConfig)
-					}
-
-					setDataValue(fieldName, val, fieldConfig, isInitialValue)
-				}
-				else {
-					state.set(name, val)
+		// Field may NOT have a configuration...
+		if (fieldConfig) {
+			if (fieldConfig.isData) {
+				// Clean when re/initializing a value from raw data
+				// Option passed by setData() IF field.cleanOnBlur = true
+				if (opts.cleanValue) {
+					val = cleanValue(val, fieldConfig)
 				}
 
-				// Update the stateOfForm cache
-				setFormValueFromData(fieldName, val)
+				setDataValue(fieldName, val, fieldConfig, isInitialValue)
 			}
 			else {
-				setDataValue(n, value, null, isInitialValue)
-
-				// Update the stateOfForm cache
-				setFormValueFromData(n, value)
+				state.set(name, val)
 			}
 
-			// If triggered by a field-event, validate BEFORE firing callbacks
-			if (event || validate) {
-				const validationEvent = validate ? 'validate' : event
-				const onChangeForm = config.get('onChange')
-				const onChangeField = (config.getField(name) || {}).onChange
+			// Update the stateOfValues cache
+			setFormValueFromData(fieldName, val)
+		}
+		else {
+			setDataValue(name, value, null, isInitialValue)
 
-				if (fieldConfig) {
-					const opts2 = { update: false }
+			// Update the stateOfValues cache
+			setFormValueFromData(name, value)
+		}
 
-					// Track promises so can wait until ALL done before 'update'
-					validationPromises.push(
-						// A validation event MAY trigger validation & callback.
-						// Validation MAY run, depending on event-type.
-						// Validation is async so always returns a promise.
-						formManager.validate(name, val, validationEvent, opts2)
-						.then(() => {
-							// If field value was changed, then fire events
-							// noinspection JSIncompatibleTypesComparison
-							if (event === 'change') {
-								fireEventCallback(onChangeField, value, name)
-								fireEventCallback(onChangeForm, value, name)
-							}
-						})
-					)
-				}
-				else {
+		// If triggered by a field-event, validate BEFORE firing callbacks
+		if (event || validate) {
+			const validationEvent = validate ? 'validate' : event
+			const onChangeForm = config.get('onChange')
+			const onChangeField = (config.getField(name) || {}).onChange
+
+			if (fieldConfig) {
+				// A validation event MAY trigger validation & callback.
+				// Validation MAY run, depending on event-type.
+				// Validation is async so always returns a promise.
+				validationPromise = internal.validate(
+					name,
+					val,
+					validationEvent,
+					{ update: false }
+				)
+				.then(() => {
+					// If field value was changed, then fire events
 					// noinspection JSIncompatibleTypesComparison
 					if (event === 'change') {
-						// Just fire form-level onChange, if one exists
+						fireEventCallback(onChangeField, value, name)
 						fireEventCallback(onChangeForm, value, name)
 					}
+				})
+			}
+			else {
+				// noinspection JSIncompatibleTypesComparison
+				if (event === 'change') {
+					// Just fire form-level onChange, if one exists
+					fireEventCallback(onChangeForm, value, name)
 				}
 			}
 		}
 
-
-		// PROCESS METHOD ARGUMENTS - SET ONE -OR- ALL FIELDS?
-		if (isString(name)) {
-			set(name, value)
-		}
-		else if (isPlainObject(name)) {
-			// Handle data-hash syntax: value(data, opts)
-			forOwn(name, ( v, n ) => {
-				set(n, v)
-			})
-		}
-
-
-		// Note: opts.update default is true; must pass false to prevent update
+		// Note: opts.update default == true; must pass false to prevent update
 		if (update !== false) {
 			// If field(s) is validating, wait for that to complete
-			if (validationPromises.length) {
-				Promise.all(validationPromises).then(triggerComponentUpdate)
+			if (validationPromise) {
+				// noinspection JSUnresolvedFunction
+				return validationPromise.then(triggerComponentUpdate)
 			}
 			else {
 				triggerComponentUpdate()
 			}
 		}
 
+		return validationPromise || formManager
+	}
+
+	/**
+	 * PUBLIC SETTER for a specific field value.
+	 *
+	 * @public
+	 * @param {Object} data    	Hash of new values keyed by fieldname or alias
+	 * @param {Object} [opts]   Options
+	 * @returns {Object}       	All SETTERS return instance for chaining
+	 */
+	function setValues( data, opts = {} ) {
+		const { update } = opts
+		const valueOpts = { ...opts, update: false }
+		const validationPromises = []
+
+		forOwn(data, (value, name ) => {
+			const retVal = setValue(name, value, valueOpts)
+			if (retVal.then) validationPromises.push(retVal)
+		})
+
+		if (validationPromises.length) {
+			const retVal = Promise.all(validationPromises)
+			if (update) retVal.then(triggerComponentUpdate)
+			return retVal
+		}
+
 		return formManager
 	}
 
 	/**
-	 * Helper to parse a field-value from data-value
+	 * INTERNAL HELPER to parse a field-value from data-value
 	 *
 	 * @param {string} fieldName
 	 * @param {*} [newDataValue]
@@ -258,14 +279,22 @@ function Data( formManager, components ) {
 		value = formatValue(value, valueFormat)
 		value = undefinedToDefaultValue(value) // , dataType
 
-		// Update stateOfForm cache
-		// NOTE: stateOfForm is ONE LEVEL; no nested fields
-		stateOfForm[fieldName] = clone(value)
+		// Update stateOfValues cache
+		// NOTE: stateOfValues is ONE LEVEL; no nested fields
+		stateOfValues[fieldName] = clone(value)
 
-		// return value to getFieldValue()
+		// return value to getValue()
 		return value
 	}
 
+
+	/**
+	 * INTERNAL HELPER to clean a field value
+	 *
+	 * @param {*} value
+	 * @param {Object} fldCfg
+	 * @returns {*}
+	 */
 	function cleanValue( value, fldCfg ) {
 		if (!value) return value
 		let val = value
@@ -305,81 +334,83 @@ function Data( formManager, components ) {
 
 
 	/**
-	 * @param {(string|Object)} [name]  Fieldname
-	 * @param {Object} [opts]           Options
-	 * @returns {(string|Object)}       Data value(s) for one-field or all-data
+	 * @param {string} [name]  	Fieldname
+	 * @returns {*}       		Data value(s) for one-field or all-data
 	 */
-	function getData( name, opts ) {
-		const namePassed = isString(name)
-		const getOpts = Object.assign(
-			{ cloneValue: true },
-			namePassed ? opts : name
-		)
-		return namePassed
-			? getObjectValue(stateOfData, aliasToRealName(name), getOpts)
-			: cloneDeep(stateOfData)
+	function getFieldData( name ) {
+		const fieldname = aliasToRealName(name)
+		return getObjectValue(stateOfData, fieldname, { clone: true })
 	}
 
 	/**
-	 * @param {(string|Object)} [nameOrData]  Fieldname OR Data hash
+	 * @returns {Object}	All data
+	 */
+	function getData() {
+		return cloneDeep(stateOfData)
+	}
+
+
+	/**
+	 * INTERNAL HELPER for setData() & setFieldData().
+	 * Recurse into data structure to find 'nested-fields' and 'data-objects'.
+	 *
+	 * @param {string} parentPath
+	 * @param {*} branchData
+	 */
+	function setDataAtBranch( parentPath, branchData ) {
+		forOwn(branchData, ( value, key ) => {
+			// Create a concatenated filename like 'user.profile.nickname'
+			const fieldName = parentPath ? `${parentPath}.${key}` : key
+			const fieldConfig = config.getField(fieldName)
+
+			// ASSUME a non-configured fieldname/path that contains a
+			//	hash is part of the data-keys structure, and NOT a 'value'
+			if (!fieldConfig && isPlainObject(value)) {
+				// RECURSE into object to find nested fields
+				setDataAtBranch(fieldName, value)
+			}
+
+			// Handle non-data fields (state)
+			else if (fieldConfig && !fieldConfig.isData) {
+				state.set(fieldName, value, { update: false })
+			}
+
+			// Anything else is a data field, even if no field-config found.
+			// Not all fields require a field configuration.
+			else {
+				// If cleanOnBlur = true, ALSO means clean on init-value.
+				// This setting will usually come from config.fieldDefaults.
+				const clean = withFieldDefaults(
+					fieldConfig, // NOTE: this may be undefined
+					'cleaning.cleanOnBlur'
+				)
+				const setOpts = { isInitialValue: true }
+				if (clean) setOpts.cleanValue = true
+
+				setValue(fieldName, value, setOpts)
+			}
+		})
+	}
+
+	/**
+	 * @param {(string|Object)} [name]  Fieldname OR Data hash
 	 * @param {*} [fieldData]            Data for a single field
 	 * @returns {Object}                All SETTERS return instance for chaining
 	 */
-	function setData( nameOrData, fieldData ) {
-		// Subroutine to handle recursively processing nested data paths
-		const processDataBranch = ( parentPath, branch ) => {
-			if (isPlainObject(branch) && !isEmpty(branch)) {
-				forOwn(branch, ( value, name ) => {
-					const fieldName = parentPath
-						? `${parentPath}.${name}`
-						: name
-					const fieldConfig = config.getField(fieldName)
+	function setFieldData( name, fieldData ) {
+		const fieldName = aliasToRealName(name)
+		setDataAtBranch('', { [fieldName]: fieldData })
+		return triggerComponentUpdate()
+	}
 
-					// ASSUME a non-configured fieldname/path that contains a
-					//	hash is part of the data structure, NOT a 'hash-value'
-					if (!fieldConfig && isPlainObject(value)) {
-						// RECURSE into object at this key-value
-						processDataBranch(fieldName, value)
-					}
-
-					// Not all fields need to have a configuration
-					else if (!fieldConfig || fieldConfig.isData) {
-						// If cleanOnBlur = true, ALSO means clean on init-value
-						const clean = withFieldDefaults(
-							fieldConfig,
-							'cleaning.cleanOnBlur'
-						)
-						const setOpts = { isInitialValue: true }
-						if (clean) setOpts.cleanValue = true
-
-						setValue(fieldName, value, setOpts)
-					}
-
-					// This catches everything else - criteria just for clarity
-					else if (!fieldConfig.isData) {
-						state.set(fieldName, value, { update: false })
-					}
-				})
-			}
-		}
-
-
-		if (isString(nameOrData)) {
-			const fieldName = aliasToRealName(nameOrData)
-			processDataBranch('', { [fieldName]: fieldData })
-		}
-		else if (isPlainObject(nameOrData)) {
-			processDataBranch('', nameOrData)
-		}
-		else {
-			// BAD DATA PASSED - ABORT
-			console.warn('Invalid data passed to FormManager.setData()')
-			return
-		}
-
-		triggerComponentUpdate()
-
-		return formManager
+	/**
+	 * @param {(string|Object)} data 	Data hash
+	 * @param {*} [data]           		Data for a single field
+	 * @returns {Object}            	All SETTERS return instance for chaining
+	 */
+	function setData( data ) {
+		setDataAtBranch('', data)
+		return triggerComponentUpdate()
 	}
 
 	function setDataValue( fieldName, value, fieldConfig, isInitialValue ) {

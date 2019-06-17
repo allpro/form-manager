@@ -8,6 +8,9 @@
 :toc:
 :toc-placement!:
 :toclevels: 3
+:toc-title: Contents
+:hide-uri-scheme:
+
 ifdef::env-github[]
 :tip-caption: :bulb:
 :note-caption: :information_source:
@@ -19,42 +22,58 @@ endif::[]
 [.small]#Last update: {localdate}#
 
 
-NOTE: THIS IS A WORK IN PROGRESS
-
 .Breaking Changes
 [WARNING]
 ====
-Some method names were changed in v7.0.
-The ones most likely to affect existing code are: +
-
-- `getErrors(fieldname)` => `getError(fieldname)`
-- `setErrors(fieldname, errors)` => `setError(fieldname, errors)`
+Some method names changed in v7.x +
+This includes *field-prop helpers* and
+'singular' vs 'plural' name variations.
+(See{nbsp}<<single-vs-plural>>)
 ====
 
 toc::[]
 
 
+[#Overview]
 == API Overview & Conventions
 
 FormManager ("*FM*") has an extensive API.
-_Everything_ can be done programmatically so
-you have total control of data, state, events,
-and even the form fields FM manages.
+_Everything_ can be done programmatically,
+providing control of data, form-state, events, and form fields.
 
-#FM exposes only 'methods' -- there are no 'properties'.# +
+#FM exposes only 'methods' -- it has no 'properties'.# +
 All data, state and configuration caches are _private_ so they cannot
 be directly mutated.
-Interactions must be performed using API _getter_ and _setter_ methods.
-This allows FM to keep everything perfectly synchronized.
+All modifications are performed with _getter_ and _setter_ methods
+so everything can be kept synchronized.
+
+You can also attach _custom_ methods or properties to a FM object.
+For example, adding a `form.submit()` method is simpler and more semantic
+than passing extra callback props...
+
+[source]
+----
+// Create a form-manager instance and load the data
+this.form = FormManager(this, formConfig, props.data)
+
+// Attach form.submit() and form.refresh() methods
+this.form.submit = this.submitChanges
+this.form.refresh = this.fetchLatestData
+
+// Pass only a 'form' prop to all subcomponents
+<FormSectionOne form={this.form} />
+<FormSectionTwo form={this.form} />
+----
 
 
 === Dynamic Configuration
 
-FM followed the configuration rules it is provided,
-and this can be updated _on-the-fly_ using the configuration API.
-FM can seamlessly integrate with any custom logic.
+FM obeys the configuration rules specified.
+This can be updated _on-the-fly_ using configuration API methods.
+FM can also integrate seamlessly with custom logic or helpers.
 
 
+[#single-vs-plural]
 === Singular vs Plural Method-names
 
 Many getter & setter methods have _similar_ names, except that
@@ -62,10 +81,10 @@ one is '*singular*' (eg: `getValue`) and
 one is '*plural*' (eg: `getValues`).
 #These are different methods with different argument signatures.#
 
-- *Singular method-names* usually apply to _one specific field_,
+* *Singular method-names* usually apply to _one specific field_,
   so the first argument is always a fieldname.
 
-- *Plural method-names* usually apply to _all fields_ -or- _multiple fields_,
+* *Plural method-names* usually apply to _all fields_ -or- _multiple fields_,
   so the first argument is an object, an array, or nothing!
 
 [source]
@@ -86,35 +105,23 @@ form.setValues({
 })
 ----
 
-Methods with names that do not have a plural form (eg: `getData`) can
-apply to a specific field _or_ all fields,
-depending whether a fieldname is passed.
-Therefore these methods accept more than one argument signature.
-
-[source]
-----
-const username = form.getData('profile.username') // One value
-// OR
-const formData = form.getData() // All form data
-const username = formData.profile.username
-----
 
 === Abbreviated Method-names
 
 Some methods have alternate, shorter alias names to aid code brevity, like:
 
-- `isFieldDisabled` -> `isDisabled`
-- `getAllProps` -> `allProps`
-- `getValue` -> `value`
-- `getError` -> `error`
+* `isFieldDisabled` -> `isDisabled`
+* `getMuiFieldProps` -> `allMuiProps`
+* `getValue` -> `value`
+* `getError` -> `error`
 
 These are especially useful when used _repeatedly_ in markup, like:
 
 [source,html]
 ----
-<TextField label="First Name"  {...form.allProps("firstName")} />
-<TextField label="Middle Name" {...form.allProps("middleName")} />
-<TextField label="Last Name"   {...form.allProps("lastName")} />
+<TextField label="First Name"  {...form.allMuiProps("firstName")} />
+<TextField label="Middle Name" {...form.allMuiProps("middleName")} />
+<TextField label="Last Name"   {...form.allMuiProps("lastName")} />
 ----
 
 
@@ -137,23 +144,23 @@ form.setFieldRequired('phone')
 === Fieldname Aliases
 
 *An alias-name can be specified for any field.*
-This can be used to normalize fieldnames across different datasets,
-or to simplify the concatenated names of nested fields.
+This helps normalize fieldnames across different datasets,
+and simplifies the concatenated names required for nested data fields.
 
-An alias can be passed to _any_ FM method.
-The examples below show equivalent commands, one using the alias
-and the other the actual, concatenated fieldname.
-Note how the alias makes the code easier to write and read.
+#An alias can be passed to _any_ FM method.#
+In the examples below, each pair of commands are equivalent -- one
+using the full fielname and one the aliasName.
+Note how the alias makes code easier to write and read.
 
 [source]
 ----
 // Set an aliasName for a deeply nested field
 const formConfig = {
-  fields: {
-    'profile.contacts.primaryPhone': {
-      aliasName: 'phone'
+    fields: {
+        'profile.contacts.primaryPhone': {
+            aliasName: 'phone'
+        }
     }
-  }
 }
 
 const phone = form.getValue('profile.contacts.primaryPhone')
@@ -162,67 +169,15 @@ const phone = form.getValue('phone')
 form.setFieldDisabled('profile.contacts.primaryPhone')
 form.setFieldDisabled('phone')
 
-<TextField {...form.allProps('profile.contacts.primaryPhone')}
-<TextField {...form.allProps('phone')}
+<TextField
+    label="Phone"
+    {...form.allMuiProps('profile.contacts.primaryPhone')}
+/>
+<TextField label="Phone" {...form.allMuiProps('phone')} />
 ----
 
 
-== Form Rendering Methods
-
-
-update / render ::
-+
---
-Force a re-render of the component FM is inside.
-
-.@params (0)
-++ ++
-
-.@returns
-FormManager [.small]#{object}#
-
-.@details
-[.small]#A render is _automatically_ triggered when necessary.
-However, if you programmatically change form configuration,
-you need to manually trigger an update for the changes to take effect.
-This method provides that, and also increments the form revision value.#
-
-.@example
-[source]
-----
-form.update()
-----
---
-
-''''
-
-revision / getRevision ::
-+
---
-Unique number for logic in `shouldComponentUpdate()`
-
-[.small]#When using `React.PureComponent`, some props must _change_ to
-trigger a component render. Since the form-manager object/prop
-never changes, you need another prop to _force_ component updates.
-The form revision number provides this prop.
-It increments each time data in FM changes -- on every keystroke!#
-
-.@params (0)
-++ ++
-
-.@returns
-Revision Number {integer}
-
-.@example
-[source]
-----
-<FormFields form={this.form} rev={this.form.revision()} />
-----
---
-
-'''
-
-
+[#Configuration]
 == Configuration Methods
 
 Every aspect of FM is controlled by the form-configuration.
@@ -234,28 +189,25 @@ For example, changing field validation rules, disabling one or all fields,
 changing the error-messages (eg: a different language), etc.
 
 
-+++<details open>+++
-+++<summary>+++*setConfig | setFieldConfig*+++</summary><div>+++
-+++ +++ ::
-====
-Foobar
-
-[.small]#Foobar#
-
-.@params (2)
+=== setConfig( `config`, `options` )
+++ ++ ::
++
 --
+* `config`* {nbsp} [.small]#{object} +
+  An object containing _some_ form configuration.#
 
-. `fieldname` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+* `options` {nbsp} [.small]#{object}# +
+** `options.replace` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+   By default the passed `config` data is _merged_ with
+   the existing form configuration. +
+   Pass `{ replace: true }` to _replace_ the _entire_ form config.#
 
-. `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
-  Foobar
---
+_@returns:_ FormManager [.small]#{object}#
 
-.@returns
-FormManager [.small]#{object}#
+Modifies the form configuration. +
+[.small]#The config structure is the same as the initial form configuration.
+See link:Configuration.md[FormManager Configuration] for details.#
 
-.@example
 [source]
 ----
 form.setFieldConfig(
@@ -264,588 +216,1255 @@ form.setFieldConfig(
 )
 ----
 ''''
-====
-+++</div></details>+++
+--
 
 
-setFieldDefaults ::
+=== setFieldsConfig( `config`, `options` )
+++ ++ ::
 +
 --
-Foobar
+* `config`* {nbsp} [.small]#{object|array<object>} +
+  An object containing _some_ `fields` configuration.#
 
-[.small]#Foobar#
+* `options` {nbsp} [.small]#{object}# +
+** `options.replace` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+   By default the supplied `config` data is _merged_ with
+   the existing field config. +
+   Pass `{ replace: true }` to _replace_ the config of _each_ field specified.#
 
-*@params* (2)
+_@returns:_ FormManager [.small]#{object}#
 
-. `fieldname`* {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+Modifies the configuration of multiple form fields. +
+[.small]#The config structure is the same as the initial form `fields`
+configuration.
+See link:Configuration.md[FormManager Configuration] for details.#
 
-. `settings` {nbsp} [.small]#{object} {nbsp} [`{}`]# +
-  Foobar
+[source]
+----
+form.setFieldConfig(
+    'password',
+    { disabled: true }
+)
+----
+''''
+--
 
-*@returns* FormManager [.small]#{object}#
 
-*@example*
+=== getFieldsConfig()
+++ ++ ::
++
+--
+_@returns:_ Fields Config [.small]#{object}#
+
+[TIP]
+Use `getFieldConfig(fieldname)` to get a field-config using an alias-name.
+
+[source]
+----
+const allConfig = getFieldsConfig()
+
+// Fields config is keyed by REAL fieldnames, not aliases
+const emailConfig = allConfig['profile.primaryEmail']
+
+// Read field data
+const emailAlias = emailConfig.aliasName // "email"
+const emailRequired = emailConfig.validation.required
+----
+''''
+--
+
+
+=== setFieldDefaults( `config` )
+++ ++ ::
++
+--
+* `config`* {nbsp} [.small]#{object} +
+  An object containing _some_ `fieldDefaults` configuration.#
+
+_@returns:_ FormManager [.small]#{object}#
+
+Modifies the configuration for field-defaults. +
+[.small]#The config structure is the same as the initial form `fieldDefaults`
+configuration.
+See link:Configuration.md[FormManager Configuration] for details.#
+
 [source]
 ----
 form.setFieldDefaults({
     validateOnChange: true,
-    disabled: false
+    cleaning: {
+        trim: true,
+        trimInner: true
+    }
 })
 ----
---
 ''''
+--
 
 
-isDisabled | isFieldDisabled ::
+=== getFieldDefaults( `key` )
+++ ++ ::
 +
 --
-Foobar
+* `key`* {nbsp} [.small]#{string} +
+  A simple key _or_ a concatenated path like `"cleaning.trim"`#
 
-[.small]#Foobar#
+_@returns:_ A fields-default value [.small]#{any}#
 
-*@params* (1)
-
-. `fieldname`* {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-*@returns* (true|false)
-
-*@example*
 [source]
 ----
-if (form.isDisabled('email') {
-    form.setDisabled('email', false)
-}
+const allFieldsDisabled = form.getFieldDefaults('disabled')
 ----
---
 ''''
+--
 
 
-setDisabled | setFieldDisabled ::
+=== setFieldConfig( `fieldname`, `config`, `options` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+* `config`* {nbsp} [.small]#{object} +
+  An object containing _some_ field configuration.#
 
-*@params* (2)
+* `options` {nbsp} [.small]#{object} {nbsp}# +
+** `options.replace` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+   By default `config` data is _merged_ with existing configuration. +
+   Pass `{ replace: true }` to _replace_ the entire field config.#
 
-. `fieldname` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+_@returns:_ FormManager [.small]#{object}#
 
-. `disable` {nbsp} [.small]#{boolean} `[true]`# +
-  Foobar
+Modifies the configuration of a single form field. +
+[.small]#The config structure is the same as the initial configuration
+for a field. See link:Configuration.md[FormManager Configuration] for details.#
 
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-if (form.isDisabled('email') {
-    form.setDisabled('email', false)
-}
+form.setFieldConfig('password', { disabled: true })
 ----
---
 ''''
+--
 
 
-setDefaultDisabled ::
+=== getFieldConfig( `fieldname` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+_@returns:_ Field Configuration [.small]#{(object|undefined)}#
 
-*@params* (1)
+Returns a _copy_ of current field configuration. +
+[.small]#Can be used to _inspect_ the current settings,
+or as a starting point for creating an updated config.#
 
-. `disable` {nbsp} [.small]#{string} `[true]`# +
-  Foobar
+[source]
+----
+// Get the field configuration
+const emailConfig = form.getFieldConfig('email')
 
-*@returns* FormManager [.small]#{object}#
+// Read some values from the config data
+const { dataType, inputType, inputFormat } = emailConfig
+const { required, minLength } = emailConfig.validation
+----
+''''
+--
 
-*@example*
+
+=== setFieldValidation( `fieldname`, `config` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `config`* {nbsp} [.small]#{object} +
+  A validation configuration -- the same as for the initial form-config. +
+  See link:Configuration.md[FormManager Configuration] for details.#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+setFieldValidation(
+    'username',
+    { required: true, minLength: 8, maxLength: 24 }
+)
+----
+''''
+--
+
+
+=== getFieldValidation( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+_@returns:_ Field Validation Configuration [.small]#{object}#
+
+Returns a _copy_ of current field validation configuration. +
+[.small]#Can be used to _inspect_ the current settings,
+or as a starting point for creating an updated config.#
+
+[source]
+----
+const passwordValidationConfig = getFieldValidation('password')
+----
+''''
+--
+
+
+=== isRequired | isFieldRequired( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+_@returns:_ true|false [.small]#{boolean}#
+
+[source]
+----
+const isEmailRequired = form.isRequired('email')
+----
+''''
+--
+
+
+=== setRequired | setFieldRequired( `fieldname`, `enable` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `enable` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true`# +
+  Pass a falsey value to make field _not_ required
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+// Set Email field to be required
+form.setRequired('email')
+form.setRequired('email', true)
+
+// Set Email field to be not-required
+form.setRequired('email', false)
+----
+''''
+--
+
+
+=== isDisabled | isFieldDisabled( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+_@returns:_ true|false [.small]#{boolean}#
+
+Returns the _derived_ state of field-disabled. +
+[.small]#Returns `fieldDefaults.disabled` value
+if `fieldConfig.disabled` is not explicitly set.#
+
+[source]
+----
+const isEmailDisabled = form.isDisabled('email')
+----
+''''
+--
+
+
+=== setDisabled | setFieldDisabled( `fieldname`, `enable` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `enable` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true`# +
+  Pass a falsey value to make field _not_ disabled
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+// Set Email field to be disabled
+form.setDisabled('email')
+form.setDisabled('email', true)
+
+// Un-set Email disabled - will now follow fieldsDefault
+form.setDisabled('email', false)
+----
+''''
+--
+
+
+=== setDefaultDisabled( `enable` )
+++ ++ ::
++
+--
+* `enable` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true`# +
+  Pass a falsey value to make fields default _not_ disabled.
+
+_@returns:_ FormManager [.small]#{object}#
+
 [source]
 ----
 handleSubmit() {
     const { form } = this
-    // Disable all form fields, by default
+    // Disable ALL form fields while submitting
     form.setDefaultDisabled(true)
 
     form.validateAll().then(isValid => {
         if (isValid) {
             // post the data...
         } else {
-            // Re-enable all form fields, by default
+            // Re-enable all form fields
             form.setDefaultDisabled(false)
         }
     }
 }
 ----
---
 ''''
+--
 
 
-
-=== isFieldReadOnly (name)
- ::
+=== isReadOnly | isFieldReadOnly( `fieldname` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+_@returns:_ true|false [.small]#{boolean}#
 
-[%autowidth, cols="<.<1m,^.<1e,<.<9"]
-|===
-| param | type | details
+Returns the _derived_ state of field-readOnly. +
+[.small]#Returns `fieldDefaults.readOnly` value
+if `fieldConfig.readOnly` is not explicitly set.#
 
-| fieldname*
-| +++string+++
-| +++A fieldname or alias-name+++
-|===
-
-|===
-| param       | type   | details
-
-| fieldname * | string | A fieldname or alias-name
-|===
-
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+const isEmailReadOnly = form.isReadOnly('email')
 ----
---
 ''''
+--
 
 
-=== setReadOnly | setFieldReadOnly (name)
- ::
+=== setReadOnly | setFieldReadOnly( `fieldname`, `enable` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+* `enable` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true`# +
+  Pass a falsey value to make field _not_ readOnly
 
-*@params* (2)
+_@returns:_ FormManager [.small]#{object}#
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
+// Set Email field to be read-only
+form.setReadOnly('email')
+form.setReadOnly('email', true)
 
+// Un-set Email read-only - will now follow fieldsDefault
+form.setReadOnly('email', false)
 ----
---
 ''''
+--
 
 
-=== isReadOnly (name)
- ::
+=== setDefaultReadOnly( `enable` )
+++ ++ ::
 +
 --
-Foobar
+* `enable` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true` +
+  Pass a falsey value to make field default _not_ readOnly
 
-[.small]#Foobar#
+_@returns:_ FormManager [.small]#{object}#
 
-*@params* (2)
+[TIP]
+Material-UI < 4.x does not pass-through the readOnly
+attribute from props, so do this explicitly _if_ you use readOnly. +
+See the example below.
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
+// Set all fields to be read-only
+setDefaultReadOnly()
+setDefaultReadOnly(true)
 
+// Remove default readOnly state for all fields
+setDefaultReadOnly(false)
+
+// Explicitly set input.readOnly for Material-UI < 4.x
+<TextField
+    label="Username"
+    {...form.allMuiProps('username')}
+    inputProps={{
+        readOnly: form.isReadOnly('username')
+    }}
+/>
 ----
+''''
 --
+
+
+[#Validation]
+== Field Validation Methods
+
+Validation can be configured for fields that require it,
+inside a `validation` key in the field configuration.
+Validation can be changed or overridden programatically.
+
 ''''
 
 
-=== setDefaultReadOnly ([readOnly] = true)
- ::
+=== validate( `fieldname` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname` {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+_@returns:_ Validation-Promise [.small]#{Promise}#
 
-*@params* (2)
+[TIP]
+If no fieldname is passed, then is same as calling `validateAll()`.
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+Manually trigger validation of a single form-field.
 
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.validate('password')
 ----
---
 ''''
+--
 
 
-
-== Validation & Error Methods
-
-Validation is usually handled by configuration the fields that require it,
-so it is a _subset_ of configuration.
-However there are cases when its useful to read, perform, or change validation
-rules programatically, so there is a rich API devoted to validation rules.
-
-
-=== validate (name, value, [eventName])
- ::
+=== validateAll()
+++ ++ ::
 +
 --
-Foobar
+_@returns:_ FormManager [.small]#{object}#
 
-[.small]#Foobar#
+Manually trigger validation of ALL form-fields.
 
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.validateAll()
 ----
---
 ''''
+--
 
 
-=== validateAll ()
- ::
+[NOTE]
+See <<Configuration>> for validation configuration methods.
+
+
+[#Error-Messages]
+== Field Error-Message Methods
+
+[TIP]
+It is easier and less error-prone to use the field-level error-handling features
+than to _manually_ manage errors via error-setter methods.
+
+.Error-Message Language Support
+****
+Error-Messages are part of form configuration
+so can be changed on-the-fly like all configuration.
+This can be used to _switch_ error-message languages.
+(See example below.)
+****
+
+=== setErrorMessages( `errorMessages` )
+++ ++ ::
 +
 --
-Foobar
+* `errorMessages`* {nbsp} [.small]#{object}#
 
-[.small]#Foobar#
+_@returns:_ FormManager [.small]#{object}#
 
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
+import { englishErrors, frenchErrors } from './formErrorMessages'
 
+function setErrorLanguage( language ) {
+    form.setErrorMessages( `${language}Errors` )
+}
 ----
---
 ''''
+--
 
 
-
-=== getFieldValidation (name)
- ::
+=== hasError( `fieldname` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+_@returns:_ true|false [.small]#{boolean}#
 
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.validate('password') // If not already validated
+const passwordFieldHasError = form.hasError('password')
 ----
---
 ''''
+--
 
 
-=== setFieldValidation (name, settings)
- ::
+=== hasErrors()
+++ ++ ::
 +
 --
-Foobar
+_@returns:_ true|false [.small]#{boolean}#
 
-[.small]#Foobar#
-
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.validateAll() // If not already validated
+const formHasSomeErrors = form.hasErrors()
 ----
---
 ''''
+--
 
 
-=== getFieldConfig (name)
- ::
+=== error | getError( `fieldname`, `options` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+* `options` {nbsp} [.small]#{object}# +
+** `options.asArray` {nbsp} [.small]#{object} {nbsp} _@default:_ `false` +
+    Return field-errors as an array instead of a concatenated string.#
 
-*@params* (2)
+Get error(s) for one field, as a string _or_ an array. +
+[.small]#By default errors are returned as a ##linebreak-delimited string##
+so it can be rendered as-is.
+If returned as an array, errors must be _iterated_.#
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+_@returns:_ FormManager [.small]#{object}#
 
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
+// Add a "whiteSpace" style so text line-breaks render correctly,
+//  plus cosmetic styles so errors looks nice
+<div style={{ whiteSpace: 'pre-line', lineHeight: '1.3em', color: 'red'  }}>
+    {form.error('password')}
+</div>
 
+// Get errors as an array and render them one-by-one
+{form.hasError('password') &&
+    <ul>
+      { const arrErrors = form.getError('password', { asArray: true }) }
+      {arrErrors.map( error => (
+        <li>{error}</li>
+      )}
+</ul>
+}
 ----
---
 ''''
+--
 
 
-=== isRequired | isFieldRequired (name)
- ::
+=== setError( `fieldname`, `type`, `errorMessage` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+* `type`* {nbsp} [.small]#{string} +
+  A _validation type_ like "required", "minLength", "custom", etc.#
 
-*@params* (2)
+* `errorMessage` {nbsp} [.small]#{string|array<string>} +
+  A single error-message or an array of error-messages. +
+  If a falsey value or an empty array is passed,
+  it means _clear_ the error of this type.#
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+_@returns:_ FormManager [.small]#{object}#
 
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
+[NOTE]
+====
+Error messages use a templating system with variable replacement:
 
-*@returns* FormManager [.small]#{object}#
+* `{name}` is replaced with the field's `displayName`, `aliasName` or `name`
+* `{value}` is replaced with the field-value being validated
+====
 
-*@example*
 [source]
 ----
-
+form.setError(
+    'username',
+    'custom',
+    // The '{name}' param will be replaced with "Username"
+    '{name} can contain only letters and dashes'
+)
 ----
---
 ''''
+--
 
 
-=== setRequired | setFieldRequired (name)
- ::
+=== setErrors( `errors`, `options` )
+++ ++ ::
 +
 --
-Foobar
+* `errors`* {nbsp} [.small]#{object} +
+  An object of errors with fieldnames as keys and error-types as subkeys.
+  If no error-type keys exists, it is assumed to be `custom`.#
 
-[.small]#Foobar#
+* `options` {nbsp} [.small]#{object}# +
+** `options.merge` {nbsp} [.small]#{object} {nbsp} _@default:_ `true` +
+    By default the passed errors are _merged_ with existing errors. +
+    Pass `merge: false` to _replace_ all existing errors.#
 
-*@params* (2)
+_@returns:_ FormManager [.small]#{object}#
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
+[TIP]
+You _can_ use alias-names as field keys, even though
+_real_ fieldnames are used internally to cache field errors.
 
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.setErrors(
+    {
+        username: {
+            require: 'A username is required'
+        },
+        password: {
+            minLength: 'Passwords must be at least 8 characters',
+            // Any 'key' can be used for custom errors
+            anything: 'Passwords should contain at least one symbol'
+        },
+        // This will become a 'custom' error-type
+        email: 'Please enter an email address'
+    },
+    { merge: false }
+)
 ----
---
 ''''
+--
 
 
-=== errors | getError | getErrors (name)
- ::
+=== clearError( `fieldname` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldname`* {nbsp} [.small]#{string}#
 
-[.small]#Foobar#
+_@returns:_ FormManager [.small]#{object}#
 
-*@params* (2)
+Remove all errors from a single field -- _every validation-type._
 
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.clearError('username')
 ----
---
 ''''
+--
 
 
-=== setError | setErrors (name, type, [errorMessage])
- ::
+=== clearErrors( `fieldnames` )
+++ ++ ::
 +
 --
-Foobar
+* `fieldnames` {nbsp} [.small]#{array<string>} +
+  Clears all errors for all fieldnames in this array. +
+  If _no_ fieldnames passed, then same as calling `clearAllErrors()`.#
 
-[.small]#Foobar#
+_@returns:_ FormManager [.small]#{object}#
 
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
+// Clear specific fields
+form.clearErrors([ 'username', 'password' ])
 
+// Clear all fields
+form.clearErrors()
+// is same as
+form.clearAllErrors()
 ----
---
 ''''
+--
 
 
-=== clearError | clearErrors ([name])
- ::
+=== clearAllErrors()
+++ ++ ::
 +
 --
-Foobar
+_@returns:_ FormManager [.small]#{object}#
 
-[.small]#Foobar#
+Clear _all_ field errors.
 
-*@params* (2)
-
-. `param` {nbsp} [.small]#{string} {nbsp} [`""`]# +
-  Foobar
-
-. `param` {nbsp} [.small]#{integer} {nbsp} [`0`]# +
-  Foobar
-
-*@returns* FormManager [.small]#{object}#
-
-*@example*
 [source]
 ----
-
+form.clearAllErrors()
 ----
---
 ''''
+--
 
 
-=== isClean ([name])
+[#Data]
+== Form 'Data' Methods
 
-=== isDirty ([name])
+The 'form data' is the _source_ for 'field values'.
+Generally you only use 'data' methods when setting form data _from_ the server,
+or preparing to post data _to_ the server. +
+Also see <<Values>>
 
-=== reset ()
+=== data | getData()
+++ ++ ::
++
+--
+_@returns:_ All data [.small]#{object}#
+
+[source]
+----
+// Get and submit all data - after validating it
+form.validateAll()
+.then(isValid => {
+    if (isValid) {
+        const formData = form.data()
+        postToServer( formData )
+    }
+    // If validation failed, field-errors will display
+}
+----
+''''
+--
 
 
-=== changes | getChanges ()
+=== getFieldData( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}# +
 
-=== data | getData ([name], [options])
+_@returns:_ Field value (cloned) [.small]#{any}#
 
-=== setData (nameOrData, [fieldData])
+[source]
+----
+const phone = form.data('phone')
+----
+''''
+--
 
 
+=== setData( `data` )
+++ ++ ::
++
+--
+* `data`* {nbsp} [.small]#{object}#
 
-=== value | values | getValue | getValues ([name])
+_@returns:_ FormManager [.small]#{object}#
 
-=== setValue | setValues (name, value)
+[NOTE]
+When 'data' is set, it also updates the initial-data cache,
+so a `form.reset()` will _retain_ this value. +
+To set temporary values, use `setValue()` instead.
+
+[source]
+----
+form.setData({
+    phone: '6045551212',
+    email: 'john.smith@gmail.com'
+})
+----
+''''
+--
 
 
+=== setFieldData( `fieldname`, `value`, `options` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `value` {nbsp} [.small]#{any}#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[NOTE]
+When 'field-data' is set, it also updates the initial-data cache,
+so a `form.reset()` will _retain_ this value. +
+To set temporary values, use `setFieldValue()` instead.
+
+[source]
+----
+form.setFieldData('phone', '6045551212')
+----
+''''
+--
+
+
+=== isClean( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+  Pass a fieldname to check whether that field is unchanged
+
+_@returns:_ true|false [.small]#{boolean}#
+
+Returns clean-state for a single field or entire form.
+
+[source]
+----
+const isDataChanged = !form.isClean()
+----
+''''
+--
+
+
+=== isDirty( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+  Pass a fieldname to check whether that field is changed
+
+_@returns:_ true|false [.small]#{boolean}#
+
+Returns dirty-state for a single field or entire form.
+
+[source]
+----
+const isDataChanged = form.isDirty()
+----
+''''
+--
+
+
+=== changes | getChanges()
+++ ++ ::
++
+--
+_@returns:_ Changed data [.small]#{object}#
+
+[source]
+----
+const changedData = form.changes()
+----
+''''
+--
+
+
+=== reset()
+++ ++ ::
++
+--
+_@returns:_ FormManager [.small]#{object}#
+
+Resets the form back to its initial data and
+all error-messages are cleared, (except `initialErrors`).
+
+[source]
+----
+form.reset()
+----
+''''
+--
+
+
+[#Values]
+== Field 'Value' Methods
+
+The 'field values' are the raw `value` props of the form-fields.
+Values may differ from 'form data' in data-type or format.
+If you 'set' a value, it will be coerced into the format
+set in the field's configuration. +
+Also see <<Data>>
+
+
+=== value | getValue( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `options` {nbsp} [.small]#{object}#
+  ** `options.cleanValue` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Apply cleaning to field value before returning it.#
+
+_@returns:_ Field value [.small]#{any}#
+
+[source]
+----
+const phone = form.getValue('phone', { cleanValue: true })
+----
+''''
+--
+
+
+=== getValues()
+++ ++ ::
++
+--
+_@returns:_ Form-field values [.small]#{object}#
+
+Returns a _deep-clone_ of form values to preserve immutability.
+
+[source]
+----
+const formValues = form.values()
+----
+''''
+--
+
+
+=== setValue( `fieldname`, `value`, `options` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `value`* {nbsp} [.small]#{any}#
+
+* `options` {nbsp} [.small]#{object}#
+  ** `options.validate` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Validate the field after setting the new value.#
+  ** `options.isInitialValue` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     This flag causes the initial-data cache to be updated
+     so that a `reset()` command will _retain_ this value.#
+
+[.small]#Value is _automatically_ converted to the correct data-type
+and reformatted as specified in the field configuration.#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+form.setValue('phone', '604-555-1212', { validate: true })
+----
+''''
+--
+
+
+=== setValues( `values`, `options` )
+++ ++ ::
++
+--
+* `values`* {nbsp} [.small]#{object} +
+  An 1-level object with fieldnames as keys and field-values as values.#
+
+* `options` {nbsp} [.small]#{object}#
+  ** `options.validate` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Validate the field after setting the new value.#
+
+[.small]#Field-values is a ##single-level object## so nested keys must use a
+dot-delimited format like `'user.profile.homePhone'`.
+However field alias-names can also be used as keys.#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+form.setValues(
+    {
+        // 'phone' is the aliasName for 'user.profile.homePhone'
+        phone, '604-555-1212',
+        'user.profile.nickname': 'symore',
+        rememberMe: true
+    },
+    { validate: true }
+)
+----
+''''
+--
+
+
+=== cleanField | cleanFieldValue( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+_@returns:_ FormManager [.small]#{object}#
+
+Triggers _cleaning_ of the current field value
+according to the field configuration.
+
+[source]
+----
+form.cleanField('phone')
+----
+''''
+--
+
+
+[#State]
 == Form 'State' Methods
 
 
-=== state | getState ([key])
+=== state | getState( `key` )
+++ ++ ::
++
+--
+* `key`* {nbsp} [.small]#{string} +
+  The key to get from form-state.
+  _Nested_ values can be specified using a dot-delimited key like
+  `category.selected`.#
 
-=== setState (key, value)
+* `options` {nbsp} [.small]#{object}#
+  ** `options.clone` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Return a shallow-clone of the state value, if applicable.#
+  ** `options.cloneDeep` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Return a deep-clone of the state value, if applicable.#
+
+_@returns:_ State-value [.small]#{any}#
+
+Returns a value from form-state, or undefined if key/path does not exist.
+
+[source]
+----
+// Add user data to form-state
+form.setState('user', this.props.userProfile)
+
+// Read nested data from form-state
+const username = form.state('user.nickname')
+----
+''''
+--
 
 
-== Form and Field Methods
+=== setState( `key`, `value` )
+++ ++ ::
++
+--
+* `key`* {nbsp} [.small]#{string} +
+  The key to set in form-state.
+  _Nested_ values can be set by passing a dot-delimited key like
+  `category.selected`.#
 
-ALSO SEE methods like:
+* `value` {nbsp} [.small]#{any} {nbsp} +
+  _Anything_ can be stored in form-state. +
+  ##If no value is passed, the specified key will be deleted##.#
 
- - `getValue()` in the Values section
-- `getError()` in the Validation section
-- `isFieldDisabled()` in the Configuration section
+_@returns:_ FormManager [.small]#{object}#
 
-These methods are used to set field props,
-but usually you'll use the `allProps()` or `dataProps()` helpers instead,
-which _combine_ all the individual props into a single setter.
+Sets a value in FM state so is accessible everywhere. +
+
+[source]
+----
+// Add user data to form-state
+form.setState('user', this.props.userProfile)
+
+// Remove user data from form-state
+form.setState('user', undefined)
+// or just
+form.setState('user')
+----
+''''
+--
 
 
-=== allProps (name)
+[#Form-Rendering]
+== Form Rendering Methods
 
-=== dataProps (name)
 
-=== errorProps (name)
+=== update | render()
+++ ++ ::
++
+--
+_@returns:_ FormManager [.small]#{object}#
 
-=== cleanField | cleanFieldValue (name)
+Forces a re-render of the component FM is inside. +
+[.small]#A render is _automatically_ triggered when necessary.
+However, if you programmatically change form configuration,
+you need to manually trigger an update for the changes to take effect.
+This method provides that, and also increments the form revision value.#
 
-=== hasError (name)
+[source]
+----
+form.update()
+----
+''''
+--
 
-=== hasErrors ()
 
-=== onFieldBlur (event_or_name, [value])
+=== revision | getRevision()
+++ ++ ::
++
+--
+_@returns:_ Revision [.small]#{integer}#
 
-=== onFieldChange (event_or_name, [value])
+UID useful for _forcing_ component re-rendering. +
+[.small]#If using `React.PureComponent` or a custom `shouldComponentUpdate()`,
+some prop must _change_ to trigger a component render.
+Since the form-manager object/prop never changes,
+another prop is needed to _force_ component updates.
+The form revision number provides this prop.
+It increments each time anything in FM changes -- including every keystroke!#
 
-=== onFieldFocus (event_or_name, [value])
+[source]
+----
+<FormFields form={this.form} rev={this.form.revision()} />
+----
+''''
+--
+
+
+[#Fields]
+== Form-Field Helpers & Handlers
+
+_These methods are generally used only in form-field props,
+but the event handlers can also be triggered programmatically._
+
+''''
+
+
+=== fieldProps( `fieldname`, `options` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `options` {nbsp} [.small]#{object}#
+  ** `options.inputType` {nbsp} [.small]#{string} {nbsp} _@default:_ `null` +
+  Allows _overriding_ the `inputType` set in field configuration.#
+
+_@returns:_ Data-related props [.small]#{object}#
+
+This helper returns _many props_, including value & name,
+input attributes, aria attributes, and event handlers.
+
+[source]
+----
+<label>
+    <input {...fieldProps('password'} />
+    Remember Me
+</label>
+
+<Switch
+    label="Remember Me"
+    {...fieldProps('password'}
+/>
+----
+''''
+--
+
+
+=== muiErrorProps( `fieldname` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+_@returns:_ Error-related props [.small]#{object}#
+
+#This helper is specific to Material-UI components.# +
+[.small]#This returns only: `error={hasError(fieldname)}`
+and `helperText={getError(fieldname)}`#
+
+[source]
+----
+<TextField
+    label="Full Name"
+    {...form.fieldProps('name')}
+    {...form.muiErrorProps('name')}
+/>
+// Is the same as...
+<TextField label="Full Name" {...form.allMuiProps('name')} />
+----
+''''
+--
+
+
+=== allMuiProps( `fieldname`, `options` )
+++ ++ ::
++
+--
+* `fieldname`* {nbsp} [.small]#{string}#
+
+* `options` {nbsp} [.small]#{object} +
+  Options are passed-through to `fieldProps()`; see below.#
+
+_@returns:_ FormManager [.small]#{object}#
+
+#This helper is specific to Material-UI components.# +
+[.small]#It returns the _combined_ fields from:
+`fieldProps(fieldname)` (any field) and `muiErrorProps(fieldname)`#
+
+[source]
+----
+<TextField
+    label="Password"
+    {...allMuiProps('password')}
+/>
+----
+''''
+--
+
+
+=== onFieldChange( `event_or_fieldname`, `value` )
+++ ++ ::
++
+--
+* `event_or_fieldname`* {nbsp} [.small]#{string} -- _either:_#
+  ** `event` {nbsp} [.small]#{Event} +
+     The DOM Event object returned if bound to onChange, etc.#
+  ** `fieldname` {nbsp} [.small]#{string} +
+     Fieldname, for calling this handler manually.#
+
+* `value` {nbsp} [.small]#{any} +
+  Value, for calling this handler manually +
+  (`event.target.value` used if a value _not_ passed)#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+<input name="note" onChange={form.onChange} />
+<DatePicker onChange={date => form.onChange('birthdate', date)} />
+----
+''''
+--
+
+
+=== onFieldBlur( `event_or_fieldname`, `value` )
+++ ++ ::
++
+--
+* `event_or_fieldname`* {nbsp} [.small]#{string} -- _either:_#
+  ** `event` {nbsp} [.small]#{Event} +
+     The DOM Event object returned if bound to onChange, etc.#
+  ** `fieldname` {nbsp} [.small]#{string} +
+     Fieldname, for calling this handler manually.#
+
+* `value` {nbsp} [.small]#{any} +
+  Value, for calling this handler manually +
+  (`event.target.value` used if a value _not_ passed)#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+<input name="note" onChange={form.onBlur} />
+<DatePicker onBlur={date => form.onBlur('birthdate', date)} />
+----
+''''
+--
+
+
+=== onFieldFocus( `event_or_fieldname`, `value` )
+++ ++ ::
++
+--
+* `event_or_fieldname`* {nbsp} [.small]#{string} -- _either:_#
+  ** `event` {nbsp} [.small]#{Event} +
+     The DOM Event object returned if bound to onChange, etc.#
+  ** `fieldname` {nbsp} [.small]#{string} +
+     Fieldname, for calling this handler manually.#
+
+* `value` {nbsp} [.small]#{any} +
+  Value, for calling this handler manually +
+  (`event.target.value` used if a value _not_ passed)#
+
+_@returns:_ FormManager [.small]#{object}#
+
+[source]
+----
+<input name="note" onFocus={form.onFocus} />
+<DatePicker onFocus={date => form.onFocus('birthdate', date)} />
+----
+''''
+--
 

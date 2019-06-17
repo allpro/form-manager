@@ -7,11 +7,12 @@
 function logFormData( form, label ) {
 	console.log(label || 'FormManager', {
 		'form.isDirty()': form.isDirty(),
+		'form.hasErrors()': form.hasErrors(),
 		'form.getChanges()': form.getChanges(),
 		'form.getData()': form.getData(),
 		'form.getValues()': form.getValues(),
 		'form.getState()': form.getState(),
-		'form.getErrors()': form.getErrors()
+		'form.getErrors({ asArray: true })': form.getErrors({ asArray: true })
 	})
 }
 

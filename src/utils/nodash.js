@@ -85,14 +85,19 @@ export const isEmpty = v => {
 
 
 export const clone = v => (
-	isPlainObject(v)
-		? Object.assign({}, v)
-		: isArray(v)
-		? v.slice(v)
-		: v
+	!v // Exit early for performance
+		? v
+		: isPlainObject(v)
+			? Object.assign({}, v)
+			: isArray(v)
+				? v.slice(v)
+				: v
 )
 
 function recursiveClone(branch) {
+	// Exit early for performance
+	if (!branch) return branch
+
 	if (isPlainObject(branch)) {
 		const obj = {}
 		for (const key in branch) {

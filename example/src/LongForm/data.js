@@ -30,7 +30,6 @@ const subcategories = {
 const formData = {
 	username: '',
 	password: '',
-	tagline: '',
 	remember: false,
 	age: null,
 	dateJoined: '2005-06-22T12:00:00',
@@ -41,7 +40,8 @@ const formData = {
 	profile: {
 		homePhone: '5555555555',
 		gender: '',
-	},
+		tagline: ''
+	}
 }
 
 const formErrors = {

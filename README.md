@@ -36,9 +36,9 @@ that can virtually eliminate the need for custom code.
 
 **Data Handling**
 
+- Maintains 4 data caches: server-data, form-values, initial-data, and state
+- Automated data-type and format conversion between form-data and field-values
 - Parsing, cleaning and reformatting of form-field entries
-- Maintains and synchronizes separate server-data and form-data caches
-- Automated data-type conversion between form and server field formats
 - Change-tracking, undo capability
 
 **FM does NOT do/require:**
@@ -124,16 +124,16 @@ This example uses React JSX markup, but ordinary HTML could also be used.
 
 ```javascript static
 // Native control, with manual error output
-<input {...form.dataProps('firstName')} />
+<input {...form.fieldProps('firstName')} />
 { form.hasError('firstName') &&
-    <p>{form.errors('firstName'}</p>
+    <p>{form.error('firstName'}</p>
 }
 
 // Material UI control using props setter, including error messages
-<TextField {...form.allProps('firstName') />
+<TextField {...form.allMuiProps('firstName') />
 
 // Custom control that emulates Material UI component API
-<DatePicker {...form.allProps('birthdate')} />
+<DatePicker {...form.allMuiProps('birthdate')} />
 ```
 
 ## Material-UI Form Example
@@ -142,7 +142,7 @@ The sample form below uses **Material UI TextFields**.
 A `formManager` instance is created in the parent, container component, 
 then passed down as **`props.form`**.
 
-The `form.allProps('fieldname')` helper adds **12 properties and
+The `form.allMuiProps('fieldname')` helper adds **12 properties and
 event handlers**, giving FM full control of all the fields.
 This includes output of error-messages when applicable.
 
@@ -157,14 +157,14 @@ const MyForm = (props) => {
 
     return (
         <div>
-            <TextField label="First Name" {...form.allProps('firstName')} />
-            <TextField label="Last Name"  {...form.allProps('lastName')} />
-            <TextField label="Address"    {...form.allProps('address')} />
-            <TextField label="City"       {...form.allProps('city')} />
-            <TextField label="State"      {...form.allProps('state')} />
-            <TextField label="Country"    {...form.allProps('country')} />
-            <TextField label="Phone"      {...form.allProps('phone')} />
-            <TextField label="Email"      {...form.allProps('email')} />
+            <TextField label="First Name" {...form.allMuiProps('firstName')} />
+            <TextField label="Last Name"  {...form.allMuiProps('lastName')} />
+            <TextField label="Address"    {...form.allMuiProps('address')} />
+            <TextField label="City"       {...form.allMuiProps('city')} />
+            <TextField label="State"      {...form.allMuiProps('state')} />
+            <TextField label="Country"    {...form.allMuiProps('country')} />
+            <TextField label="Phone"      {...form.allMuiProps('phone')} />
+            <TextField label="Email"      {...form.allMuiProps('email')} />
 
             <div>
                 <Button color="primary" onClick={form.submit}>
@@ -211,7 +211,7 @@ kept in perfect sync with the state stored in the container.
 FM can also clean, reformat and transform form values.
 
 See 
-**[FormManager Data Handling](https://github.com/allpro/form-manager/blob/master/docs/Data.md)** 
+**[FormManager Data Handling](https://github.com/allpro/form-manager/blob/master/docs/Data.adoc)** 
 for details.
 
 ### Validation
@@ -241,7 +241,7 @@ The FM object has a rich API. It provides integration with form-field
 components, plus many methods for interacting with the data.
 
 See 
-**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/API.md)** 
+**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/API.adoc)** 
 for details.
 
 

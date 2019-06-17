@@ -1,19 +1,9 @@
 import {
+	clone,
 	cloneDeep,
-	merge,
 	getObjectValue,
 	setObjectValue
 } from './utils'
-
-
-const defaultFormState = {
-	// TODO: need to track load-values so know if current value is the same
-	// isDirty:		false,	// true if ANY field has changed
-	// hasErrors:	false,	// true if ANY field has an error
-	// Standard FormControl state keys
-	// dirty:		false,
-	// adornedStart:	false,
-}
 
 
 /**
@@ -37,7 +27,7 @@ function State( formManager, components ) {
 	const { triggerComponentUpdate } = internal
 
 	// Form-State cache - data accessible only via config methods
-	let stateOfForm = cloneDeep(defaultFormState)
+	let stateOfForm = {}
 
 	return {
 		init,
@@ -60,8 +50,7 @@ function State( formManager, components ) {
 	 * @param {Object} [initialState]
 	 */
 	function init( initialState = {} ) {
-		stateOfForm = cloneDeep(defaultFormState)
-		merge(stateOfForm, initialState)
+		stateOfForm = clone(initialState)
 	}
 
 	/**
@@ -73,9 +62,8 @@ function State( formManager, components ) {
 	 * @returns {*}                	All form-state OR just specific key requested
 	 */
 	function getState( key, opts = {} ) {
-		const getOpts = Object.assign({ cloneValue: true }, opts)
 		// If a key is passed, then return value for just that, if exists
-		if (key) return getObjectValue(stateOfForm, key, getOpts)
+		if (key) return getObjectValue(stateOfForm, key, opts)
 
 		// Return a deep clone to ensure state cannot be mutated
 		return cloneDeep(stateOfForm)
@@ -90,10 +78,13 @@ function State( formManager, components ) {
 	 * @param {Object} [opts]           Options, like { cloneValue: false }
 	 */
 	function setState( key, value, opts = {} ) {
-		const setOpts = Object.assign({ cloneValue: true, update: true }, opts)
-		setObjectValue(stateOfForm, key, value, setOpts)
+		setObjectValue(stateOfForm, key, value, opts)
 
-		if (setOpts.update) triggerComponentUpdate()
+		if (opts.update !== false) {
+			triggerComponentUpdate()
+		}
+
+		return formManager
 	}
 }
 

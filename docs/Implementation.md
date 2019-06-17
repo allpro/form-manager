@@ -145,11 +145,11 @@ const MyForm = (props) => {
         <Fragment>
 
             <FormControl
-                error={form.hasErrors('category')}
+                error={form.hasError('category')}
             >
                 <InputLabel htmlFor="category">Category</InputLabel>
                 <Select
-                    {...form.dataProps('category')}
+                    {...form.fieldProps('category')}
                     input={<Input name="form-category" id="form-category"/>}
                 >
                     <MenuItem value="" />
@@ -160,33 +160,33 @@ const MyForm = (props) => {
                     )}
                 </Select>
                 <FormHelperText className="hide-when-empty">
-                    {form.errors('category')}
+                    {form.error('category')}
                 </FormHelperText>
             </FormControl>
 
             <TextField
                 label="Details of Issue"
-                {...form.dataProps('message')}
-                {...form.errorProps('message')}
+                {...form.fieldProps('message')}
+                {...form.muiErrorProps('message')}
                 inputRef={ (el) => { this.messageInput = el} }
             />
 
             <FormControl
                 component="fieldset"
-                error={form.hasErrors('user/gender')}
+                error={form.hasError('user/gender')}
             >
                 <FormLabel type="h6" component="legend">
                     Select your gender
                 </FormLabel>
                 <RadioGroup
-                    {...form.dataProps('user/gender')}
+                    {...form.fieldProps('user/gender')}
                 >
                     <FormControlLabel value="male" label="Male" control={<Radio/>} />
                     <FormControlLabel value="female" label="Female" control={<Radio/>} />
                     <FormControlLabel value="other" label="Other" control={<Radio/>} />
                 </RadioGroup>
                 <FormHelperText className="hide-when-empty">
-                    {form.errors('user.gender')}
+                    {form.error('user.gender')}
                 </FormHelperText>
             </FormControl>
 

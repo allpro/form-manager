@@ -4,7 +4,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 
 import { useFormManager } from '@allpro/form-manager'
-import { FieldsTestOutput } from '@allpro/form-manager-devtools'
+import { FieldsTestOutput, FormButtonsBar } from '@allpro/form-manager-devtools'
 
 import FormSection from './Form'
 import formConfig from './formConfig'
@@ -36,8 +36,14 @@ function LongFormHookDemo(props) {
 	return (
 		<div style={styles.wrapper}>
 			<Card style={styles.card}>
+				<FormButtonsBar form={form} />
+
 				<CardContent>
-					<FormSection form={form} revision={revision} />
+					<FormSection
+						form={form}
+						revision={revision}
+						title="Sample Hooks Form"
+					/>
 				</CardContent>
 			</Card>
 

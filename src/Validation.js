@@ -34,7 +34,8 @@ function Validation( formManager, components ) {
 
 	const { config, data, internal } = components
 
-	// Extract helper methods from config for brevity
+	// Extract helper methods for brevity
+	const { triggerComponentUpdate } = internal
 	const { aliasToRealName, withFieldDefaults } = config
 
 	// Form-Errors cache - data accessible only via config methods
@@ -46,25 +47,33 @@ function Validation( formManager, components ) {
 	return {
 		// Methods used internally by FormManager components
 		init,
-		hasErrors,				// GETTER - does field OR form have errors
+		hasError,				// GETTER - does field have errors?
+		hasErrors,				// GETTER - does form have errors?
+		getError,				// GETTER for errors of 1 field
 		getErrors,				// GETTER for stateOfErrors
-		setErrors,				// SETTER for stateOfErrors
-		clearErrors,			// SETTER - clears ALL errors for 1 field
+		setError,				// SETTER for errors of 1 field
+		setErrors,				// SETTER for multiple-or-all errors
+		clearError,				// SETTER - clears errors for 1 field
+		clearErrors,			// SETTER - clears errors for multiple fields
+		clearAllErrors,			// SETTER - clears errors for ALL fields
 		validate,				// ACTION for field OR form validation
 
 		// Methods exposed in FormManager API
 		publicAPI: {
-			validate,			// ACTION for field OR form validation
+			validate: doValidate, // ACTION for field OR form validation
 			validateAll,		// ACTION for field OR form validation
+			hasError,			// GETTER - does field have errors?
+			hasErrors,			// GETTER - does form have errors?
+			getError,			// GETTER for errors of 1 field
 			getErrors,			// GETTER for stateOfErrors
-			setErrors,			// SETTER for stateOfErrors
-			clearErrors,		// SETTER - clears ALL errors for 1 field
-			hasErrors,			// GETTER - does field OR form have errors
+			getErrorsData,		// GETTER for stateOfErrors
+			setError,			// SETTER for errors of 1 field
+			setErrors,			// SETTER for multiple-or-all errors
+			clearError,			// SETTER - clears errors for 1 field
+			clearErrors,		// SETTER - clears errors for multiple fields
+			clearAllErrors,		// SETTER - clears errors for ALL fields
 			// ALIASES
-			hasError: hasErrors,
-			clearError: clearErrors,
-			setError: setErrors,
-			getError: getErrors,
+			error: getError,
 			errors: getErrors
 		}
 	}
@@ -78,31 +87,50 @@ function Validation( formManager, components ) {
 	}
 
 
-	function getFormErrors( opts = { asArray: true } ) {
+	/**
+	 * PUBLIC GETTER for all form error.
+	 * Errors as a delimited single string OR an array.
+	 * Calling code can output message(s) using join() or iterate array.
+	 *
+	 * @public
+	 * @returns {Object}
+	 */
+	function getErrorsData() {
 		// Iterate everything in state.form.error to create list of errors
 		// Error data is in a hash so can include fieldNames
-		const arrErrors = []
+		const ebjErrors = {}
 
 		forOwn(stateOfErrors, ( errors, fieldName ) => {
 			if (errors && !isEmpty(errors)) {
-				const error = {
-					name: fieldName,
-					errors: itemToArray(errors)
-				}
-
-				// Add aliasName & displayName to error from field-config
-				const { aliasName, displayName } = config.getField(fieldName) || {}
-				if (aliasName) error.aliasName = aliasName
-				if (displayName) error.displayName = displayName
-
-				arrErrors.push(error)
+				const { aliasName } = config.getField(fieldName) || {}
+				ebjErrors[aliasName || fieldName] = itemToArray(errors)
 			}
 		})
 
-		// NOTE: Is an empty array if there are no field-error
-		// Auto-join errors into a string if option passed
-		return opts.asArray === false ? arrErrors.join('\n') : arrErrors
+		return ebjErrors
 	}
+
+	/**
+	 * PUBLIC GETTER for all form error.
+	 * Errors as a delimited single string OR an array.
+	 * Calling code can output message(s) using join() or iterate array.
+	 *
+	 * @public
+	 * @param {Object} opts        Options for return value
+	 * @returns {(string|Array)}
+	 */
+	function getErrors( opts = { asArray: false } ) {
+		let arrErrors = []
+
+		forOwn(stateOfErrors, fieldErrors => {
+			arrErrors = arrErrors.concat(itemToArray(fieldErrors))
+		})
+
+		return opts.asArray === false
+			? arrErrors.join('\n')
+			: arrErrors
+	}
+
 
 	/**
 	 * Helper for error methods to keep things DRY
@@ -113,7 +141,8 @@ function Validation( formManager, components ) {
 		// However the field data is NESTED at:	form.data.who.gender
 		let fieldErrors = stateOfErrors[fieldName] || {}
 
-		// If field-errors is a string, normalize it to a custom error
+		// If field-errors is a string, normalize it to a custom error.
+		// Can only happens if errors set using setConfig() or similarly.
 		if (isString(fieldErrors)) {
 			fieldErrors = {
 				custom: fieldErrors
@@ -122,7 +151,6 @@ function Validation( formManager, components ) {
 
 		return fieldErrors
 	}
-
 
 	/**
 	 * PUBLIC GETTER to fetch error(s) for a specific field.
@@ -134,11 +162,7 @@ function Validation( formManager, components ) {
 	 * @param {Object} opts        Options for return value
 	 * @returns {(string|Array)}
 	 */
-	function getErrors( name, opts = { asArray: false } ) {
-		if (!name) {
-			return getFormErrors()
-		}
-
+	function getError( name, opts = { asArray: false } ) {
 		// field MAY have an aliasName
 		const fieldName = aliasToRealName(name)
 		const fieldConfig = config.getField(fieldName)
@@ -162,6 +186,7 @@ function Validation( formManager, components ) {
 			: arrErrors
 	}
 
+
 	/**
 	 * PUBLIC SETTER for 1 type of error on 1 field; can be an array of errors
 	 * Note: Errors can only be set ONE FIELD AT A TIME
@@ -170,91 +195,162 @@ function Validation( formManager, components ) {
 	 * @public
 	 * @param {string} name                Field-name or alias-name
 	 * @param {string} type                Type, eg: 'required', 'custom'
-	 * @param {(Array|string)} errorMsg    Error-message text for this type
-	 * @param {Object} opts                Merge options
+	 * @param {(Array|string)} [errorMsg]  Error-message text(s) for this type
 	 */
-	function setErrors( name, type, errorMsg, opts = {} ) {
-		const setOpts = Object.assign({ merge: true }, opts)
+	function setError( name, type, errorMsg ) {
 		const fieldName = aliasToRealName(name)
-		let fieldErrors = setOpts.merge ? stateOfErrors[fieldName] || {} : {}
+		let fieldErrors = stateOfErrors[fieldName]
 
-		// Field error values should be an array of messages, even if only one
-		fieldErrors[type] = isString(errorMsg) ? [errorMsg] : errorMsg
+		if (!errorMsg || isEmpty(errorMsg)) {
+			delete fieldErrors[type]
 
-		// Multiple error-types as hash keyed by type
-		if (isPlainObject(errorMsg)) {
-			Object.assign(fieldErrors, cloneDeep(errorMsg))
-		}
-		else if (isArray(errorMsg)) {
-			fieldErrors[type] = clone(errorMsg)
+			if (isEmpty(fieldErrors)) {
+				delete stateOfErrors[fieldName]
+			}
 		}
 		else {
-			fieldErrors[type] = [errorMsg]
+			if (!fieldErrors) {
+				fieldErrors = stateOfErrors[fieldName] = {}
+			}
+
+			// Field errors are stored in an array, even if only one
+			fieldErrors[type] = isArray(errorMsg)
+				? errorMsg.slice(0)
+				: [ errorMsg ]
 		}
+
+		return formManager
+	}
+
+	/**
+	 * PUBLIC SETTER for errors on multiple fields
+	 * Note: Errors can only be set ONE FIELD AT A TIME
+	 * Call this method multiple times to set errors on additional fields.
+	 *
+	 * @public
+	 * @param {Object} errorData 	Multiple error-types as hash keyed by type
+	 * @param {Object} opts         Merge options
+	 */
+	function setErrors( errorData, opts = {} ) {
+		if (opts.merge === false) {
+			stateOfErrors = {}
+		}
+
+		// Hash may contain aliases, so process one by one
+		forOwn(errorData, (fieldErrors, name) => {
+			if (isPlainObject(fieldErrors)) {
+				forOwn(fieldErrors, (errors, type) => {
+					setError(name, type, errors)
+				})
+			}
+			else {
+				setError(name, 'custom', fieldErrors)
+			}
+		})
 
 		return formManager
 	}
 
 
 	/**
-	 * PUBLIC SETTER for field errors - removes errors only
-	 * Can remove for 1 field (string), multiple fields (Array) or all (blank)
+	 * PUBLIC SETTER to clear errors for 1 field
 	 *
 	 * @public
-	 * @param {(Array|string)} [name]        Field-name(s) and/or alias-name(s)
+	 * @param {string} name    		Field-name or alias-name
+	 * @param {string} [type]    	Error/validation type, like "required"
 	 */
-	function clearErrors( name ) {
-		if (!name) {
-			stateOfErrors = {}
-		}
-		else if (isArray(name)) {
-			for (const n of name) {
-				const fieldName = aliasToRealName(n)
+	function clearError( name, type ) {
+		const fieldName = aliasToRealName(name)
+		const fieldErrors = stateOfErrors[fieldName]
+
+		if (fieldErrors) {
+			if (!type) {
 				delete stateOfErrors[fieldName]
 			}
-		}
-		else {
-			const fieldName = aliasToRealName(name)
-			delete stateOfErrors[fieldName]
+			else if (fieldErrors[type]) {
+				delete fieldErrors[type]
+			}
 		}
 
-		return internal.triggerComponentUpdate()
+		return triggerComponentUpdate()
+	}
+
+	/**
+	 * PUBLIC SETTER to clear errors for multiple field
+	 *
+	 * @public
+	 * @param {Array} [names]     	Array of fieldnames and/or alias-names
+	 */
+	function clearErrors( names ) {
+		if (!names) {
+			return clearAllErrors()
+		}
+
+		for (const name of names) {
+			clearError(name)
+		}
+
+		return triggerComponentUpdate()
+	}
+
+	/**
+	 * PUBLIC SETTER to clear ALL field errors
+	 *
+	 * @public
+	 */
+	function clearAllErrors() {
+		stateOfErrors = {}
+
+		return triggerComponentUpdate()
 	}
 
 
 	/**
-	 * PUBLIC GETTER to check if a specific field has any errors
+	 * PUBLIC GETTER to check if a specific field has errors
 	 *
 	 * @public
 	 * @param {string} name        Field-name or alias-name
 	 * @returns {boolean}
 	 */
-	function hasErrors( name ) {
-		if (name) {
-			const fieldName = aliasToRealName(name)
-			const fieldErrors = stateOfErrors[fieldName]
-			return !!fieldErrors && !isEmpty(fieldErrors)
-		}
-		else {
-			return !isEmpty(stateOfErrors)
-		}
+	function hasError( name ) {
+		const fieldName = aliasToRealName(name)
+		const fieldErrors = stateOfErrors[fieldName]
+		return !!fieldErrors && !isEmpty(fieldErrors)
+	}
+
+	/**
+	 * PUBLIC GETTER to check if form has any errors
+	 *
+	 * @public
+	 * @returns {boolean}
+	 */
+	function hasErrors() {
+		return !isEmpty(stateOfErrors)
 	}
 
 
 	/**
+	 * PUBLIC ACTION - alias for validate() to avoid extra params
+	 *
 	 * @param {string} name         Field-name or alias-name
-	 * @param {*} val             	Field value to validate
+	 * @returns {Promise<boolean>}  Validation can be async so returns a promise
+	 */
+	function doValidate( name ) {
+		return name ? validate( name ) : validateAll()
+	}
+
+	/**
+	 * INTERNAL METHOD - has a public wrapper: doValidate()
+	 *
+	 * @param {string} name         Field-name or alias-name
+	 * @param {*} [val]             Field value to validate
 	 * @param {string} [event]      Event that triggered this, eg: 'change'
 	 * @param {boolean} [update]    Event that triggered this, eg: 'change'
 	 * @returns {Promise<boolean>}  Validation can be async so returns a promise
 	 */
 	function validate( name, val, event, update = true ) {
-		if (!name || isPlainObject(name)) {
-			return validateAll(name)
-		}
-
 		// This CAN also be called directly to validate the 'current value'
-		const value = !isUndefined(val) ? val : formManager.value(name)
+		const value = !isUndefined(val) ? val : internal.getValue(name)
 
 		// field MAY have an aliasName
 		const fieldName = aliasToRealName(name)
@@ -269,7 +365,7 @@ function Validation( formManager, components ) {
 		// If an event was passed, check to see if we should validate or not.
 		// If not, then abort without doing validation
 		if (event && !forceValidation) {
-			const fieldHasErrors = hasErrors(fieldName)
+			const fieldHasErrors = hasError(fieldName)
 			const prefix = fieldHasErrors ? 'revalidate' : 'validate'
 			const suffix = suffixes[event]
 			const isValidationEvent = withFieldDefaults(
@@ -293,7 +389,7 @@ function Validation( formManager, components ) {
 	 * @returns {Promise<boolean>}
 	 */
 	function validateAll( opts = {} ) {
-		const fields = config.getField()
+		const fields = config.getFields()
 		const noUpdate = { update: false }
 		let only, skip
 
@@ -325,7 +421,7 @@ function Validation( formManager, components ) {
 		.then(() => {
 			// If error state has changed IN ANY WAY, update component
 			if (!isEqual(stateOfErrors, previousFieldErrors)) {
-				internal.triggerComponentUpdate()
+				triggerComponentUpdate()
 			}
 
 			// Return Promise with true if NO errors; false otherwise
@@ -417,7 +513,7 @@ function Validation( formManager, components ) {
 				}
 
 				// Add or remove the custom error based on response.
-				setError('required', !isError, isError)
+				setErrorType('required', !isError, isError)
 
 				// If failed required test then abort all further validation
 				if (isError) {
@@ -473,21 +569,21 @@ function Validation( formManager, components ) {
 			function handleValidatorResp( type, resp, ruleValue ) {
 				// Add or remove error-type based on response
 				if (isBoolean(resp)) {
-					setError(type, resp, ruleValue)
+					setErrorType(type, resp, ruleValue)
 				}
 				else if (isString(resp) || isArray(resp)) {
 					// Consider empty-string OR empty-array as no-error
 					if (!resp.length) {
-						setError(type, true)
+						setErrorType(type, true)
 					}
 					else {
-						setError(type, false, ruleValue, resp)
+						setErrorType(type, false, ruleValue, resp)
 					}
 				}
 				else {
 					// Consider any other type of response as inValid
 					// Either configured or default error-message applies
-					setError(type, false, ruleValue)
+					setErrorType(type, false, ruleValue)
 				}
 			}
 
@@ -499,7 +595,7 @@ function Validation( formManager, components ) {
 			 * @param {*} [ruleValue]     The rule settings for this validator
 			 * @param {(string|Array)} [errorMessage]  Custom validator message
 			 */
-			function setError( type, isValid, ruleValue = '', errorMessage ) {
+			function setErrorType( type, isValid, ruleValue = '', errorMessage ) {
 				if (!isValid) {
 					// ADD errorMessage(s) to
 					// stateOfErrors.[fieldName].[errorKey] Will use CUSTOM
@@ -613,7 +709,7 @@ function Validation( formManager, components ) {
 
 					// Trigger component reload if something changed
 					if (errorsChanged && opts.update !== false) {
-						internal.triggerComponentUpdate()
+						triggerComponentUpdate()
 					}
 
 					// Resolve promise so calling code knows we are done.
