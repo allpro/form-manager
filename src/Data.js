@@ -306,10 +306,11 @@ function Data( formManager, components ) {
 	/**
 	 * PUBLIC GETTER
 	 *
-	 * @param {string} fieldName
+	 * @param {string} name
 	 * @returns {*}       			Data value for one-field
 	 */
-	function getFieldData( fieldName ) {
+	function getFieldData( name ) {
+		const fieldName = aliasToRealName(name)
 		const fieldConfig = config.getField(fieldName) || {}
 
 		return fieldConfig.isData === false
