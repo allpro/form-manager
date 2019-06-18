@@ -95,9 +95,9 @@ function getObjectValue( hash, path, opts = {} ) {
 		}
 	}
 
-	return opts.cloneDeep || opts.deep
+	return opts.cloneDeep
 		? cloneDeep( branch )
-		: opts.cloneValue || opts.clone
+		: opts.clone
 			? clone( branch )
 			: branch
 }
@@ -113,9 +113,9 @@ function getObjectValue( hash, path, opts = {} ) {
 function setObjectValue( hash, path, value, opts = {} ) {
 	if (!hash || !isPlainObject(hash)) return undefined
 
-	const getValue = (val) => opts.cloneDeep || opts.deep
+	const getValue = (val) => opts.cloneDeep
 		? cloneDeep( val )
-		: opts.cloneValue || opts.clone
+		: opts.clone
 			? clone( val )
 			: val
 

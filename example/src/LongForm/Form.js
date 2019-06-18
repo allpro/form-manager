@@ -315,6 +315,31 @@ class FormSection extends Component {
 						</FormHelperText>
 					</FormControl>
 				</section>
+
+
+				<section style={styles.formSection}>
+					<Typography variant="h6">
+						State-Values
+					</Typography>
+					<Typography paragraph>
+						These fields are designated as <em>state</em> instead of
+						<em>data</em> &mdash `{'{'} isData: false {'}'}`.
+					</Typography>
+
+					<TextField
+						label="User Feedback"
+						{...form.allMuiProps('feedback')}
+						{...textFieldProps}
+					/>
+
+					<FormControlLabel
+						label="Like This Form?"
+						{...form.fieldProps('like')}
+						control={
+							<Switch />
+						}
+					/>
+				</section>
 			</Fragment>
 		)
 	}

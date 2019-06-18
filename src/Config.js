@@ -388,6 +388,8 @@ function Config( formManager, components ) {
 	 * @returns {(Object|*)} 		ONE Field-config-value for a field(s)
 	 */
 	function getField( name, branch ) {
+		if (!name) return
+
 		const get = n => {
 			const fieldName = aliasToRealName(n)
 			const path = `fields.${fieldName}.${branch}`
@@ -452,7 +454,7 @@ function Config( formManager, components ) {
 		if (formConfig.fields[name]) return name
 
 		const realName = formConfig.fieldAliasMap[name]
-		if (formConfig.fields[realName]) return realName
+		if (realName) return realName
 
 		// field nay not have a field-configuration, so can't find the name
 		return name

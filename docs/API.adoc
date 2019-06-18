@@ -1081,14 +1081,14 @@ Also see <<Data>>
 * `fieldname`* {nbsp} [.small]#{string}#
 
 * `options` {nbsp} [.small]#{object}#
-  ** `options.cleanValue` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+  ** `options.clean` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
      Apply cleaning to field value before returning it.#
 
 _@returns:_ Field value [.small]#{any}#
 
 [source]
 ----
-const phone = form.getValue('phone', { cleanValue: true })
+const phone = form.getValue('phone', { clean: true })
 ----
 ''''
 --
@@ -1121,9 +1121,6 @@ const formValues = form.values()
 * `options` {nbsp} [.small]#{object}#
   ** `options.validate` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
      Validate the field after setting the new value.#
-  ** `options.isInitialValue` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
-     This flag causes the initial-data cache to be updated
-     so that a `reset()` command will _retain_ this value.#
 
 [.small]#Value is _automatically_ converted to the correct data-type
 and reformatted as specified in the field configuration.#
@@ -1146,6 +1143,8 @@ form.setValue('phone', '604-555-1212', { validate: true })
   An 1-level object with fieldnames as keys and field-values as values.#
 
 * `options` {nbsp} [.small]#{object}#
+  ** `options.clean` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Clean the value per the config settings.#
   ** `options.validate` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
      Validate the field after setting the new value.#
 

@@ -26,6 +26,8 @@ const formConfig = {
 	initialData: sampleData.formData,
 	initialErrors: sampleData.formErrors,
 	initialState: {
+		feedback: '',
+		metadata: { like: 0 },
 		categoryList: sampleData.categories,
 		subcategoryList: sampleData.subcategories[selectedCategory] || []
 	},
@@ -162,6 +164,23 @@ const formConfig = {
 			validation: {
 				required: true
 			}
+		},
+		// STATE FIELDS
+		feedback: {
+			displayName: 'Feedback',
+			isData:   false,
+			validation: {
+				required: true,
+				minLength: 2
+			}
+		},
+		'metadata.like': {
+			displayName: 'Like',
+			aliasName: 'like',
+			isData:   false,
+			dataType: 'number',   // 1/0
+			valueType: 'boolean', // true/false
+			inputType: 'checkbox'
 		}
 	}
 }

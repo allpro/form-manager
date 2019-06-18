@@ -350,7 +350,7 @@ function Validation( formManager, components ) {
 	 */
 	function validate( name, val, event, update = true ) {
 		// This CAN also be called directly to validate the 'current value'
-		const value = !isUndefined(val) ? val : internal.getValue(name)
+		const value = !isUndefined(val) ? val : components.data.getValue(name)
 
 		// field MAY have an aliasName
 		const fieldName = aliasToRealName(name)
@@ -408,8 +408,6 @@ function Validation( formManager, components ) {
 			// Skip fields if specified in opts
 			if (only && !only[fieldName]) return
 			if (skip && skip[fieldName]) return
-			// Skip fields that are really form-state; those don't validate
-			if (field.isData === false) return
 
 			fieldValidations.push(
 				validateField(fieldName, data.getValue(fieldName), noUpdate)

@@ -5,7 +5,7 @@ import DemoLayout from '@allpro/demo-layout'
 
 import LongFormClass from './LongForm'
 import LongFormHook from './LongForm/Hook'
-import LogFormData from './LogFormData'
+import FieldsTestOutput from './LongForm/FieldsTestOutput'
 
 
 function FormManagerDemos() {
@@ -29,7 +29,7 @@ function FormManagerDemos() {
 				{
 					label: 'Fields Test Output',
 					path: '/test-output',
-					component: LogFormData
+					component: FieldsTestOutput
 				}
 			]}
 		/>

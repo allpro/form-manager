@@ -21,10 +21,9 @@ function State( formManager, components ) {
 		return new State(formManager, components)
 	}
 
-	const { internal } = components
-
 	// Extract helper methods for brevity
-	const { triggerComponentUpdate } = internal
+	const { triggerComponentUpdate } = components.internal
+	const { aliasToRealName } = components.config
 
 	// Form-State cache - data accessible only via config methods
 	let stateOfForm = {}
@@ -63,7 +62,11 @@ function State( formManager, components ) {
 	 */
 	function getState( key, opts = {} ) {
 		// If a key is passed, then return value for just that, if exists
-		if (key) return getObjectValue(stateOfForm, key, opts)
+		if (key) {
+			// Can use field aliases for state as well
+			const fieldName = aliasToRealName(key)
+			return getObjectValue(stateOfForm, fieldName, opts)
+		}
 
 		// Return a deep clone to ensure state cannot be mutated
 		return cloneDeep(stateOfForm)
@@ -75,10 +78,12 @@ function State( formManager, components ) {
 	 * @public
 	 * @param {(Object|string)} key  	Path OR a hash of data to set
 	 * @param {*} [value]               Value to SET, if key is a string
-	 * @param {Object} [opts]           Options, like { cloneValue: false }
+	 * @param {Object} [opts]           Options, like { clone: false }
 	 */
 	function setState( key, value, opts = {} ) {
-		setObjectValue(stateOfForm, key, value, opts)
+		// Can use field aliases for state as well
+		const fieldName = aliasToRealName(key)
+		setObjectValue(stateOfForm, fieldName, value, opts)
 
 		if (opts.update !== false) {
 			triggerComponentUpdate()

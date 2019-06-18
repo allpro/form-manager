@@ -62,29 +62,30 @@ function FormManager( componentObject, options = {}, extraData ) {
 
 	// Internal API so sub-components can access internal helper methods
 	const internal = { fireEventCallback, triggerComponentUpdate }
+	const components = { internal }
 
 	// Config sub-component, internal API
-	const config = Config(publicAPI, { internal })
+	const config = Config(publicAPI, components)
 	config.init(options)
 	Object.assign(publicAPI, config.publicAPI)
+	components.config = config
 
 	// State sub-component, internal API
-	const state = State(publicAPI, { internal })
+	const state = State(publicAPI, components)
 	state.init(options.initialState)
 	Object.assign(publicAPI, state.publicAPI)
+	components.state = state
 
 	// Data sub-component, internal API
-	const data = Data(publicAPI, { config, state, internal })
+	const data = Data(publicAPI, components)
 	data.init(options.initialData, extraData)
 	Object.assign(publicAPI, data.publicAPI)
-	// Add internal.getValue because Validation cannot import it; circular!
-	internal.getValue = data.getValue
+	components.data = data
 
 	// Validation sub-component, internal API
-	const validation = Validation(publicAPI, { config, data, internal })
+	const validation = Validation(publicAPI, components)
 	Object.assign(publicAPI, validation.publicAPI)
-	// Add internal validate method to internals because not exposed publicly
-	internal.validate = validation.validate
+	components.validation = validation
 
 	// Extract helper methods from config API for brevity
 	const { aliasToRealName, withFieldDefaults } = config

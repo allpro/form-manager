@@ -23,6 +23,7 @@ that can virtually eliminate the need for custom code.
 - Optimizations for use with **Material UI controls**
 - Form-field property-setter helpers to simplify form mark-up
 - Form-field event handling, with customizable validation events
+- Generates relevant ARIA attributes to improve accessibility
 - Can _alias_ fieldnames, to normalize names or to flatten nested data
 - Development tools for testing and refining form configurations
 
@@ -97,7 +98,7 @@ and this configuration is **completely separate from the mark-up**.
 If you have a complex form configuration, 
 it's can even go its own file, like `formConfig.js`.
 
-If you are already use some helpers, like a validation system, 
+If you already use other helpers, like a validation system, 
 it can be easily integrate with FM events and configuration. 
 **Every feature in FM is designed to be easily extended or overridden.**
 
@@ -126,14 +127,14 @@ This example uses React JSX markup, but ordinary HTML could also be used.
 // Native control, with manual error output
 <input {...form.fieldProps('firstName')} />
 { form.hasError('firstName') &&
-    <p>{form.error('firstName'}</p>
+    <p>{form.getError('firstName'}</p>
 }
 
 // Material UI control using props setter, including error messages
 <TextField {...form.allMuiProps('firstName') />
 
 // Custom control that emulates Material UI component API
-<DatePicker {...form.allMuiProps('birthdate')} />
+<DatePicker {...form.fieldProps('birthdate')} />
 ```
 
 ## Material-UI Form Example
@@ -201,47 +202,53 @@ for details.
 
 **Documentation is spread across multiple files...**
 
-### Data Handling
+### API Reference
 
-FM stores and updates all data (form or otherwise). 
-It can automatically transform nested JSON structures into a flat-structure more 
-suitable for forms. This 2-way transformation is done on-the-fly and the UI is 
-kept in perfect sync with the state stored in the container.
-
-FM can also clean, reformat and transform form values.
+The FM object has a rich API. It provides integration with form-field 
+components, plus many methods for interacting with the data.
+Every feature of FM can be controlled programmatically when necessary.
 
 See 
-**[FormManager Data Handling](https://github.com/allpro/form-manager/blob/master/docs/Data.adoc)** 
-for details.
-
-### Validation
-
-Validation is a key feature of FormManager (**"FM"**). It is designed to make
- field validation and error handling as simple as possible. As with all other
- features, validation rules and error messages are specified in the form 
- config, not inside the presentation components.
- 
-See 
-**[FormManager Validation](https://github.com/allpro/form-manager/blob/master/docs/Validation.md)** 
+**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/API.adoc)** 
 for details.
 
 
 ### FormManager Configuration
 
 The power of FormManager is in its configuration.
+This is passed in when creating a FM instance,
+but every option can also be changed on-the-fly.
+Special methods are provided to make this simple and intuitive.
 
 See 
 **[FormManager Configuration](https://github.com/allpro/form-manager/blob/master/docs/Configuration.md)** 
 for details.
 
 
-### API Reference
+### Data Handling & Form-State
 
-The FM object has a rich API. It provides integration with form-field 
-components, plus many methods for interacting with the data.
+FM caches and manages all relevant data, including a custom 'form state'. 
+It automatically transforms complex JSON structures into a flat-structure 
+suitable for forms. All transformations are done on-the-fly and the UI is 
+kept in perfect sync at all times.
+
+FM can also clean, reformat, transform and validate field values.
+This is all enabled with simple configuration options.
 
 See 
-**[FormManager API Reference](https://github.com/allpro/form-manager/blob/master/docs/API.adoc)** 
+**[FormManager Data Handling](https://github.com/allpro/form-manager/blob/master/docs/Data.adoc)** 
+for details.
+
+
+### Validation
+
+Validation is a key feature of FM. It is designed to make
+field validation and error handling as simple as possible. As with all other
+features, validation rules and error messages are specified in the form 
+config, not inside the presentation components.
+ 
+See 
+**[FormManager Validation](https://github.com/allpro/form-manager/blob/master/docs/Validation.md)** 
 for details.
 
 

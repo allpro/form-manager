@@ -33,7 +33,11 @@ export const isInteger = v => isNumber(v) && v % 1 === 0
 export const isSafeInteger = v => isInteger(v) && v < MAX_SAFE_INTEGER
 
 export const toString = v => isNil(v) ? '' : typeof v === 'string' ? v : `${v}`
-export const toNumber = v => isNumber(v) ? v : v ? +v : 0
+export const toNumber = v => (
+	isNumber(v) ? v
+		: isBoolean(v) ? (v ? 1 : 0)
+			: (v ? +v : 0)
+)
 export const toInteger = v => isInteger(v) ? v : Math.floor(toNumber(v))
 
 export const trim = v => isString(v) ? v.trim() : v
