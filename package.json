@@ -1,6 +1,6 @@
 {
   "name": "@allpro/form-manager",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Data Manager for React Forms, or for any form data",
   "repository": {
     "type": "git",

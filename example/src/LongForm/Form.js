@@ -322,8 +322,8 @@ class FormSection extends Component {
 						State-Values
 					</Typography>
 					<Typography paragraph>
-						These fields are designated as <em>state</em> instead of
-						<em>data</em> &mdash `{'{'} isData: false {'}'}`.
+						These fields are designated as <em>state</em> instead
+						of <em>data</em> - <code>{'{'} isData: false {'}'}</code>
 					</Typography>
 
 					<TextField

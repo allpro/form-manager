@@ -8,10 +8,10 @@
 [![license][license-badge]][license-link]
 [![donate][donate-badge]][donate-link]
 
-FormManager (**"FM'**) is collection of data-handling tools for form-data, 
+FormManager (**'FM'**) is collection of data-handling tools for form-data, 
 or any data actually.
 The motivation for this helper is to have **a total data solution for forms**,
-that can virtually eliminate the need for custom code.
+which can virtually eliminate the need for custom code.
 
 ## FormManager Capabilities
 
@@ -20,7 +20,7 @@ that can virtually eliminate the need for custom code.
 - **Compatible with ANY UI library, including React**
 - Integration with any type of form control, standard or custom
 - Manages data internally; does not require a `<form>` element
-- Optimizations for use with **Material UI controls**
+- Optimizations for use with **Material UI** controls
 - Form-field property-setter helpers to simplify form mark-up
 - Form-field event handling, with customizable validation events
 - Generates relevant ARIA attributes to improve accessibility
@@ -29,7 +29,7 @@ that can virtually eliminate the need for custom code.
 
 **Data Validation & Error Messages**
 
-- Comprehensive validation of data; with most common validators built-in.
+- Comprehensive validation of data; with most common validators built-in
 - Configuration options at both the form and field level for maximum control
 - Simple, multiple validation options linked to error-message system
 - Error-message auto-generation, using a templating system
@@ -44,14 +44,14 @@ that can virtually eliminate the need for custom code.
 
 **FM does NOT do/require:**
  
-- **Does not require any special mark-up or structure**.
-- Does not 'render' anything - **it's a _pure_ data and logic handler.**
-- Does not 'wrap' your forms; it is _agnostic_ about form mark-up
-- Does not fetch or post data, but does provide data ready to post.
-- Does not create any global vars (unless imported as a `<script />`)
-- Does not use Context in React or any similar trickery
+- **Does not require any special mark-up or structure**
+- Does not 'render' anything, but does auto-generate field props
+- Does not 'wrap' forms; it is agnostic about form layout
+- Does not fetch or post data, but does provide post-ready data
+- Does not create use global vars (unless imported as a `<script />`)
+- Does not use Context in React or similar trickery
 
-FM is **pure Javascript**. There is no magic behind the curtain!
+FM is **ordinary Javascript**. There is no magic behind the curtain!
 
 
 ## Live Examples
@@ -79,28 +79,28 @@ If you pull or fork the repo, you can run the demos like this:
 
 ## How Is FormManager Different?
 
-**No helper I've found matches FM's data handling capabilities.** 
+**No form helper I've found matches FM's data handling capabilities.** 
 Many helpers focus on backend communications, with no built-in validation. 
 For me, validation and error message handling is vital for forms,
-whereas communications is NOT something I need a form-helper to do.
+whereas communications is _not_ something I need a form-helper to do.
 
-Most form helpers requires special mark-up, which adds significant complexity 
-and limits the use of custom controls.
-It also means that _dumb_ presentation components must contain form logic. 
-This is against my preference for **total separation of concerns**.
+Most form helpers don't provide value-formatting or data-conversion 
+capabilities, so you must write this yourself, often repetitively.
+**FM integrates all data manipulation features so they become simple options.**
 
-Most helpers don't provide any formatting or data-conversion capabilities.
-This means you must write your own code, often repetitively.
-FM is a TOTAL data handler, so all such features are integrated and easy to use.
+Most form helpers requires special mark-up, which adds complexity.
+This means 'presentation components' contain form logic, which means they
+are not as 'dumb' as they should be.
+**FM provides a total separation of concerns, making components simpler.**
 
-When using FormManager, **ALL data handling and logic is in one place**, 
-and this configuration is **completely separate from the mark-up**. 
-If you have a complex form configuration, 
+**FormManager centralizes all data handling and logic,
+separated from any form mark-up**. 
+If you have a large form configuration, 
 it's can even go its own file, like `formConfig.js`.
 
 If you already use other helpers, like a validation system, 
 it can be easily integrate with FM events and configuration. 
-**Every feature in FM is designed to be easily extended or overridden.**
+**Every feature in FM is easily extended or overridden.**
 
 I created FM when using Material UI components in a large React app. 
 However, **FM is not reliant on React or any other library**. 
@@ -111,19 +111,19 @@ It handles rich forms using a wide range of controls,
 in potentially complex designs.
 **There are no limitations on what kind of form FM can handle.**
 
-Although FM's focus is _not_ creating simple forms for beginners,
-it is extremely easy to learn and to use.
-Anyone who has created an HTML form already knows how to implement FM.
+Although FM's focus is not creating simple forms for beginners,
+**event a junior dev can learn the basics in a few minutes**.
+Existing forms require no changes other than changing their attributes/props.
 
 
 ## Implementation Overview
 
-**FM uses ordinary properties and events to integrate with form controls.**
+**FM uses standard properties and events to integrate with form controls.**
 Below are examples of basic form control mark-up.
 FM property-setter helpers are used to set many properties at once.
-This example uses React JSX markup, but ordinary HTML could also be used.
+This example uses React JSX markup, but that's not a requirement.
 
-```javascript static
+```jsx harmony
 // Native control, with manual error output
 <input {...form.fieldProps('firstName')} />
 { form.hasError('firstName') &&
@@ -137,22 +137,56 @@ This example uses React JSX markup, but ordinary HTML could also be used.
 <DatePicker {...form.fieldProps('birthdate')} />
 ```
 
-## Material-UI Form Example
+### Simplest Form Example
+
+**All FM configuration is optional.**
+If you don't need validation, data-conversion, or any other features, 
+then you don't need _any_ form configuration at all!
+This example illustrates the simplest possible form, 
+where FM is used just to handle fields and track the form-data.
+(This example uses a React Hooks component.)
+
+```jsx harmony
+function SimpleNameForm(props) {
+    const form = useFormManager({}, props.data);
+
+    return (
+    	<div>
+            <label>First Name: <input {...form.fieldProps('firstName')} /></label>
+            <label>Middle Name: <input {...form.fieldProps('middleName')} /></label>
+            <label>Last Name: <input {...form.fieldProps('lastName')} /></label>
+            <button 
+                disabled={form.isClean()}
+                onClick={() => postToServer(form.changes())} 
+            >
+                Save Changes
+            </button>
+        </div>
+    );
+}
+```
+
+Note that there is no 'state', no event handlers, and no logic.
+FM handles everything, including knowing if _anything_ changed 
+(`isClean()`/`isDirty()`), and if so, 
+then exactly _which data_ needs to be updated (`changes()`).
+
+### Material-UI Form Example
 
 The sample form below uses **Material UI TextFields**. 
 A `formManager` instance is created in the parent, container component, 
 then passed down as **`props.form`**.
 
 The `form.allMuiProps('fieldname')` helper adds **12 properties and
-event handlers**, giving FM full control of all the fields.
-This includes output of error-messages when applicable.
+event handlers**, giving FM full control of each field.
+This includes then display of error-messages when applicable.
 
 **NOTES**
 - There is no `<form>` element &mdash; it's not necessary.
 - The `form.submit` method shown is NOT part of FM.
   It's a container method that was _attached_ to the FM object for convenience.
 
-```javascript static
+```jsx harmony
 const MyForm = (props) => {
     const { form } = props;
 
@@ -181,17 +215,19 @@ const MyForm = (props) => {
 ```
 
 **ALL form options and logic is set in the form-configuration.** 
-<br>Validation, data-transformations, and other features are all specified in 
-the container component &mdash; _not_ in presentation component(s). 
+<br>There is _no_ form configuration visible in the mark-up.
+This keeps presentation components 'dumb' so they can focused on appearance.
 
-Cosmetic properties can be added to the form-fields in the presentation 
-component as normal. Field 'labels' are considered 'cosmetic' because they are
-a presentation choice, and do not affect the 'data'.
+Cosmetic properties can be added to the form-fields as normal. 
+Field 'labels' are cosmetic because they are a presentation choice, 
+and do not affect the 'data'.
+However, FM can store a 'displayName' for use in error messages and for
+auto-generating ARIA field attributes.
 
 **FM easily handles very complex custom forms.** For example:
-A form that spans multiple screens, with some controls inside modal popups. 
-FM does not 'wrap' markup so page structure doesn't matter. 
-Just pass `props.form` to integrate any control with FM.
+A form can spans multiple screens, with some controls inside modal popups. 
+Since FM does not 'wrap' markup, the page structure does not matter. 
+Just pass `props.form` to integrate any sub-component with a FM instance.
 
 See 
 **[Implementing FormManager in Components](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
@@ -205,7 +241,7 @@ for details.
 ### API Reference
 
 The FM object has a rich API. It provides integration with form-field 
-components, plus many methods for interacting with the data.
+components, plus many methods for interacting with data.
 Every feature of FM can be controlled programmatically when necessary.
 
 See 
@@ -215,10 +251,9 @@ for details.
 
 ### FormManager Configuration
 
-The power of FormManager is in its configuration.
-This is passed in when creating a FM instance,
-but every option can also be changed on-the-fly.
-Special methods are provided to make this simple and intuitive.
+The power of FM is in its configuration.
+This is generally passed-in when creating a FM instance.
+However every configuration option can also be changed on-the-fly.
 
 See 
 **[FormManager Configuration](https://github.com/allpro/form-manager/blob/master/docs/Configuration.md)** 
@@ -229,11 +264,11 @@ for details.
 
 FM caches and manages all relevant data, including a custom 'form state'. 
 It automatically transforms complex JSON structures into a flat-structure 
-suitable for forms. All transformations are done on-the-fly and the UI is 
-kept in perfect sync at all times.
+suitable for form-values. All transformations are done on-the-fly and 
+the the data and the UI are kept in perfect sync at all times.
 
 FM can also clean, reformat, transform and validate field values.
-This is all enabled with simple configuration options.
+These features can be enabled with simple configuration options.
 
 See 
 **[FormManager Data Handling](https://github.com/allpro/form-manager/blob/master/docs/Data.adoc)** 
@@ -243,9 +278,9 @@ for details.
 ### Validation
 
 Validation is a key feature of FM. It is designed to make
-field validation and error handling as simple as possible. As with all other
+field validation and error handling as easy as possible. As with all other
 features, validation rules and error messages are specified in the form 
-config, not inside the presentation components.
+config - _not_ inside the presentation components.
  
 See 
 **[FormManager Validation](https://github.com/allpro/form-manager/blob/master/docs/Validation.md)** 
@@ -256,6 +291,8 @@ for details.
 
 FM can be used any way you want, but usually will be 
 implemented in a 'container component' that handles the data and view logic.
+There is also a **`useFormManager` hook**, to integrate with components
+that use **[React Hooks](https://reactjs.org/docs/hooks-intro.html)**.
 
 See 
 **[Implementing FormManager in Components](https://github.com/allpro/form-manager/blob/master/docs/Implementation.md)** 
@@ -266,11 +303,11 @@ for details.
 
 ## Utilities and Helpers
 
-FM exposes many of the utility methods it uses internally.
+FM exposes most of the utility methods it uses internally.
 These helpers can be imported and used separately from FM 
 if you find any useful.
-For example, it exposes `parseDate` and `formatDate()` helpers
-that might serve all your date handling needs.
+For example, it exposes `parseDate()` and `formatDate()` helpers
+that might serve your date handling needs.
 
 See 
 **[Exported Helpers](https://github.com/allpro/form-manager/blob/master/docs/Exports.md)** 

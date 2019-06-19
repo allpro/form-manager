@@ -501,15 +501,17 @@ function Data( formManager, components ) {
 		}
 
 		let fmt = format
-		let fmtOpts = undefined
+		let fmtOpts1 = undefined
+		let fmtOpts2 = undefined
 		if (isArray(format)) {
 			fmt = format[0]
-			fmtOpts = format[1]
+			fmtOpts1 = format[1]
+			fmtOpts2 = format[2]
 		}
 
 		// Format value if a formatter is specified
 		if (fmt && formatters[fmt]) {
-			return formatters[fmt](value, fmtOpts)
+			return formatters[fmt](value, fmtOpts1, fmtOpts2)
 		}
 
 		return value

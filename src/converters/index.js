@@ -41,9 +41,9 @@ const boolean = value => {
 }
 
 
-const date = ( value, format = 'YYYY-MM-DD' ) => formatDate(value, format)
+const date = ( value, dt = 'medium-date', tm ) => formatDate(value, dt, tm)
 const dateISO = value => formatDate(value, 'iso')
-const dateISOTimezone = value => formatDate(value, 'isoTimezone')
+const dateISOLocal = value => formatDate(value, 'isoLocal')
 
 const dateObject = value => {
 	if (!value) return null
@@ -62,6 +62,6 @@ export default {
 	number,
 	date,
 	dateISO,
-	dateISOTimezone,
+	dateISOLocal,
 	dateObject
 }

@@ -48,8 +48,8 @@ function State( formManager, components ) {
 	 *
 	 * @param {Object} [initialState]
 	 */
-	function init( initialState = {} ) {
-		stateOfForm = clone(initialState)
+	function init( initialState ) {
+		stateOfForm = clone(initialState || {})
 	}
 
 	/**
@@ -83,9 +83,10 @@ function State( formManager, components ) {
 	function setState( key, value, opts = {} ) {
 		// Can use field aliases for state as well
 		const fieldName = aliasToRealName(key)
-		setObjectValue(stateOfForm, fieldName, value, opts)
+		const setOpts = Object.assign({ clone: true, update: true }, opts)
+		setObjectValue(stateOfForm, fieldName, value, setOpts)
 
-		if (opts.update !== false) {
+		if (opts.update) {
 			triggerComponentUpdate()
 		}
 

@@ -1193,14 +1193,14 @@ form.cleanField('phone')
 == Form 'State' Methods
 
 
-=== state | getState( `key` )
+=== state | getState( `key`, `options` )
 ++ ++ ::
 +
 --
 * `key`* {nbsp} [.small]#{string} +
   The key to get from form-state.
   _Nested_ values can be specified using a dot-delimited key like
-  `category.selected`.#
+  `category.selected`. Can also pass a fieldname-alias here.#
 
 * `options` {nbsp} [.small]#{object}#
   ** `options.clone` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
@@ -1224,18 +1224,26 @@ const username = form.state('user.nickname')
 --
 
 
-=== setState( `key`, `value` )
+=== setState( `key`, `value`, `options` )
 ++ ++ ::
 +
 --
 * `key`* {nbsp} [.small]#{string} +
   The key to set in form-state.
   _Nested_ values can be set by passing a dot-delimited key like
-  `category.selected`.#
+  `category.selected`. Can also pass a fieldname-alias here.#
 
 * `value` {nbsp} [.small]#{any} {nbsp} +
   _Anything_ can be stored in form-state. +
   ##If no value is passed, the specified key will be deleted##.#
+
+* `options` {nbsp} [.small]#{object}#
+  ** `options.update` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true` +
+     Re-render component after updating state.#
+  ** `options.clone` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `true` +
+     Shallow-clone the new state value, if applicable.#
+  ** `options.cloneDeep` {nbsp} [.small]#{boolean} {nbsp} _@default:_ `false` +
+     Deep-clone the new state value, if applicable. (overrides 'clone')#
 
 _@returns:_ FormManager [.small]#{object}#
 

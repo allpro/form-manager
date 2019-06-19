@@ -9,22 +9,21 @@ const dateFormats = {
 	'medium-date': 'MMM d, yyyy', // Feb 23, 2018
 	'long-date': 'MMMM d, yyyy', // February 23, 2018
 
-	'short-day-date': 'E..EEE, MMM d', // Tue, Jan 30
-	'medium-day-date': 'EEEE, MMM d, yyyy', // Friday, Feb 23, 2018
+	'short-day-date': 'EEE, MMM d', // Tue, Jan 30
+	'medium-day-date': 'EEE, MMM d, yyyy', // Friday, Feb 23, 2018
 	'long-day-date': 'EEEE, MMMM d, yyyy', // Friday, February 23, 2018
 
-	'short-time': 'h a..aaa', // 10 AM
-	'medium-time': 'h:mm a..aaa', // 10:22 AM
-	'long-time': 'h:mm:ss a..aaa', // 10:22:35 AM
+	'short-time': 'HH:mm', // 14:22
+	'medium-time': 'h:mm aa', // 10:22 AM
+	'long-time': 'h:mm:ss aa', // 10:22:35 AM
 
 	// SPECIAL DATA FORMATS
 	'date-input': 'yyyy-MM-dd', 			// For input.type="date"
 	'time-input': 'HH:mm',					// For input.type="time"
 	'datetime-input': "yyyy-MM-dd'T'HH:mm",	// For input.type="datetime-local"
-	'isoTimezone': "yyyy-MM-dd'T'HH:mm:ssx", 	// ISO-8601 WITH timezone offset
+	'isoLocal': "yyyy-MM-dd'T'HH:mm:ssx", 	// ISO-8601 WITH timezone offset
 	'iso': '' // Default format - means Date().toISOString (ISO-8601)
 }
-
 
 /**
  * PUBLIC UTILITY to parse a date and returns it a formatted string.
