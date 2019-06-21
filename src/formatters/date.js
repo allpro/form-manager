@@ -10,7 +10,7 @@ const dateFormats = {
 	'long-date': 'MMMM d, yyyy', // February 23, 2018
 
 	'short-day-date': 'EEE, MMM d', // Tue, Jan 30
-	'medium-day-date': 'EEE, MMM d, yyyy', // Friday, Feb 23, 2018
+	'medium-day-date': 'EEE, MMM d, yyyy', // Fri, Feb 23, 2018
 	'long-day-date': 'EEEE, MMMM d, yyyy', // Friday, February 23, 2018
 
 	'short-time': 'HH:mm', // 14:22

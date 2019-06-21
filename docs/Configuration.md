@@ -11,8 +11,10 @@ Setting an option at the form/top level makes it the _default_ for all fields.
 This default can be overridden by individual fields by setting an option in the 
 config  for that field. See `validateOn` examples below.
 
- You can see the default configuration for FM in: `defaultFormConfig.js`. It 
- includes many of the same default values and comments as shown below.
+## Default Configuration
+
+You can see the default configuration for FM in: `defaultFormConfig.js`. 
+It includes many of the same comments as shown below.
 
 ```javascript static
 const formConfig = {
@@ -73,5 +75,35 @@ const formConfig = {
     fields: {},
 }
 ```
+
+
+## Configuration Sections
+
+Each of these are optional keys in the root of a configuration.
+Each section is a hash object.
+
+- initialData
+- initialState
+- initialErrors
+- errorMessages
+- formatters
+- validators
+- converters
+- fieldDefaults
+- fields
+
+
+**initialData** 
+
+This is form data that can be set inside the configuration.
+Data can _also_ be passed as an argument when creating a FM instance.
+If both data-setting methods are used, values passed as an argument will 
+_update_ the data set by `initialData`.
+
+**initialState** 
+
+FM maintains 
+
+
 
 ## DETAILS COMING SOON

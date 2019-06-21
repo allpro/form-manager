@@ -126,7 +126,7 @@ This example shows a form with a few fields on it. It does not show cosmetic
 props like `classes` or `fullWidth`, which you can add as normal. The FM
 props shown here _only_ handles props like `name`, `value` and event-handlers.
 
-** References to nested data-fields**
+**References to nested data-fields**
 
 This sample includes the fieldname `user.gender` to reference the gender value
 _nested_ inside the user object. 

@@ -112,7 +112,7 @@ in potentially complex designs.
 **There are no limitations on what kind of form FM can handle.**
 
 Although FM's focus is not creating simple forms for beginners,
-**event a junior dev can learn the basics in a few minutes**.
+**even a junior dev can learn the basics in a few minutes**.
 Existing forms require no changes other than changing their attributes/props.
 
 
