@@ -8,6 +8,17 @@
   },
   "homepage": "https://allpro.github.io/form-manager",
   "bugs": "https://github.com/allpro/form-manager/issues",
+  "keywords": [
+    "forms",
+    "form-handler",
+    "form-data",
+    "form-data-binding",
+    "form-validation",
+    "react-forms",
+    "react-form-validation",
+    "form-validation-react",
+    "react-form-helper"
+  ],
   "author": "allpro",
   "license": "MIT",
   "main": "cjs/index.js",
