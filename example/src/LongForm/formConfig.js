@@ -71,6 +71,17 @@ const formConfig = {
 				password: { lower: 1, upper: 1, number: 1, symbol: 1 }
 			}
 		},
+		'profile.homePhone': {
+			aliasName: 'phone',
+			displayName: 'Phone Numbers',
+			dataFormat: 'numbersOnly',
+			cleaning: {
+				reformat: 'phone',
+			},
+			validation: {
+				phone: true // Length -or- true == 7, 10, 11 numbers
+			}
+		},
 		'profile.tagline': {
 			aliasName: 'tagline',
 			displayName: 'Profile Tagline',
@@ -88,17 +99,6 @@ const formConfig = {
 			validateOnChange: true,
 			validation: {
 				required: true
-			}
-		},
-		'profile.homePhone': {
-			aliasName: 'phone',
-			displayName: 'Phone Numbers',
-			dataFormat: 'numbersOnly',
-			cleaning: {
-				reformat: 'phone',
-			},
-			validation: {
-				phone: true // Length -or- true == 7, 10, 11 numbers
 			}
 		},
 		age: {

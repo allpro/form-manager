@@ -5,6 +5,7 @@ import DemoLayout from '@allpro/demo-layout'
 
 import LongFormClass from './LongForm'
 import LongFormHook from './LongForm/Hook'
+import SimpleForm from './SimpleForm'
 import FieldsTestOutput from './LongForm/FieldsTestOutput'
 
 
@@ -25,6 +26,11 @@ function FormManagerDemos() {
 					label: 'Hooks Form',
 					path: '/hook-form',
 					component: LongFormHook
+				},
+				{
+					label: 'Simple Form',
+					path: '/simple-form',
+					component: SimpleForm
 				},
 				{
 					label: 'Fields Test Output',

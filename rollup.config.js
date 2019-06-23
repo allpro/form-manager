@@ -5,12 +5,12 @@ import postcss from 'rollup-plugin-postcss'
 import resolve from 'rollup-plugin-node-resolve'
 import url from 'rollup-plugin-url'
 import svgr from '@svgr/rollup'
-import { sizeSnapshot } from 'rollup-plugin-size-snapshot'
 import { terser } from 'rollup-plugin-terser'
+// import { sizeSnapshot } from 'rollup-plugin-size-snapshot'
 
 const globals = {
 	react: 'React',
-	'react-router-dom': 'ReactRouterDOM',
+	// 'react-router-dom': 'ReactRouterDOM',
 	'prop-types': 'PropTypes',
 	'@material-ui/core': 'window["material-ui"]'
 }
@@ -75,8 +75,8 @@ export default [
 			exports: 'named',
 			esModule: true
 		},
-		// plugins: basePlugins
-		plugins: [sizeSnapshot()].concat(basePlugins)
+		plugins: basePlugins
+		// plugins: [sizeSnapshot()].concat(basePlugins)
 	},
 
 	{
@@ -106,7 +106,7 @@ export default [
 			esModule: false,
 			sourcemap: true
 		},
-		// plugins: [terser()].concat(basePlugins)
-		plugins: [terser(), sizeSnapshot()].concat(basePlugins)
+		plugins: [terser()].concat(basePlugins)
+		// plugins: [terser(), sizeSnapshot()].concat(basePlugins)
 	}
 ]
