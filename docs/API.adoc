@@ -189,6 +189,20 @@ For example, changing field validation rules, disabling one or all fields,
 changing the error-messages (eg: a different language), etc.
 
 
+=== getConfig()
+++ ++ ::
++
+--
+_@returns:_ Deep-clone of the entire form-configuration [.small]#{object}#
+
+[source]
+----
+const formConfig = form.getConfig()
+----
+''''
+--
+
+
 === setConfig( `config`, `options` )
 ++ ++ ::
 +
@@ -208,13 +222,6 @@ Modifies the form configuration. +
 [.small]#The config structure is the same as the initial form configuration.
 See link:Configuration.md[FormManager Configuration] for details.#
 
-[source]
-----
-form.setFieldConfig(
-    'password',
-    { disabled: true }
-)
-----
 ''''
 --
 

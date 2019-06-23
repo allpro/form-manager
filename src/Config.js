@@ -59,6 +59,7 @@ function Config( formManager, components ) {
 
 		// Methods exposed in FormManager API
 		publicAPI: {
+			getConfig,						// GETTER for ALL config keys
 			setConfig,						// SETTER for ANY config keys
 			setErrorMessages,				// SETTER for config.errorMessages
 			getFieldDefaults,				// GETTER for fieldDefaults config
@@ -111,7 +112,16 @@ function Config( formManager, components ) {
 
 
 	/**
-	 * Set config for ANYTHING!
+	 * GETTER for ALL config
+	 *
+	 * @returns {Object}            Clone of ALL formConfig
+	 */
+	function getConfig() {
+		return cloneDeep(formConfig)
+	}
+
+	/**
+	 * SETTER of config for ANYTHING!
 	 * Accepts an array -or- hash keyed by fieldname to set multiple fields.
 	 *
 	 * @param {Object} config		Hash of configuration changes
