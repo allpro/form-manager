@@ -144,8 +144,7 @@ function Data( formManager, components ) {
 		const setOpts = { clone: true }
 
 		let fieldValue = processFieldValue(value, fieldConfig, opts)
-		let dataValue = processDataValue(fieldValue)
-		let validationPromise = null
+		let dataValue = processDataValue(fieldValue, fieldConfig)
 
 		// Update the stateOfValues cache
 		stateOfValues[fieldName] = clone(fieldValue)
@@ -158,11 +157,13 @@ function Data( formManager, components ) {
 		//	because not all fields require a field configuration.
 		else {
 			setObjectValue(stateOfData, fieldName, dataValue, setOpts)
-			setObjectValue(stateOfInitialData, fieldName, dataValue)
 			setIsDirty(fieldName, dataValue)
 		}
 
+
 		const { event, validate } = opts
+		let validationPromise = null
+
 		if (event || validate) {
 			const validationEvent = validate ? 'validate' : event
 			const onChangeForm = config.get('onChange')
@@ -244,7 +245,7 @@ function Data( formManager, components ) {
 	 *
 	 * @param {string} fieldName
 	 * @param {*} [newDataValue]
-	 * @param {Object} [opts]
+	 * @param {Object} [opts]		Options; defaults: { clean: false}
 	 */
 	function setFormValueFromData( fieldName, newDataValue, opts = {} ) {
 		const fieldConfig = config.getField(fieldName)
@@ -403,7 +404,8 @@ function Data( formManager, components ) {
 				else {
 					setObjectValue(stateOfData, fieldName, val)
 					setObjectValue(stateOfInitialData, fieldName, val)
-					setIsDirty(fieldName, val)
+					setFormValueFromData(fieldName, val, { clean: true })
+					dirtyFields.delete(fieldName) // NOT dirty; just set it!
 				}
 			}
 		})
