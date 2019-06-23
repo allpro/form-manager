@@ -7,6 +7,7 @@
     "url": "https://github.com/allpro/form-manager.git"
   },
   "homepage": "https://allpro.github.io/form-manager",
+  "bugs": "https://github.com/allpro/form-manager/issues",
   "author": "allpro",
   "license": "MIT",
   "main": "cjs/index.js",
