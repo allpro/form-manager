@@ -30,11 +30,12 @@ function Data( formManager, components ) {
 		return new Data(formManager, components)
 	}
 
-	const { config, state } = components
+	// NOTE: Cannot extract 'validation' here because NOT YET in 'components'!
+	const { internal, config, state } = components
 
 	// Extract helper methods for brevity
-	const { fireEventCallback, triggerComponentUpdate } = components.internal
-	const { withFieldDefaults, aliasToRealName } = components.config
+	const { fireEventCallback, triggerComponentUpdate } = internal
+	const { withFieldDefaults, aliasToRealName } = config
 	// Create local aliases for config objects
 	const formatters = config.get('formatters')
 	const converters = config.get('converters')
@@ -161,53 +162,48 @@ function Data( formManager, components ) {
 		}
 
 
-		const { event, validate } = opts
+		// Get methods from Validation component
+		const { isValidationEvent, validate } = components.validation
+
+		const { event } = opts
+		const validationEvent = opts.validate ? 'validate' : event
+		const needsValidation = isValidationEvent(fieldName, validationEvent)
 		let validationPromise = null
 
-		if (event || validate) {
-			const validationEvent = validate ? 'validate' : event
-			const onChangeForm = config.get('onChange')
-			const onChangeField = (config.getField(name) || {}).onChange
+		const onChangeForm = config.get('onChange')
+		const onChangeField = (config.getField(name) || {}).onChange
 
-			// When triggered by a field-event, validate BEFORE firing callbacks
-			if (fieldConfig) {
-				// A validation event MAY trigger validation & callback.
-				// Validation MAY run, depending on event-type.
-				// Validation is async so always returns a promise.
-				validationPromise = components.validation.validate(
-					name,
-					dataValue,
-					validationEvent,
-					{ update: false }
-				)
-				.then(() => {
-					// If field value was changed, then fire events
-					// noinspection JSIncompatibleTypesComparison
-					if (event === 'change') {
-						fireEventCallback(onChangeField, value, name)
-						fireEventCallback(onChangeForm, value, name)
-					}
-				})
-			}
-			else {
+		// When triggered by a field-event, validate BEFORE firing callbacks
+		if (needsValidation) {
+			// A validation event MAY trigger validation & callback.
+			// Validation MAY run, depending on event-type.
+			// Validation is async so always returns a promise.
+			validationPromise = validate(
+				name,
+				dataValue,
+				validationEvent,
+				{ update: true }
+			)
+			.then(() => {
+				// If field value was changed, then fire events
 				// noinspection JSIncompatibleTypesComparison
 				if (event === 'change') {
-					// Just fire form-level onChange, if one exists
+					fireEventCallback(onChangeField, value, name)
 					fireEventCallback(onChangeForm, value, name)
 				}
+			})
+		}
+		else {
+			// noinspection JSIncompatibleTypesComparison
+			if (event === 'change') {
+				// Just fire form-level onChange, if one exists
+				fireEventCallback(onChangeForm, value, name)
 			}
 		}
 
 		// Note: opts.update default == true; must pass false to prevent update
 		if (opts.update !== false) {
-			// If field(s) is validating, wait for that to complete
-			if (validationPromise) {
-				// noinspection JSUnresolvedFunction
-				return validationPromise.then(triggerComponentUpdate)
-			}
-			else {
-				triggerComponentUpdate()
-			}
+			triggerComponentUpdate()
 		}
 
 		return validationPromise || formManager
@@ -230,6 +226,9 @@ function Data( formManager, components ) {
 			const retVal = setValue(name, value, setOpts)
 			if (retVal.then) validationPromises.push(retVal)
 		})
+
+		// Trigger an immediate, synchronous render
+		triggerComponentUpdate()
 
 		if (validationPromises.length) {
 			const promise = Promise.all(validationPromises)

@@ -57,6 +57,7 @@ function Validation( formManager, components ) {
 		clearErrors,			// SETTER - clears errors for multiple fields
 		clearAllErrors,			// SETTER - clears errors for ALL fields
 		validate,				// ACTION for field OR form validation
+		isValidationEvent,		// HELPER to see if event triggers validation
 
 		// Methods exposed in FormManager API
 		publicAPI: {
@@ -329,6 +330,22 @@ function Validation( formManager, components ) {
 	}
 
 
+	function isValidationEvent(fieldName, event) {
+		if (!event) return false
+		if (event === 'validate') return true
+
+		const suffixes = {
+			blur: 'OnBlur',
+			change: 'OnChange'
+		}
+		const fieldHasErrors = hasError(fieldName)
+		const prefix = fieldHasErrors ? 'revalidate' : 'validate'
+		const suffix = suffixes[event]
+		const fieldConfig = config.getField(fieldName) || {}
+
+		return withFieldDefaults(fieldConfig, `${prefix}${suffix}`)
+	}
+
 	/**
 	 * PUBLIC ACTION - alias for validate() to avoid extra params
 	 *
@@ -354,29 +371,11 @@ function Validation( formManager, components ) {
 
 		// field MAY have an aliasName
 		const fieldName = aliasToRealName(name)
-		const fieldConfig = config.getField(fieldName) || {}
+		const needsValidation = isValidationEvent(fieldName, event)
 
-		const forceValidation = event === 'validate'
-		const suffixes = {
-			blur: 'OnBlur',
-			change: 'OnChange'
-		}
-
-		// If an event was passed, check to see if we should validate or not.
-		// If not, then abort without doing validation
-		if (event && !forceValidation) {
-			const fieldHasErrors = hasError(fieldName)
-			const prefix = fieldHasErrors ? 'revalidate' : 'validate'
-			const suffix = suffixes[event]
-			const isValidationEvent = withFieldDefaults(
-				fieldConfig,
-				`${prefix}${suffix}`
-			)
-
-			if (!isValidationEvent) {
-				// ABORT by returning a resolved promise
-				return Promise.resolve(!fieldHasErrors)
-			}
+		if (!needsValidation) {
+			// ABORT by returning a resolved promise
+			return Promise.resolve()
 		}
 
 		// Return the validation promise - will return true if is-valid value
@@ -695,8 +694,7 @@ function Validation( formManager, components ) {
 					// if field-errors is empty, remove the entire field-errors
 					// object
 					if (isFieldErrorFree) {
-						// If there is existing errors hash, then this is a
-						// change
+						// If there is existing errors hash, this is a change
 						errorsChanged = !!stateOfErrors[fieldName]
 						delete stateOfErrors[fieldName]
 					}

@@ -78,7 +78,9 @@ const formConfig = {
 			aliasName: 'tagline'
 		},
 		'profile.homePhone': {
-			aliasName: 'phone'
+			aliasName: 'phone',
+			cleaning: { reformat: 'phone' },
+			validation: { phone: true }
 		},
 		feedback: {
 			isData:   false
@@ -108,6 +110,8 @@ function SimpleFormDemo(props) {
 		margin: 'dense',
 		FormHelperTextProps: { classes }
 	}
+
+	console.log(`"${form.value('phone')}"`)
 
 	return (
 		<div style={styles.wrapper}>
