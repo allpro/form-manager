@@ -21,7 +21,7 @@ which can virtually eliminate the need for custom code.
 - Integration with any type of form control, standard or custom
 - Manages data internally; does not require a `<form>` element
 - Optimizations for use with **Material UI** controls
-- Form-field property-setter helpers to simplify form mark-up
+- Form-field property-setter helpers to simplify form markup
 - Form-field event handling, with customizable validation events
 - Generates relevant ARIA attributes to improve accessibility
 - Can _alias_ fieldnames, to normalize names or to flatten nested data
@@ -44,7 +44,7 @@ which can virtually eliminate the need for custom code.
 
 **FM does NOT do/require:**
  
-- **Does not require any special mark-up or structure**
+- **Does not require any special markup or structure**
 - Does not 'render' anything, but does auto-generate field props
 - Does not 'wrap' forms; it is agnostic about form layout
 - Does not fetch or post data, but does provide post-ready data
@@ -88,13 +88,13 @@ Most form helpers don't provide value-formatting or data-conversion
 capabilities, so you must write this yourself, repetitively.
 **FM integrates all data manipulation features, so they are simple options.**
 
-Most form helpers requires special mark-up, which adds complexity.
+Most form helpers requires special markup, which adds complexity.
 This means 'presentation components' contain form logic
 and therefore are not as simple and 'dumb' as they should be.
 **FM provides a total separation of concerns, making components simpler.**
 
 **FormManager centralizes all data handling and logic,
-separated from any form mark-up**. 
+separated from any form markup**. 
 If you have a large form configuration, 
 it's can even go its own file, like `formConfig.js`.
 
@@ -119,7 +119,7 @@ See the '**Simplest Form Example**' below to see how easy it can be.
 ## Implementation Overview
 
 **FM uses standard properties and events to integrate with form controls.**
-Below are examples of basic form control mark-up.
+Below are examples of basic form control markup.
 FM property-setter helpers are used to set many properties at once.
 These examples uses React JSX markup, but that's not a requirement.
 
@@ -167,7 +167,7 @@ function SimpleNameForm(props) {
 ```
 
 Note that there is no 'state', no event handlers, and no logic.
-FM handles everything. It knowing if _anything_ changed 
+FM handles everything. It knows if _anything_ changed 
 (`isClean()`/`isDirty()`), and if so, 
 then _which data_ needs to be updated (`changes()`).
 
@@ -295,8 +295,6 @@ for details.
 
 
 ### FormManager Utilities & Helpers
-
-## Utilities and Helpers
 
 FM exposes most of the utility methods it uses internally.
 These helpers can be imported and used separately from FM 
