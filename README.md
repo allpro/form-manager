@@ -48,7 +48,7 @@ which can virtually eliminate the need for custom code.
 - Does not 'render' anything, but does auto-generate field props
 - Does not 'wrap' forms; it is agnostic about form layout
 - Does not fetch or post data, but does provide post-ready data
-- Does not create use global vars (unless imported as a `<script />`)
+- Does not create global vars (unless imported as a `<script />`)
 - Does not use Context in React or similar trickery
 
 **FM is just ordinary Javascript.** There is no magic!
@@ -177,14 +177,17 @@ The sample form below uses **Material UI TextFields**.
 A `formManager` instance is created in the parent, container component, 
 then passed down as **`props.form`**.
 
-The `form.allMuiProps('fieldname')` helper adds **12 properties and
-event handlers**, giving FM full control of each field.
-This includes then display of error-messages when applicable.
+The `form.allMuiProps('fieldname')` helper adds **_up to_ 11 properties and
+3 event handlers**. This gives FM full control of each field,
+_including_ automatically displaying error-messages when applicable.
 
 **NOTES**
+- No form configuration exists inside this component.
 - There is no `<form>` element &mdash; it's not necessary.
+  FormManager IS the form!
 - The `form.submit` method shown is NOT part of FM.
-  It's a container method that was _attached_ to the FM object for convenience.
+  It's a container method _attached_ to FM because it 
+  provides intuitive semantics, and avoids an extra prop.
 
 ```jsx harmony
 const MyForm = (props) => {
@@ -215,16 +218,16 @@ const MyForm = (props) => {
 ```
 
 **ALL form options and logic is set in the form-configuration.** 
-<br>There is _no_ form configuration visible in the markup.
-This keeps presentation components 'dumb' so they can focus on appearance.
+<br>This presentation components is 'dumb' so it can focus on appearance.
+Cosmetic properties can be added to fields or components _as normal_.
 
-Cosmetic properties can be added to form-fields as normal. 
-Field 'labels' are cosmetic because they are a presentation choice.
-However, FM can store a 'displayName' for use in error messages and for
-auto-generating ARIA field attributes.
+Field 'labels' are just a cosmetic presentation choice.
+However, FM accepts a 'displayName' for use in error messages and an
+auto-generated `aria-label` attribute.
+(`aria-invalid` is also auto-generated)
 
-**FM easily handles very complex custom forms.** For example:
-A form can spans multiple screens, with some controls inside modal popups. 
+**FM easily handles very complex custom forms.** For example,
+a form can spans multiple screens, with some controls inside modal popups. 
 Just pass `props.form` to integrate any sub-component with a FM instance.
 
 See 
